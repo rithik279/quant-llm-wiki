@@ -61,6 +61,7 @@ from portfolio_optimizer import (
     compute_correlation_matrix,
     find_optimal_portfolios,
 )
+from routers.upload_mt5 import router as upload_mt5_router
 
 # ─────────────────────────────────────────────────────────────────────────────
 # App
@@ -82,6 +83,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(upload_mt5_router)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Strategy storage — SQLite-backed; CSV files live in strategies/
