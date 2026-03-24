@@ -814,6 +814,12 @@ def root():
     return FileResponse("ui_test.html", media_type="text/html")
 
 
+@app.get("/healthz", tags=["Health"], summary="Liveness check")
+def healthz() -> Any:
+    """Lightweight endpoint used by the frontend to warm sleeping deployments."""
+    return {"status": "ok", "service": "monte-carlo-prop-firm-simulator"}
+
+
 @app.post("/strategies/upload", tags=["Strategies"], summary="Upload a strategy CSV")
 async def upload_strategy(file: UploadFile = File(...)) -> Any:
     """

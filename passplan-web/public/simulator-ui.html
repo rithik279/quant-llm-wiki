@@ -1035,6 +1035,9 @@
         let currentEp = "until_payout";
         let chartModeActive = false;
         let lastSimData = null;
+        const API_WARMUP_MAX_WAIT_MS = 90000;
+        const API_WARMUP_POLL_MS = 3000;
+        const API_WARMUP_REQUEST_TIMEOUT_MS = 8000;
         let mt5Config = {
             starting_balance: 10000,
             overall_max_loss: 3000,
@@ -1043,6 +1046,63 @@
             time_limit_days: 7,
             weekends_tradable: false,
         };
+
+        const _sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+        async function fetchWithTimeout(url, options = {}, timeoutMs = 30000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                return await fetch(url, { ...options, signal: controller.signal });
+            } finally {
+                clearTimeout(timeoutId);
+            }
+        }
+
+        function _isWarmupRetryableStatus(status) {
+            return [502, 503, 504, 522, 524].includes(status);
+        }
+
+        async function ensureApiAwake(onStatus) {
+            const startedAt = Date.now();
+            let attempt = 0;
+            while (Date.now() - startedAt < API_WARMUP_MAX_WAIT_MS) {
+                attempt += 1;
+                if (onStatus) {
+                    onStatus(`Waking backend (attempt ${attempt})… this can take up to ~1 min on free Render.`);
+                }
+                try {
+                    const r = await fetchWithTimeout(`${API_BASE}/healthz`, {
+                        method: 'GET',
+                        headers: { 'Cache-Control': 'no-cache' },
+                    }, API_WARMUP_REQUEST_TIMEOUT_MS);
+                    if (r.ok) {
+                        if (onStatus) onStatus('Backend is awake.');
+                        return true;
+                    }
+                    if (!_isWarmupRetryableStatus(r.status)) {
+                        if (onStatus) onStatus(`Backend responded (${r.status}). Continuing…`);
+                        return true;
+                    }
+                } catch {
+                    // Keep polling until timeout.
+                }
+                await _sleep(API_WARMUP_POLL_MS);
+            }
+            throw new Error('Backend did not wake up in time. Please retry in ~1 minute.');
+        }
+
+        async function fetchWithWarmup(url, options = {}, onStatus) {
+            try {
+                const first = await fetchWithTimeout(url, options);
+                if (first.ok || !_isWarmupRetryableStatus(first.status)) return first;
+            } catch {
+                // Fall through to warmup.
+            }
+
+            await ensureApiAwake(onStatus);
+            return await fetchWithTimeout(url, options);
+        }
 
         window.addEventListener("message", (event) => {
             if (event.origin !== window.location.origin) return;
@@ -1090,7 +1150,9 @@
         // -- Strategy registry -------------------------------------------------
         async function loadStrategies() {
             try {
-                const r = await fetch(API_BASE + "/strategies?source=" + encodeURIComponent(uploadMode));
+                const r = await fetchWithWarmup(
+                    API_BASE + "/strategies?source=" + encodeURIComponent(uploadMode)
+                );
                 registeredStrategies = r.ok ? await r.json() : [];
             } catch { registeredStrategies = []; }
             populateStrategyDropdown();
@@ -1133,7 +1195,11 @@
         async function deleteStrategy(strategy_id, filename) {
             if (!confirm(`Delete "${filename}" from the registry?\n\nThis also removes the stored CSV file.`)) return;
             try {
-                const resp = await fetch(API_BASE + "/strategies/" + strategy_id, { method: "DELETE" });
+                const resp = await fetchWithWarmup(
+                    API_BASE + "/strategies/" + strategy_id,
+                    { method: "DELETE" },
+                    msg => setUploadStatus(msg, "")
+                );
                 const data = await resp.json();
                 if (data.error) { alert("Delete failed: " + data.error); return; }
                 await loadStrategies();
@@ -1295,6 +1361,13 @@
             const skipped = files.length - csvFiles.length;
             if (!csvFiles.length) { setUploadStatus("Error: No CSV files found in selection.", "error"); return; }
 
+            try {
+                await ensureApiAwake(msg => setUploadStatus(msg, ""));
+            } catch (e) {
+                setUploadStatus(e.message, "error");
+                return;
+            }
+
             let lastId = null;
             const errors = [];
             let duplicates = 0;
@@ -1304,7 +1377,11 @@
                 const form = new FormData();
                 form.append("file", file);
                 try {
-                    const resp = await fetch(API_BASE + "/strategies/upload", { method: "POST", body: form });
+                    const resp = await fetchWithWarmup(
+                        API_BASE + "/strategies/upload",
+                        { method: "POST", body: form },
+                        msg => setUploadStatus(msg, "")
+                    );
                     const data = await resp.json();
                     if (data.error) { errors.push(`${file.name}: ${data.error}`); continue; }
                     if (data.duplicate) duplicates++;
@@ -1352,6 +1429,7 @@
             form.append("file", file);
             _showUploadProgress(`Uploading ${file.name}…`);
             try {
+                await ensureApiAwake(msg => _updateUploadProgress(0, file.size, msg));
                 const resp = await postFormWithProgress(API_BASE + "/upload/ninjatrader", form, (loaded, total) => {
                     _updateUploadProgress(loaded, total, `Uploading ${file.name}…`);
                 });
@@ -1420,6 +1498,7 @@
             form.append("file", file);
             _showUploadProgress(`Uploading ${file.name}…`);
             try {
+                await ensureApiAwake(msg => _updateUploadProgress(0, file.size, msg));
                 const resp = await postFormWithProgress(API_BASE + "/upload/mt5", form, (loaded, total) => {
                     _updateUploadProgress(loaded, total, `Uploading ${file.name}…`);
                 });
@@ -1705,11 +1784,11 @@
             spinner.style.display = "block";
             _showSingleProgress(body.n_sims || 0);
             try {
-                const resp = await fetch(singleStreamEndpointPath(), {
+                const resp = await fetchWithWarmup(singleStreamEndpointPath(), {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(body),
-                });
+                }, msg => _updateSingleProgress(0, body.n_sims || 1, msg));
                 if (!resp.ok) { showError('Server error ' + resp.status); return; }
 
                 const reader = resp.body.getReader();
@@ -1987,10 +2066,12 @@
             spinner.style.display = 'block';
             _showOptProgress();
             try {
-                const resp = await fetch(API_BASE + '/portfolio/optimize/stream', {
+                const resp = await fetchWithWarmup(API_BASE + '/portfolio/optimize/stream', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body),
+                }, msg => {
+                    document.getElementById('op-stage').textContent = msg;
                 });
                 if (!resp.ok) { showError('Server error ' + resp.status); return; }
                 const reader = resp.body.getReader();
@@ -2058,10 +2139,12 @@
             const total = (body.strategy_ids || body.csv_paths || []).length;
             _showBatchProgress(total);
             try {
-                const resp = await fetch(API_BASE + '/analyze/batch/stream', {
+                const resp = await fetchWithWarmup(API_BASE + '/analyze/batch/stream', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body),
+                }, msg => {
+                    document.getElementById('bp-file').textContent = msg;
                 });
                 if (!resp.ok) { showError('Server error ' + resp.status); return; }
                 const reader = resp.body.getReader();
@@ -2107,7 +2190,7 @@
             btn.disabled = true; spinner.style.display = 'block';
             try {
                 const url = `${API_BASE}/leaderboard?simulation_type=${simType}&metric=${metric}&limit=${limit}`;
-                const resp = await fetch(url);
+                const resp = await fetchWithWarmup(url, {}, msg => showError(msg));
                 const data = await resp.json();
                 if (!resp.ok || data.error) { showError((data.error || 'Server error') + ''); return; }
                 if (!data.length) {
@@ -2243,11 +2326,11 @@
             const spinner = document.getElementById('spinner');
             btn.disabled = true; spinner.style.display = 'block';
             try {
-                const resp = await fetch(API_BASE + '/analyze/rescue', {
+                const resp = await fetchWithWarmup(API_BASE + '/analyze/rescue', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body),
-                });
+                }, msg => showError(msg));
                 const data = await resp.json();
                 if (!resp.ok || data.error) { showError(data.error || 'Server error'); return; }
                 document.body.classList.add('rescue-mode');
