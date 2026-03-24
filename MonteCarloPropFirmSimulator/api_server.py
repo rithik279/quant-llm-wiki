@@ -213,7 +213,7 @@ def _mt5_overrides_from_request(req: Any) -> dict[str, Any]:
     }
 
 
-def _run_mt5_personal_simulation(
+def _run_mt5_hft_simulation(
     csv_path: str,
     req: Any,
     *,
@@ -226,7 +226,7 @@ def _run_mt5_personal_simulation(
         daily_pnl.tolist() if hasattr(daily_pnl, "tolist") else list(daily_pnl),
         n_sims=req.n_sims,
         stop_at_payout=stop_at_payout,
-        profile="personal",
+        profile="mt5_hft",
         config_overrides=overrides,
         progress_cb=progress_cb,
     )
@@ -249,7 +249,7 @@ def _map_personal_until_payout(mc: dict, *, csv_path: str, n_sims: int, risk_mul
             "sampling_mode": "uniform",
             "weight_strength": 0.0,
             "recent_window": 0,
-            "profile": "mt5_personal",
+            "profile": "mt5_hft",
             "primary_success_label": "target_achieved",
         },
         "probabilities": {
@@ -263,8 +263,8 @@ def _map_personal_until_payout(mc: dict, *, csv_path: str, n_sims: int, risk_mul
             "mean_days_to_payout": float(np.mean(target_days)) if target_days else 0.0,
             "median_days_to_payout": int(np.median(target_days)) if target_days else 0,
             "mean_payout": mean_target_gain,
-            "tier_label": "PERSONAL",
-            "tier_description": "Personal account mode with user-defined balance, loss, target and time rules.",
+            "tier_label": "MT5 HFT",
+            "tier_description": "MT5 high-frequency personal account mode with user-defined balance, loss, target and time rules.",
         },
         "distributions": {
             "equity_paths": mc.get("paths", []),
@@ -274,7 +274,7 @@ def _map_personal_until_payout(mc: dict, *, csv_path: str, n_sims: int, risk_mul
             "recent_pass_probability": None,
             "probability_delta": None,
             "recency_status": "n/a",
-            "recency_comment": "Recency analysis is not applied in MT5 personal mode.",
+            "recency_comment": "Recency analysis is not applied in MT5 HFT mode.",
         },
     }
 
@@ -321,7 +321,7 @@ def _map_personal_full_period(
             "sampling_mode": "uniform",
             "weight_strength": 0.0,
             "recent_window": 0,
-            "profile": "mt5_personal",
+            "profile": "mt5_hft",
             "primary_success_label": "target_achieved",
         },
         "probabilities": {
@@ -339,8 +339,8 @@ def _map_personal_full_period(
             "median_payout": median_payout,
             "mean_days_to_payout": float(np.mean(target_days)) if target_days else 0.0,
             "e_monthly": e_monthly,
-            "tier_label": "PERSONAL",
-            "tier_description": "Personal account mode with user-defined balance, loss, target and time rules.",
+            "tier_label": "MT5 HFT",
+            "tier_description": "MT5 high-frequency personal account mode with user-defined balance, loss, target and time rules.",
         },
         "distributions": {
             "equity_paths": mc.get("paths", []),
@@ -350,7 +350,7 @@ def _map_personal_full_period(
             "recent_pass_probability": None,
             "probability_delta": None,
             "recency_status": "n/a",
-            "recency_comment": "Recency analysis is not applied in MT5 personal mode.",
+            "recency_comment": "Recency analysis is not applied in MT5 HFT mode.",
         },
     }
 
@@ -532,7 +532,7 @@ def _run_personal_multi_account(
             "n_sims": int(sims),
             "max_days": int(overrides.get("max_days", 30)),
             "stop_at_payout": bool(stop_at_payout),
-            "profile": "mt5_personal",
+            "profile": "mt5_hft",
         },
         "portfolio": {
             "mean_total_payout": mean_total_payout,
@@ -699,12 +699,12 @@ class UntilPayoutRequest(BaseModel):
     weight_strength: float = Field(3.0, description="Exponential steepness (recency_weighted mode only).")
     recent_window: int = Field(50, ge=1, description="Look-back in trading days (recent_only mode only).")
     seed: Optional[int] = Field(None, description="RNG seed for reproducible results.")
-    starting_balance: float = Field(50_000.0, gt=0, description="MT5 personal mode: starting balance.")
-    overall_max_loss: float = Field(2_500.0, gt=0, description="MT5 personal mode: max absolute loss from start.")
-    daily_max_loss: float = Field(700.0, gt=0, description="MT5 personal mode: max daily loss.")
-    target_balance: float = Field(52_600.0, gt=0, description="MT5 personal mode: target account balance.")
-    time_limit_days: int = Field(90, ge=1, description="MT5 personal mode: calendar-day time constraint.")
-    weekends_tradable: bool = Field(False, description="MT5 personal mode: include weekends as tradable days.")
+    starting_balance: float = Field(50_000.0, gt=0, description="MT5 HFT mode: starting balance.")
+    overall_max_loss: float = Field(2_500.0, gt=0, description="MT5 HFT mode: max absolute loss from start.")
+    daily_max_loss: float = Field(700.0, gt=0, description="MT5 HFT mode: max daily loss.")
+    target_balance: float = Field(52_600.0, gt=0, description="MT5 HFT mode: target account balance.")
+    time_limit_days: int = Field(90, ge=1, description="MT5 HFT mode: calendar-day time constraint.")
+    weekends_tradable: bool = Field(False, description="MT5 HFT mode: include weekends as tradable days.")
 
 
 class FullPeriodRequest(BaseModel):
@@ -719,12 +719,12 @@ class FullPeriodRequest(BaseModel):
     weight_strength: float = Field(3.0, description="Exponential steepness (recency_weighted mode only).")
     recent_window: int = Field(50, ge=1, description="Look-back in trading days (recent_only mode only).")
     seed: Optional[int] = Field(None, description="RNG seed for reproducible results.")
-    starting_balance: float = Field(50_000.0, gt=0, description="MT5 personal mode: starting balance.")
-    overall_max_loss: float = Field(2_500.0, gt=0, description="MT5 personal mode: max absolute loss from start.")
-    daily_max_loss: float = Field(700.0, gt=0, description="MT5 personal mode: max daily loss.")
-    target_balance: float = Field(52_600.0, gt=0, description="MT5 personal mode: target account balance.")
-    time_limit_days: int = Field(21, ge=1, description="MT5 personal mode: calendar-day time constraint.")
-    weekends_tradable: bool = Field(False, description="MT5 personal mode: include weekends as tradable days.")
+    starting_balance: float = Field(50_000.0, gt=0, description="MT5 HFT mode: starting balance.")
+    overall_max_loss: float = Field(2_500.0, gt=0, description="MT5 HFT mode: max absolute loss from start.")
+    daily_max_loss: float = Field(700.0, gt=0, description="MT5 HFT mode: max daily loss.")
+    target_balance: float = Field(52_600.0, gt=0, description="MT5 HFT mode: target account balance.")
+    time_limit_days: int = Field(21, ge=1, description="MT5 HFT mode: calendar-day time constraint.")
+    weekends_tradable: bool = Field(False, description="MT5 HFT mode: include weekends as tradable days.")
 
 
 class BatchRequest(BaseModel):
@@ -734,15 +734,15 @@ class BatchRequest(BaseModel):
     sampling_mode: str = Field("uniform", description='"uniform" | "recency_weighted" | "recent_only"')
     weight_strength: float = Field(3.0, description="Exponential steepness (recency_weighted mode only).")
     recent_window: int = Field(50, ge=1, description="Look-back in trading days (recent_only mode only).")
-    risk_multiplier: float = Field(1.0, gt=0, description="Scale factor for MT5 personal mode.")
+    risk_multiplier: float = Field(1.0, gt=0, description="Scale factor for MT5 HFT mode.")
     reset_cost: float = Field(137.0, ge=0, description="Account reset fee ($) used in EV calculation.")
     seed: Optional[int] = Field(None, description="RNG seed for reproducible results.")
-    starting_balance: float = Field(50_000.0, gt=0, description="MT5 personal mode: starting balance.")
-    overall_max_loss: float = Field(2_500.0, gt=0, description="MT5 personal mode: max absolute loss from start.")
-    daily_max_loss: float = Field(700.0, gt=0, description="MT5 personal mode: max daily loss.")
-    target_balance: float = Field(52_600.0, gt=0, description="MT5 personal mode: target account balance.")
-    time_limit_days: int = Field(90, ge=1, description="MT5 personal mode: calendar-day time constraint.")
-    weekends_tradable: bool = Field(False, description="MT5 personal mode: include weekends as tradable days.")
+    starting_balance: float = Field(50_000.0, gt=0, description="MT5 HFT mode: starting balance.")
+    overall_max_loss: float = Field(2_500.0, gt=0, description="MT5 HFT mode: max absolute loss from start.")
+    daily_max_loss: float = Field(700.0, gt=0, description="MT5 HFT mode: max daily loss.")
+    target_balance: float = Field(52_600.0, gt=0, description="MT5 HFT mode: target account balance.")
+    time_limit_days: int = Field(90, ge=1, description="MT5 HFT mode: calendar-day time constraint.")
+    weekends_tradable: bool = Field(False, description="MT5 HFT mode: include weekends as tradable days.")
 
 
 class CorrelationRequest(BaseModel):
@@ -778,12 +778,12 @@ class MultiAccountRequest(BaseModel):
     recent_window: int = Field(50, ge=1, description="Look-back in trading days (recent_only mode only).")
     n_path_sims: int = Field(150, ge=0, description="Equity path samples to capture (for chart generation).")
     seed: Optional[int] = Field(None, description="RNG seed for reproducible results.")
-    starting_balance: float = Field(50_000.0, gt=0, description="MT5 personal mode: starting balance.")
-    overall_max_loss: float = Field(2_500.0, gt=0, description="MT5 personal mode: max absolute loss from start.")
-    daily_max_loss: float = Field(700.0, gt=0, description="MT5 personal mode: max daily loss.")
-    target_balance: float = Field(52_600.0, gt=0, description="MT5 personal mode: target account balance.")
-    time_limit_days: int = Field(30, ge=1, description="MT5 personal mode: calendar-day time constraint.")
-    weekends_tradable: bool = Field(False, description="MT5 personal mode: include weekends as tradable days.")
+    starting_balance: float = Field(50_000.0, gt=0, description="MT5 HFT mode: starting balance.")
+    overall_max_loss: float = Field(2_500.0, gt=0, description="MT5 HFT mode: max absolute loss from start.")
+    daily_max_loss: float = Field(700.0, gt=0, description="MT5 HFT mode: max daily loss.")
+    target_balance: float = Field(52_600.0, gt=0, description="MT5 HFT mode: target account balance.")
+    time_limit_days: int = Field(30, ge=1, description="MT5 HFT mode: calendar-day time constraint.")
+    weekends_tradable: bool = Field(False, description="MT5 HFT mode: include weekends as tradable days.")
 
 
 class OptimizeRequest(BaseModel):
@@ -996,7 +996,7 @@ def endpoint_until_payout(req: UntilPayoutRequest) -> Any:
     try:
         csv_path = _resolve_csv(req.csv_path, req.strategy_id)
         if _is_mt5_strategy(req.strategy_id):
-            personal, overrides = _run_mt5_personal_simulation(
+            personal, overrides = _run_mt5_hft_simulation(
                 csv_path,
                 req,
                 stop_at_payout=True,
@@ -1048,7 +1048,7 @@ async def _stream_single_strategy(req: Any, *, mode: str):
 
         if mode == "until_payout":
             if _is_mt5_strategy(req.strategy_id):
-                personal, overrides = _run_mt5_personal_simulation(
+                personal, overrides = _run_mt5_hft_simulation(
                     csv_path,
                     req,
                     stop_at_payout=True,
@@ -1082,7 +1082,7 @@ async def _stream_single_strategy(req: Any, *, mode: str):
 
         if mode == "full_period":
             if _is_mt5_strategy(req.strategy_id):
-                personal, overrides = _run_mt5_personal_simulation(
+                personal, overrides = _run_mt5_hft_simulation(
                     csv_path,
                     req,
                     stop_at_payout=False,
@@ -1181,7 +1181,7 @@ def endpoint_full_period(req: FullPeriodRequest) -> Any:
     try:
         csv_path = _resolve_csv(req.csv_path, req.strategy_id)
         if _is_mt5_strategy(req.strategy_id):
-            personal, overrides = _run_mt5_personal_simulation(
+            personal, overrides = _run_mt5_hft_simulation(
                 csv_path,
                 req,
                 stop_at_payout=False,
@@ -1300,11 +1300,11 @@ async def endpoint_batch_stream(req: BatchRequest):
     ``{"type":"done","data":[...]}``
     ``{"type":"error","message":"..."}``
     """
-    mt5_personal_batch = False
+    mt5_hft_batch = False
     csv_paths: List[str] = []
     try:
         if req.strategy_ids and _sources_for_strategy_ids(req.strategy_ids) == {"mt5"}:
-            mt5_personal_batch = True
+            mt5_hft_batch = True
         else:
             csv_paths = _resolve_csv_list(req.csv_paths, req.strategy_ids)
     except Exception as exc:
@@ -1338,7 +1338,7 @@ async def endpoint_batch_stream(req: BatchRequest):
 
     async def _run() -> None:
         try:
-            if mt5_personal_batch and req.strategy_ids:
+            if mt5_hft_batch and req.strategy_ids:
                 results = await loop.run_in_executor(
                     None,
                     lambda: _run_personal_batch(req.strategy_ids or [], req, progress_cb=_progress_cb),
@@ -1590,7 +1590,7 @@ def endpoint_optimize(req: OptimizeRequest) -> Any:
     try:
         if _sources_for_strategy_ids(req.strategy_ids) == {"mt5"}:
             return _error(
-            "MT5 personal mode is not supported in optimizer yet. Use until_payout, full_period, batch, or multi_account for MT5.",
+                "MT5 HFT mode is not supported in optimizer yet. Use until_payout, full_period, batch, or multi_account for MT5.",
             400,
             )
         # ── Resolve strategy_ids → PnL arrays ────────────────────────────────
@@ -1667,7 +1667,7 @@ async def endpoint_optimize_stream(req: OptimizeRequest):
     """
     if _sources_for_strategy_ids(req.strategy_ids) == {"mt5"}:
         async def _err_gen():
-            yield f"data: {_json.dumps({'type':'error','message':'MT5 personal mode is not supported in optimizer yet. Use until_payout, full_period, batch, or multi_account for MT5.'})}\n\n"
+            yield f"data: {_json.dumps({'type':'error','message':'MT5 HFT mode is not supported in optimizer yet. Use until_payout, full_period, batch, or multi_account for MT5.'})}\n\n"
         return StreamingResponse(_err_gen(), media_type="text/event-stream")
 
     # Resolve strategies up front (fast) so we can report errors before streaming
@@ -1767,7 +1767,7 @@ async def endpoint_rescue(req: RescueRequest):
     try:
         if _sources_for_strategy_ids(req.strategy_ids) == {"mt5"}:
             return _error(
-                "MT5 personal mode is not supported in rescue yet. Use until_payout, full_period, batch, or multi_account for MT5.",
+                "MT5 HFT mode is not supported in rescue yet. Use until_payout, full_period, batch, or multi_account for MT5.",
                 400,
             )
         csv_paths: List[str] = []

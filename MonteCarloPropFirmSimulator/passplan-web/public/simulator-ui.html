@@ -2942,24 +2942,24 @@
         function renderSingleStrategy(data, grid) {
             const prob = data.probabilities || {}, met = data.metrics || {};
             const profile = (data.metadata || {}).profile;
-            const isPersonal = profile === "mt5_personal";
+            const isMt5Hft = profile === "mt5_personal" || profile === "mt5_hft";
             // until_payout uses blow_prob + timeout_prob
             // full_period  uses blow_no_payout_prob + timeout_no_pay_prob
             const isFP = currentEp === "full_period";
             const blowVal = isFP ? prob.blow_no_payout_prob : prob.blow_prob;
             const timeoutVal = isFP ? prob.timeout_no_pay_prob : prob.timeout_prob;
-            const successVal = isPersonal
+            const successVal = isMt5Hft
                 ? (prob.target_achieved_prob ?? prob.payout_prob)
                 : prob.payout_prob;
-            const passLabel = isPersonal ? "Target Achieved Probability" : "Pass Probability";
-            const blowLabel = isPersonal
+            const passLabel = isMt5Hft ? "Target Achieved Probability" : "Pass Probability";
+            const blowLabel = isMt5Hft
                 ? "Loss-Limit Hit Probability"
                 : (isFP ? "Blow (no payout)" : "Blow Probability");
-            const timeoutLabel = isPersonal
+            const timeoutLabel = isMt5Hft
                 ? "Target Not Hit (time limit)"
                 : (isFP ? "Timeout (no payout)" : "Timeout Probability");
-            const payoutLabel = isPersonal ? "Mean Gain on Target Hit" : "Mean Payout";
-            const daysLabel = isPersonal ? "Mean Days to Target" : "Mean Days to Payout";
+            const payoutLabel = isMt5Hft ? "Mean Gain on Target Hit" : "Mean Payout";
+            const daysLabel = isMt5Hft ? "Mean Days to Target" : "Mean Days to Payout";
             // sanity total (should be ~100%)
             const total = (successVal || 0) + (blowVal || 0) + (timeoutVal || 0);
             const totalStr = total > 0 ? ` <span style="font-size:0.7rem;color:#555;">(total ${pct(total)})</span>` : "";

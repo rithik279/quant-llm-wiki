@@ -19,7 +19,7 @@ const ACTIVE_BORDER = "rgba(255,122,24,0.22)";
 
 export default function SimulatorPage() {
   const [uploadMode, setUploadMode] = useState<"tradingview" | "mt5" | "ninjatrader">("tradingview");
-  const SIM_UI_VERSION = "20260324f";
+  const SIM_UI_VERSION = "20260324g";
 
   return (
     <div style={{

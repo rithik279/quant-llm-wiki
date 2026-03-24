@@ -13,7 +13,7 @@ class MonteCarloServiceError(ValueError):
     """Raised when simulation cannot be run or is not reliable."""
 
 
-DEFAULT_CONFIG: dict[str, Any] = {
+PROP_DEFAULT_CONFIG: dict[str, Any] = {
     "account_size": 50_000.0,
     "trailing_dd": 2_500.0,
     "trail_stop_level": 50_100.0,
@@ -34,21 +34,49 @@ DEFAULT_CONFIG: dict[str, Any] = {
 }
 
 
+MT5_HFT_DEFAULT_CONFIG: dict[str, Any] = {
+    "account_size": 50_000.0,
+    "trailing_dd": 2_500.0,
+    "trail_stop_level": 47_500.0,
+    "payout_threshold": 52_600.0,
+    "safety_net_level": 50_000.0,
+    "max_payout_limit": 1_000_000_000.0,
+    "max_days": 90,
+    "max_trades_per_day": 100_000,
+    "max_losing_per_day": 100_000,
+    "max_winning_per_day": 100_000,
+    "daily_loss_limit": 700.0,
+    "daily_profit_cap": 1_000_000_000.0,
+    "min_days": 1,
+    "min_green_days": 0,
+    "green_day_min": 0.0,
+    "risk_multiplier": 1.0,
+    "require_consistency_rule": False,
+    "n_sims": 10_000,
+}
+
+
+def _base_config_for_profile(profile: str) -> dict[str, Any]:
+    if profile == "mt5_hft":
+        return dict(MT5_HFT_DEFAULT_CONFIG)
+    return dict(PROP_DEFAULT_CONFIG)
+
+
 def _build_config(
     *,
     n_sims: int,
     profile: str,
     config_overrides: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    config = dict(DEFAULT_CONFIG)
+    config = _base_config_for_profile(profile)
     config["n_sims"] = int(max(100, n_sims))
     if config_overrides:
         for k, v in config_overrides.items():
             if v is not None:
                 config[k] = v
 
-    if profile == "personal":
-        # Personal-account mode: static floor + no prop payout eligibility gates.
+    if profile in {"personal", "mt5_hft"}:
+        # MT5 HFT/personal-account mode: static floor + no prop payout gates.
         account_size = float(config["account_size"])
         overall_max_loss = float(config.get("overall_max_loss", config["trailing_dd"]))
         overall_max_loss = max(1.0, overall_max_loss)
@@ -77,14 +105,14 @@ def _build_daily_config(
     profile: str,
     config_overrides: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    config = dict(DEFAULT_CONFIG)
+    config = _base_config_for_profile(profile)
     config["n_sims"] = int(max(100, n_sims))
     if config_overrides:
         for k, v in config_overrides.items():
             if v is not None:
                 config[k] = v
 
-    if profile == "personal":
+    if profile in {"personal", "mt5_hft"}:
         account_size = float(config["account_size"])
         overall_max_loss = float(config.get("overall_max_loss", config["trailing_dd"]))
         overall_max_loss = max(1.0, overall_max_loss)
