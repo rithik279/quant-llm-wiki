@@ -174,6 +174,60 @@ def _load_trade_results_from_strategy_csv(csv_path: str) -> List[float]:
     return [float(v) for v in df["Net P&L USD"].tolist() if pd.notna(v)]
 
 
+def _load_mt5_trade_rows_with_summary(csv_path: str) -> tuple[list[float], dict[str, Any]]:
+    df = pd.read_csv(csv_path)
+    df.columns = df.columns.str.strip()
+
+    if "Net P&L USD" not in df.columns:
+        raise ValueError("Stored strategy CSV is missing 'Net P&L USD' column.")
+
+    pnl_series = pd.to_numeric(df["Net P&L USD"], errors="coerce")
+    trade_results = [float(v) for v in pnl_series.tolist() if pd.notna(v)]
+
+    summary: dict[str, Any] = {
+        "total_trades": len(trade_results),
+        "trading_days": 0,
+        "mean_trades_per_day": 0.0,
+        "median_trades_per_day": 0.0,
+        "max_trades_per_day": 0,
+        "mean_daily_pnl": 0.0,
+        "best_day_pnl": 0.0,
+        "worst_day_pnl": 0.0,
+    }
+
+    if "Date and time" in df.columns and not df.empty:
+        dated = df.copy()
+        dated["Date and time"] = pd.to_datetime(dated["Date and time"], errors="coerce")
+        dated = dated[dated["Date and time"].notna()].copy()
+        if not dated.empty:
+            dated["Net P&L USD"] = pd.to_numeric(dated["Net P&L USD"], errors="coerce")
+            dated = dated[dated["Net P&L USD"].notna()].copy()
+            dated["Date"] = dated["Date and time"].dt.date
+            daily_pnl = dated.groupby("Date")["Net P&L USD"].sum().astype(float)
+            daily_counts = dated.groupby("Date").size().astype(int)
+            if not daily_pnl.empty:
+                summary.update(
+                    {
+                        "trading_days": int(len(daily_pnl)),
+                        "mean_trades_per_day": float(daily_counts.mean()),
+                        "median_trades_per_day": float(daily_counts.median()),
+                        "max_trades_per_day": int(daily_counts.max()),
+                        "mean_daily_pnl": float(daily_pnl.mean()),
+                        "best_day_pnl": float(daily_pnl.max()),
+                        "worst_day_pnl": float(daily_pnl.min()),
+                    }
+                )
+
+    return trade_results, summary
+
+
+def _mt5_simulation_mode_from_request(req: Any) -> str:
+    raw = str(getattr(req, "mt5_simulation_mode", "trade_level") or "trade_level").strip().lower()
+    if raw in {"trade_level", "daily_summary"}:
+        return raw
+    raise ValueError("MT5 simulation mode must be 'trade_level' or 'daily_summary'.")
+
+
 def _calendar_to_trading_days(days: int, weekends_tradable: bool) -> int:
     if weekends_tradable:
         return max(1, int(days))
@@ -221,15 +275,32 @@ def _run_mt5_hft_simulation(
     progress_cb: Any = None,
 ) -> tuple[dict, dict[str, Any]]:
     overrides = _mt5_overrides_from_request(req)
-    daily_pnl = load_mt5_daily_pnl(csv_path)
-    personal = run_daily_simulation_profile(
-        daily_pnl.tolist() if hasattr(daily_pnl, "tolist") else list(daily_pnl),
-        n_sims=req.n_sims,
-        stop_at_payout=stop_at_payout,
-        profile="mt5_hft",
-        config_overrides=overrides,
-        progress_cb=progress_cb,
-    )
+    simulation_mode = _mt5_simulation_mode_from_request(req)
+    trade_results, daily_summary = _load_mt5_trade_rows_with_summary(csv_path)
+
+    if simulation_mode == "daily_summary":
+        daily_pnl = load_mt5_daily_pnl(csv_path)
+        personal = run_daily_simulation_profile(
+            daily_pnl.tolist() if hasattr(daily_pnl, "tolist") else list(daily_pnl),
+            n_sims=req.n_sims,
+            stop_at_payout=stop_at_payout,
+            profile="mt5_hft",
+            config_overrides=overrides,
+            progress_cb=progress_cb,
+        )
+    else:
+        personal = run_trade_simulation_profile(
+            trade_results,
+            n_sims=req.n_sims,
+            stop_at_payout=stop_at_payout,
+            profile="mt5_hft",
+            config_overrides=overrides,
+            progress_cb=progress_cb,
+        )
+
+    personal.setdefault("metadata", {})
+    personal["metadata"]["simulation_mode"] = simulation_mode
+    personal["daily_summary"] = daily_summary
     return personal, overrides
 
 
@@ -239,8 +310,9 @@ def _map_personal_until_payout(mc: dict, *, csv_path: str, n_sims: int, risk_mul
     target_days = [int(v) for v in mc.get("target_achieved_days", [])]
     target_prob = float(mc.get("target_achieved_probability", mc.get("pass_probability", 0.0)))
     mean_target_gain = float(mc.get("expected_payout", 0.0))
+    simulation_mode = str(mc.get("metadata", {}).get("simulation_mode", "trade_level"))
 
-    return {
+    result = {
         "metadata": {
             "csv_path": csv_path,
             "n_sims": n_sims,
@@ -250,6 +322,7 @@ def _map_personal_until_payout(mc: dict, *, csv_path: str, n_sims: int, risk_mul
             "weight_strength": 0.0,
             "recent_window": 0,
             "profile": "mt5_hft",
+            "simulation_mode": simulation_mode,
             "primary_success_label": "target_achieved",
         },
         "probabilities": {
@@ -277,6 +350,9 @@ def _map_personal_until_payout(mc: dict, *, csv_path: str, n_sims: int, risk_mul
             "recency_comment": "Recency analysis is not applied in MT5 HFT mode.",
         },
     }
+    if mc.get("daily_summary") is not None:
+        result["daily_summary"] = mc.get("daily_summary")
+    return result
 
 
 def _map_personal_full_period(
@@ -294,6 +370,7 @@ def _map_personal_full_period(
     target_prob = float(mc.get("target_achieved_probability", mc.get("pass_probability", 0.0)))
     target_days = [int(v) for v in mc.get("target_achieved_days", [])]
     n = max(1, len(outcomes))
+    simulation_mode = str(mc.get("metadata", {}).get("simulation_mode", "trade_level"))
 
     payout_then_blew = sum(1 for o, p in zip(outcomes, payouts) if o == "blow" and p > 0)
     payout_survived = sum(1 for o, p in zip(outcomes, payouts) if o != "blow" and p > 0)
@@ -311,7 +388,7 @@ def _map_personal_full_period(
     median_payout = float(np.median(winning_payouts)) if winning_payouts else 0.0
     e_monthly = pass_rate * mean_payout - fail_rate * avg_blow_loss - reset_cost
 
-    return {
+    result = {
         "metadata": {
             "csv_path": csv_path,
             "n_sims": n_sims,
@@ -322,6 +399,7 @@ def _map_personal_full_period(
             "weight_strength": 0.0,
             "recent_window": 0,
             "profile": "mt5_hft",
+            "simulation_mode": simulation_mode,
             "primary_success_label": "target_achieved",
         },
         "probabilities": {
@@ -353,6 +431,9 @@ def _map_personal_full_period(
             "recency_comment": "Recency analysis is not applied in MT5 HFT mode.",
         },
     }
+    if mc.get("daily_summary") is not None:
+        result["daily_summary"] = mc.get("daily_summary")
+    return result
 
 
 def _run_personal_batch(
@@ -361,6 +442,7 @@ def _run_personal_batch(
     progress_cb: Any = None,
 ) -> List[Dict[str, Any]]:
     overrides = _mt5_overrides_from_request(req)
+    mt5_mode = _mt5_simulation_mode_from_request(req)
     total = len(strategy_ids)
     rows: List[Dict[str, Any]] = []
 
@@ -376,21 +458,38 @@ def _run_personal_batch(
         csv_name = Path(csv_path).name
 
         try:
-            trades = _load_trade_results_from_strategy_csv(csv_path)
-            utp = run_trade_simulation_profile(
-                trades,
-                n_sims=req.n_sims,
-                stop_at_payout=True,
-                profile="personal",
-                config_overrides=overrides,
-            )
-            fp = run_trade_simulation_profile(
-                trades,
-                n_sims=req.n_sims,
-                stop_at_payout=False,
-                profile="personal",
-                config_overrides=overrides,
-            )
+            trades, summary = _load_mt5_trade_rows_with_summary(csv_path)
+            if mt5_mode == "daily_summary":
+                daily_pnl = load_mt5_daily_pnl(csv_path)
+                utp = run_daily_simulation_profile(
+                    daily_pnl.tolist() if hasattr(daily_pnl, "tolist") else list(daily_pnl),
+                    n_sims=req.n_sims,
+                    stop_at_payout=True,
+                    profile="mt5_hft",
+                    config_overrides=overrides,
+                )
+                fp = run_daily_simulation_profile(
+                    daily_pnl.tolist() if hasattr(daily_pnl, "tolist") else list(daily_pnl),
+                    n_sims=req.n_sims,
+                    stop_at_payout=False,
+                    profile="mt5_hft",
+                    config_overrides=overrides,
+                )
+            else:
+                utp = run_trade_simulation_profile(
+                    trades,
+                    n_sims=req.n_sims,
+                    stop_at_payout=True,
+                    profile="mt5_hft",
+                    config_overrides=overrides,
+                )
+                fp = run_trade_simulation_profile(
+                    trades,
+                    n_sims=req.n_sims,
+                    stop_at_payout=False,
+                    profile="mt5_hft",
+                    config_overrides=overrides,
+                )
 
             utp_days = [
                 int(d)
@@ -419,13 +518,15 @@ def _run_personal_batch(
                     "utp_blow_p": float(utp.get("blow_probability", 0.0)),
                     "utp_mean_days": utp_mean_days,
                     "utp_ev_monthly": utp_ev_monthly,
-                    "utp_rating": "PERSONAL",
+                    "utp_rating": "MT5 HFT",
                     "fp_payout_p": float(fp.get("pass_probability", 0.0)),
                     "fp_blow_no_pay_p": float(fp.get("blow_probability", 0.0)),
                     "fp_ev_net": fp_ev_net,
                     "recent_pass_probability": None,
                     "probability_delta": None,
                     "recency_status": None,
+                    "simulation_mode": mt5_mode,
+                    "daily_summary": summary if mt5_mode == "trade_level" else None,
                 }
             )
         except Exception as exc:
@@ -459,7 +560,7 @@ def _run_personal_multi_account(
                 trades,
                 n_sims=n_sims,
                 stop_at_payout=stop_at_payout,
-                profile="personal",
+                profile="mt5_hft",
                 config_overrides=overrides,
             )
         )
@@ -705,6 +806,7 @@ class UntilPayoutRequest(BaseModel):
     target_balance: float = Field(52_600.0, gt=0, description="MT5 HFT mode: target account balance.")
     time_limit_days: int = Field(90, ge=1, description="MT5 HFT mode: calendar-day time constraint.")
     weekends_tradable: bool = Field(False, description="MT5 HFT mode: include weekends as tradable days.")
+    mt5_simulation_mode: str = Field("trade_level", description="MT5 HFT mode: trade_level or daily_summary.")
 
 
 class FullPeriodRequest(BaseModel):
@@ -725,6 +827,7 @@ class FullPeriodRequest(BaseModel):
     target_balance: float = Field(52_600.0, gt=0, description="MT5 HFT mode: target account balance.")
     time_limit_days: int = Field(21, ge=1, description="MT5 HFT mode: calendar-day time constraint.")
     weekends_tradable: bool = Field(False, description="MT5 HFT mode: include weekends as tradable days.")
+    mt5_simulation_mode: str = Field("trade_level", description="MT5 HFT mode: trade_level or daily_summary.")
 
 
 class BatchRequest(BaseModel):
@@ -743,6 +846,7 @@ class BatchRequest(BaseModel):
     target_balance: float = Field(52_600.0, gt=0, description="MT5 HFT mode: target account balance.")
     time_limit_days: int = Field(90, ge=1, description="MT5 HFT mode: calendar-day time constraint.")
     weekends_tradable: bool = Field(False, description="MT5 HFT mode: include weekends as tradable days.")
+    mt5_simulation_mode: str = Field("trade_level", description="MT5 HFT mode: trade_level or daily_summary.")
 
 
 class CorrelationRequest(BaseModel):
@@ -784,6 +888,7 @@ class MultiAccountRequest(BaseModel):
     target_balance: float = Field(52_600.0, gt=0, description="MT5 HFT mode: target account balance.")
     time_limit_days: int = Field(30, ge=1, description="MT5 HFT mode: calendar-day time constraint.")
     weekends_tradable: bool = Field(False, description="MT5 HFT mode: include weekends as tradable days.")
+    mt5_simulation_mode: str = Field("trade_level", description="MT5 HFT mode: trade_level or daily_summary.")
 
 
 class OptimizeRequest(BaseModel):
@@ -1475,8 +1580,13 @@ def endpoint_multi_account(req: MultiAccountRequest) -> Any:
     try:
         csv_path = _resolve_csv(req.csv_path, req.strategy_id)
         if _is_mt5_strategy(req.strategy_id):
+            mt5_mode = _mt5_simulation_mode_from_request(req)
             overrides = _mt5_overrides_from_request(req)
-            trades = _load_trade_results_from_strategy_csv(csv_path)
+            trade_results, summary = _load_mt5_trade_rows_with_summary(csv_path)
+            if mt5_mode == "daily_summary":
+                trades = load_mt5_daily_pnl(csv_path).tolist()
+            else:
+                trades = trade_results
             result = _run_personal_multi_account(
                 trades=trades,
                 n_accounts=req.n_accounts,
@@ -1485,6 +1595,10 @@ def endpoint_multi_account(req: MultiAccountRequest) -> Any:
                 n_path_sims=req.n_path_sims,
                 overrides=overrides,
             )
+            result.setdefault("metadata", {})
+            result["metadata"]["simulation_mode"] = mt5_mode
+            if summary is not None:
+                result["daily_summary"] = summary
         else:
             result = run_multi_account(
                 csv_path        = csv_path,
