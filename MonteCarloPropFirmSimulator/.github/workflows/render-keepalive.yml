@@ -1,0 +1,17 @@
+name: Render Keepalive
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping-render:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health endpoint
+        env:
+          KEEPALIVE_URL: https://passplan-ffjr.onrender.com/healthz
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 20 "$KEEPALIVE_URL" > /dev/null
