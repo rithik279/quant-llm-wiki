@@ -1007,6 +1007,141 @@ def endpoint_until_payout(req: UntilPayoutRequest) -> Any:
         return _error(str(exc), 400)
 
 
+async def _stream_single_strategy(req: Any, *, mode: str):
+    """Stream single-strategy simulation progress and final result via SSE."""
+    q: asyncio.Queue = asyncio.Queue()
+    loop = asyncio.get_event_loop()
+    total = max(1, int(getattr(req, "n_sims", 1)))
+
+    def _progress_cb(completed: int, total_sims: int) -> None:
+        loop.call_soon_threadsafe(
+            q.put_nowait,
+            {"type": "progress", "completed": int(completed), "total": int(total_sims)},
+        )
+
+    def _execute_sync() -> dict:
+        csv_path = _resolve_csv(req.csv_path, req.strategy_id)
+
+        if mode == "until_payout":
+            if _is_mt5_strategy(req.strategy_id):
+                overrides = _mt5_overrides_from_request(req)
+                trades = _load_trade_results_from_strategy_csv(csv_path)
+                personal = run_trade_simulation_profile(
+                    trades,
+                    n_sims=req.n_sims,
+                    stop_at_payout=True,
+                    profile="personal",
+                    config_overrides=overrides,
+                    progress_cb=_progress_cb,
+                )
+                result = _map_personal_until_payout(
+                    personal,
+                    csv_path=csv_path,
+                    n_sims=req.n_sims,
+                    risk_multiplier=req.risk_multiplier,
+                    max_days=overrides["max_days"],
+                )
+                if req.strategy_id:
+                    _store_until_payout(req.strategy_id, result, req.n_sims)
+                return result
+
+            result = analyze_until_payout(
+                csv_path=csv_path,
+                n_sims=req.n_sims,
+                risk_multiplier=req.risk_multiplier,
+                max_days=req.max_days,
+                n_paths=req.n_paths,
+                sampling_mode=req.sampling_mode,
+                weight_strength=req.weight_strength,
+                recent_window=req.recent_window,
+                seed=req.seed,
+            )
+            if req.strategy_id:
+                _store_until_payout(req.strategy_id, result, req.n_sims)
+            return result
+
+        if mode == "full_period":
+            if _is_mt5_strategy(req.strategy_id):
+                overrides = _mt5_overrides_from_request(req)
+                trades = _load_trade_results_from_strategy_csv(csv_path)
+                personal = run_trade_simulation_profile(
+                    trades,
+                    n_sims=req.n_sims,
+                    stop_at_payout=False,
+                    profile="personal",
+                    config_overrides=overrides,
+                    progress_cb=_progress_cb,
+                )
+                result = _map_personal_full_period(
+                    personal,
+                    csv_path=csv_path,
+                    n_sims=req.n_sims,
+                    risk_multiplier=req.risk_multiplier,
+                    max_days=overrides["max_days"],
+                    reset_cost=req.reset_cost,
+                )
+                if req.strategy_id:
+                    _store_full_period(req.strategy_id, result, req.n_sims)
+                return result
+
+            result = analyze_full_period(
+                csv_path=csv_path,
+                n_sims=req.n_sims,
+                risk_multiplier=req.risk_multiplier,
+                max_days=req.max_days,
+                n_paths=req.n_paths,
+                reset_cost=req.reset_cost,
+                sampling_mode=req.sampling_mode,
+                weight_strength=req.weight_strength,
+                recent_window=req.recent_window,
+                seed=req.seed,
+            )
+            if req.strategy_id:
+                _store_full_period(req.strategy_id, result, req.n_sims)
+            return result
+
+        raise ValueError(f"Unknown stream mode: {mode!r}")
+
+    async def _run() -> None:
+        try:
+            await q.put({"type": "progress", "completed": 0, "total": total})
+            result = await loop.run_in_executor(None, _execute_sync)
+            await q.put({"type": "progress", "completed": total, "total": total})
+            await q.put({"type": "done", "data": result})
+        except FileNotFoundError as exc:
+            await q.put({"type": "error", "message": f"CSV not found: {exc}"})
+        except Exception as exc:
+            await q.put({"type": "error", "message": str(exc)})
+
+    async def _generate():
+        task = asyncio.create_task(_run())
+        while True:
+            msg = await q.get()
+            yield f"data: {_json.dumps(msg)}\n\n"
+            if msg["type"] in ("done", "error"):
+                break
+        await task
+
+    return StreamingResponse(
+        _generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+        },
+    )
+
+
+@app.post(
+    "/analyze/until_payout/stream",
+    tags=["Single Strategy"],
+    summary="Run-until-payout with live simulation progress",
+)
+async def endpoint_until_payout_stream(req: UntilPayoutRequest):
+    return await _stream_single_strategy(req, mode="until_payout")
+
+
 @app.post(
     "/analyze/full_period",
     tags=["Single Strategy"],
@@ -1069,6 +1204,15 @@ def endpoint_full_period(req: FullPeriodRequest) -> Any:
         return _error(f"CSV not found: {exc}", 400)
     except Exception as exc:
         return _error(str(exc), 400)
+
+
+@app.post(
+    "/analyze/full_period/stream",
+    tags=["Single Strategy"],
+    summary="Run full-period with live simulation progress",
+)
+async def endpoint_full_period_stream(req: FullPeriodRequest):
+    return await _stream_single_strategy(req, mode="full_period")
 
 
 @app.post(

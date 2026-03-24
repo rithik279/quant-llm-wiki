@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable
 
 import numpy as np
 
@@ -78,6 +78,7 @@ def run_trade_simulation_profile(
     stop_at_payout: bool = True,
     profile: str = "prop",
     config_overrides: dict[str, Any] | None = None,
+    progress_cb: Callable[[int, int], None] | None = None,
 ) -> dict:
     """Run a Monte Carlo simulation from per-trade PnL values with profile overrides."""
     clean = [float(v) for v in trade_results if v is not None]
@@ -96,7 +97,12 @@ def run_trade_simulation_profile(
     )
 
     try:
-        mc = run_monte_carlo(np.asarray(clean, dtype=float), config, stop_at_payout=stop_at_payout)
+        mc = run_monte_carlo(
+            np.asarray(clean, dtype=float),
+            config,
+            stop_at_payout=stop_at_payout,
+            progress_cb=progress_cb,
+        )
     except Exception as exc:
         raise MonteCarloServiceError("Simulation failed for this trade set.") from exc
 

@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from typing import Callable
 
 # ─────────────────────────────────────────────────────────────────
 # DATA LOADER — trade-level USD PnL distribution
@@ -218,7 +219,12 @@ def simulate_path(trade_pnls: np.ndarray, config: dict, stop_at_payout: bool = T
 # RUN MONTE CARLO — aggregate n_sims paths
 # ─────────────────────────────────────────────────────────────────
 
-def run_monte_carlo(trade_pnls: np.ndarray, config: dict, stop_at_payout: bool = True) -> dict:
+def run_monte_carlo(
+    trade_pnls: np.ndarray,
+    config: dict,
+    stop_at_payout: bool = True,
+    progress_cb: Callable[[int, int], None] | None = None,
+) -> dict:
     """
     Run config["n_sims"] simulation paths and collect results.
     Returns a dict of per-path outcome lists plus 50 sample equity paths.
@@ -230,6 +236,8 @@ def run_monte_carlo(trade_pnls: np.ndarray, config: dict, stop_at_payout: bool =
     days_list = []
     paths     = []
 
+    progress_every = max(1, n_sims // 100)
+
     for i in range(n_sims):
         result = simulate_path(trade_pnls, config, stop_at_payout)
         outcomes.append(result["outcome"])
@@ -238,6 +246,9 @@ def run_monte_carlo(trade_pnls: np.ndarray, config: dict, stop_at_payout: bool =
         days_list.append(result["days"])
         if i < 50:
             paths.append(result["equity_path"])
+
+        if progress_cb is not None and ((i + 1) % progress_every == 0 or i + 1 == n_sims):
+            progress_cb(i + 1, n_sims)
 
         if (i + 1) % 5000 == 0:
             print(f"  ... {i + 1:,} / {n_sims:,} simulations complete")

@@ -728,6 +728,19 @@
                     </div>
                 </div>
                 <div class="upload-status" id="upload-status"></div>
+                <div id="upload-progress-wrap" style="display:none;padding:0.2rem 0 0.2rem">
+                    <div
+                        style="display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;color:#888;margin-bottom:0.45rem">
+                        <span id="up-stage"
+                            style="color:#FF9A45;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%">Uploading…</span>
+                        <span style="flex-shrink:0;margin-left:0.5rem"><span id="up-pct">0%</span></span>
+                    </div>
+                    <div style="background:#0e0e12;border-radius:6px;height:6px;overflow:hidden">
+                        <div id="up-bar"
+                            style="background:linear-gradient(90deg,#FF7A18,#FFB347);height:100%;width:0%;transition:width 0.2s ease;border-radius:6px">
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- --- Simulation card --- -->
@@ -883,6 +896,23 @@
                 <div class="run-row">
                     <button id="run-btn" onclick="runSimulation()">Run Simulation</button>
                     <div class="spinner" id="spinner"></div>
+                </div>
+
+                <!-- Single-strategy simulation progress bar -->
+                <div id="single-progress-wrap" style="display:none;padding:0.5rem 0 0.2rem">
+                    <div
+                        style="display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;color:#888;margin-bottom:0.45rem">
+                        <span id="sp-stage"
+                            style="color:#60a5fa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%">Running
+                            simulations…</span>
+                        <span style="flex-shrink:0;margin-left:0.5rem"><span id="sp-count">0</span> / <span
+                                id="sp-total">0</span></span>
+                    </div>
+                    <div style="background:#0e0e12;border-radius:6px;height:6px;overflow:hidden">
+                        <div id="sp-bar"
+                            style="background:linear-gradient(90deg,#60a5fa,#93c5fd);height:100%;width:0%;transition:width 0.25s ease;border-radius:6px">
+                        </div>
+                    </div>
                 </div>
 
                 <div id="error-box"></div>
@@ -1320,9 +1350,13 @@
 
             const form = new FormData();
             form.append("file", file);
+            _showUploadProgress(`Uploading ${file.name}…`);
             try {
-                const resp = await fetch(API_BASE + "/upload/ninjatrader", { method: "POST", body: form });
-                const data = await resp.json();
+                const resp = await postFormWithProgress(API_BASE + "/upload/ninjatrader", form, (loaded, total) => {
+                    _updateUploadProgress(loaded, total, `Uploading ${file.name}…`);
+                });
+                _updateUploadProgress(file.size, file.size, `Server is analyzing ${file.name}…`);
+                const data = resp.data || {};
                 if (!resp.ok || data.error) {
                     const msg = data?.error || "Invalid NinjaTrader report format";
                     setUploadStatus(msg, "error");
@@ -1342,6 +1376,8 @@
                 setUploadStatus(doneMsg, "success");
             } catch (e) {
                 setUploadStatus("Could not reach /upload/ninjatrader endpoint.", "error");
+            } finally {
+                _hideUploadProgress();
             }
         }
 
@@ -1382,9 +1418,13 @@
 
             const form = new FormData();
             form.append("file", file);
+            _showUploadProgress(`Uploading ${file.name}…`);
             try {
-                const resp = await fetch(API_BASE + "/upload/mt5", { method: "POST", body: form });
-                const data = await resp.json();
+                const resp = await postFormWithProgress(API_BASE + "/upload/mt5", form, (loaded, total) => {
+                    _updateUploadProgress(loaded, total, `Uploading ${file.name}…`);
+                });
+                _updateUploadProgress(file.size, file.size, `Server is analyzing ${file.name}…`);
+                const data = resp.data || {};
                 if (!resp.ok || data.error) {
                     const msg = data?.error || "Invalid MT5 report format";
                     setUploadStatus(msg, "error");
@@ -1404,6 +1444,8 @@
                 setUploadStatus(doneMsg, "success");
             } catch (e) {
                 setUploadStatus("Could not reach /upload/mt5 endpoint.", "error");
+            } finally {
+                _hideUploadProgress();
             }
         }
 
@@ -1424,6 +1466,44 @@
 
             document.getElementById("raw-json").textContent = JSON.stringify(data, null, 2);
             document.getElementById("results-card").style.display = "block";
+        }
+
+        function _showUploadProgress(stage) {
+            document.getElementById("up-stage").textContent = stage || "Uploading…";
+            document.getElementById("up-pct").textContent = "0%";
+            document.getElementById("up-bar").style.width = "0%";
+            document.getElementById("upload-progress-wrap").style.display = "block";
+        }
+
+        function _updateUploadProgress(loaded, total, stage) {
+            const pct = total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : 0;
+            const loadedMb = (loaded / (1024 * 1024)).toFixed(1);
+            const totalMb = total > 0 ? (total / (1024 * 1024)).toFixed(1) : "?";
+            document.getElementById("up-stage").textContent = stage || `Uploading ${loadedMb} / ${totalMb} MB`;
+            document.getElementById("up-pct").textContent = `${pct}%`;
+            document.getElementById("up-bar").style.width = `${pct}%`;
+        }
+
+        function _hideUploadProgress() {
+            document.getElementById("upload-progress-wrap").style.display = "none";
+        }
+
+        function postFormWithProgress(url, form, onProgress) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open("POST", url, true);
+                xhr.responseType = "text";
+                xhr.upload.onprogress = (evt) => {
+                    if (evt.lengthComputable && onProgress) onProgress(evt.loaded, evt.total);
+                };
+                xhr.onload = () => {
+                    let data = {};
+                    try { data = JSON.parse(xhr.responseText || "{}"); } catch { }
+                    resolve({ ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, data });
+                };
+                xhr.onerror = () => reject(new Error("Network error during upload."));
+                xhr.send(form);
+            });
         }
 
         function setUploadStatus(msg, cls) {
@@ -1590,6 +1670,81 @@
             return API_BASE + map[currentEp];
         }
 
+        function singleStreamEndpointPath() {
+            const map = {
+                until_payout: "/analyze/until_payout/stream",
+                full_period: "/analyze/full_period/stream",
+            };
+            return API_BASE + map[currentEp];
+        }
+
+        function _showSingleProgress(total) {
+            document.getElementById('sp-count').textContent = '0';
+            document.getElementById('sp-total').textContent = total;
+            document.getElementById('sp-stage').textContent = 'Running simulations…';
+            document.getElementById('sp-bar').style.width = '0%';
+            document.getElementById('single-progress-wrap').style.display = 'block';
+        }
+
+        function _updateSingleProgress(completed, total, stage) {
+            const safeTotal = Math.max(1, total || 1);
+            document.getElementById('sp-count').textContent = completed;
+            document.getElementById('sp-total').textContent = safeTotal;
+            document.getElementById('sp-stage').textContent = stage || 'Running simulations…';
+            document.getElementById('sp-bar').style.width = Math.round((completed / safeTotal) * 100) + '%';
+        }
+
+        function _hideSingleProgress() {
+            document.getElementById('single-progress-wrap').style.display = 'none';
+        }
+
+        async function runSingleStreaming(body) {
+            const btn = document.getElementById("run-btn");
+            const spinner = document.getElementById("spinner");
+            btn.disabled = true;
+            spinner.style.display = "block";
+            _showSingleProgress(body.n_sims || 0);
+            try {
+                const resp = await fetch(singleStreamEndpointPath(), {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                });
+                if (!resp.ok) { showError('Server error ' + resp.status); return; }
+
+                const reader = resp.body.getReader();
+                const decoder = new TextDecoder();
+                let buf = '';
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buf += decoder.decode(value, { stream: true });
+                    const lines = buf.split('\n');
+                    buf = lines.pop();
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        let msg;
+                        try { msg = JSON.parse(line.slice(6)); } catch { continue; }
+                        if (msg.type === 'progress') {
+                            _updateSingleProgress(msg.completed || 0, msg.total || body.n_sims || 1, msg.stage);
+                        } else if (msg.type === 'done') {
+                            _hideSingleProgress();
+                            renderResults(msg.data);
+                        } else if (msg.type === 'error') {
+                            _hideSingleProgress();
+                            showError(msg.message || 'Simulation failed.');
+                        }
+                    }
+                }
+            } catch (e) {
+                _hideSingleProgress();
+                showError("Could not reach the API server. Is it running?\n\n" + e.message);
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = "none";
+            }
+        }
+
         // -- Main: run simulation -----------------------------------------------
         async function runSimulation() {
             if (currentEp === "leaderboard") { runLeaderboard(); return; }
@@ -1599,6 +1754,12 @@
             hideError(); hideResults();
             let body;
             try { body = buildBody(); } catch (e) { showError(e.message); return; }
+
+            if (currentEp === "until_payout" || currentEp === "full_period") {
+                await runSingleStreaming(body);
+                return;
+            }
+
             const btn = document.getElementById("run-btn");
             const spinner = document.getElementById("spinner");
             btn.disabled = true; spinner.style.display = "block";
