@@ -1155,18 +1155,34 @@
         async function postFormWithProgressWithWarmup(endpointPath, form, onProgress, onStatus) {
             await ensureApiAwake(onStatus);
             let lastError = null;
+            let bestResponse = null;
 
             for (const base of _apiCandidateBases()) {
                 const url = _joinApi(base, endpointPath);
                 try {
                     const resp = await postFormWithProgress(url, form, onProgress);
-                    if (resp.ok || !_isWarmupRetryableStatus(resp.status)) {
+                    if (resp.ok) {
                         ACTIVE_API_BASE = base;
                         return resp;
+                    }
+
+                    // A wrong candidate base can return 404/405. Keep trying other bases.
+                    if ([404, 405].includes(resp.status)) {
+                        continue;
+                    }
+
+                    // Keep the first definitive non-retryable response as a fallback
+                    // in case no other candidate succeeds.
+                    if (!_isWarmupRetryableStatus(resp.status) && !bestResponse) {
+                        bestResponse = resp;
                     }
                 } catch (e) {
                     lastError = e;
                 }
+            }
+
+            if (bestResponse) {
+                return bestResponse;
             }
 
             if (lastError) throw lastError;
