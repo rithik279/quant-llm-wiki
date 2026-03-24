@@ -57,7 +57,7 @@ export default function LoginPage() {
                     marginBottom: '0.5rem',
                     textAlign: 'center'
                 }}>
-                    Monte Carlo Simulator
+                    ProfitPlan
                 </h1>
                 <p style={{
                     fontSize: '0.9rem',
