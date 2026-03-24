@@ -19,6 +19,7 @@ const ACTIVE_BORDER = "rgba(255,122,24,0.22)";
 
 export default function SimulatorPage() {
   const [uploadMode, setUploadMode] = useState<"tradingview" | "mt5" | "ninjatrader">("tradingview");
+  const SIM_UI_VERSION = "20260324d";
 
   return (
     <div style={{
@@ -274,7 +275,7 @@ export default function SimulatorPage() {
           </div>
 
           <iframe
-            src={`/simulator-ui.html?uploadMode=${uploadMode}`}
+            src={`/simulator-ui.html?v=${SIM_UI_VERSION}&uploadMode=${uploadMode}`}
             title="PassPlan Simulator"
             style={{
               display: "block",
