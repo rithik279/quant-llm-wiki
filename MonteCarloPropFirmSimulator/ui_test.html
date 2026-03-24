@@ -688,7 +688,7 @@
         <div id="left-panel">
 
             <h1>Monte Carlo Prop Firm Simulator</h1>
-            <p class="subtitle">API test UI &mdash; backed by api_server.py on localhost:8000</p>
+                <p class="subtitle" id="api-subtitle">API test UI</p>
 
             <!-- --- Upload card --- -->
             <div class="card">
@@ -960,17 +960,86 @@
     </div><!-- #page-wrap -->
 
     <script>
-        const API_BASE = "http://127.0.0.1:8000";
+        const API_BASE = (() => {
+            const qsBase = new URLSearchParams(window.location.search).get("api");
+            if (qsBase) return qsBase.replace(/\/+$/, "");
+            const host = window.location.hostname;
+            const isRemoteHttp = window.location.protocol.startsWith("http") && host && host !== "127.0.0.1" && host !== "localhost";
+            return isRemoteHttp ? window.location.origin : "http://127.0.0.1:8000";
+        })();
+        const COLD_START_STATUSES = new Set([404, 425, 429, 500, 502, 503, 504]);
+        const COLD_START_MAX_ATTEMPTS = 3;
         let registeredStrategies = [];
         let currentEp = "until_payout";
         let chartModeActive = false;
         let lastSimData = null;
 
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function waitForApiReady(maxWaitMs = 90000, pollMs = 2500) {
+            const deadline = Date.now() + maxWaitMs;
+            while (Date.now() < deadline) {
+                try {
+                    const ping = await fetch(API_BASE + "/healthz", { cache: "no-store" });
+                    if (ping.ok) return true;
+                } catch {
+                    // ignore while deployment is still waking up
+                }
+                await sleep(pollMs);
+            }
+            return false;
+        }
+
+        async function fetchWithColdStart(url, options = {}, cfg = {}) {
+            const maxAttempts = cfg.maxAttempts || COLD_START_MAX_ATTEMPTS;
+            const retryOnNotFound = cfg.retryOnNotFound !== false;
+            let lastError;
+
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                try {
+                    const resp = await fetch(url, options);
+                    if (resp.ok) return resp;
+
+                    const canRetryStatus = COLD_START_STATUSES.has(resp.status) &&
+                        (resp.status !== 404 || retryOnNotFound);
+
+                    if (!canRetryStatus || attempt === maxAttempts) return resp;
+                } catch (err) {
+                    lastError = err;
+                    if (attempt === maxAttempts) throw err;
+                }
+
+                const warmed = await waitForApiReady(30000 + attempt * 15000, 2500);
+                if (!warmed && attempt === maxAttempts) break;
+                await sleep(600 * attempt);
+            }
+
+            if (lastError) throw lastError;
+            throw new Error("API is still waking up. Please retry in a few seconds.");
+        }
+
+        async function readJsonSafe(resp) {
+            const text = await resp.text();
+            if (!text) return {};
+            try {
+                return JSON.parse(text);
+            } catch {
+                return { error: `HTTP ${resp.status}: ${text.slice(0, 240)}` };
+            }
+        }
+
+        function apiErrorMessage(resp, data) {
+            if (!resp.ok) return (data && (data.error || data.detail)) || `HTTP ${resp.status}`;
+            return (data && (data.error || data.detail)) || "";
+        }
+
         // -- Strategy registry -------------------------------------------------
         async function loadStrategies() {
             try {
-                const r = await fetch(API_BASE + "/strategies");
-                registeredStrategies = r.ok ? await r.json() : [];
+                const r = await fetchWithColdStart(API_BASE + "/strategies", {}, { retryOnNotFound: true });
+                registeredStrategies = r.ok ? await readJsonSafe(r) : [];
             } catch { registeredStrategies = []; }
             populateStrategyDropdown();
             populateBatchList();
@@ -1010,9 +1079,10 @@
         async function deleteStrategy(strategy_id, filename) {
             if (!confirm(`Delete "${filename}" from the registry?\n\nThis also removes the stored CSV file.`)) return;
             try {
-                const resp = await fetch(API_BASE + "/strategies/" + strategy_id, { method: "DELETE" });
-                const data = await resp.json();
-                if (data.error) { alert("Delete failed: " + data.error); return; }
+                const resp = await fetchWithColdStart(API_BASE + "/strategies/" + strategy_id, { method: "DELETE" }, { retryOnNotFound: false });
+                const data = await readJsonSafe(resp);
+                const err = apiErrorMessage(resp, data);
+                if (err) { alert("Delete failed: " + err); return; }
                 await loadStrategies();
                 setUploadStatus(`\u2713 Deleted: ${filename}`, "success");
             } catch (e) { alert("Delete failed: " + e.message); }
@@ -1172,9 +1242,10 @@
                 const form = new FormData();
                 form.append("file", file);
                 try {
-                    const resp = await fetch(API_BASE + "/strategies/upload", { method: "POST", body: form });
-                    const data = await resp.json();
-                    if (data.error) { errors.push(`${file.name}: ${data.error}`); continue; }
+                    const resp = await fetchWithColdStart(API_BASE + "/strategies/upload", { method: "POST", body: form }, { retryOnNotFound: true });
+                    const data = await readJsonSafe(resp);
+                    const err = apiErrorMessage(resp, data);
+                    if (err) { errors.push(`${file.name}: ${err}`); continue; }
                     if (data.duplicate) duplicates++;
                     lastId = data.strategy_id;
                 } catch (e) { errors.push(`${file.name}: ${e.message}`); }
@@ -1352,13 +1423,14 @@
             const spinner = document.getElementById("spinner");
             btn.disabled = true; spinner.style.display = "block";
             try {
-                const resp = await fetch(endpointPath(), {
+                const resp = await fetchWithColdStart(endpointPath(), {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(body),
-                });
-                const data = await resp.json();
-                if (data.error) { showError(data.error); return; }
+                }, { retryOnNotFound: true });
+                const data = await readJsonSafe(resp);
+                const err = apiErrorMessage(resp, data);
+                if (err) { showError(err); return; }
                 renderResults(data);
             } catch (e) {
                 showError("Could not reach the API server. Is it running?\n\n" + e.message);
@@ -1575,11 +1647,11 @@
             spinner.style.display = 'block';
             _showOptProgress();
             try {
-                const resp = await fetch(API_BASE + '/portfolio/optimize/stream', {
+                const resp = await fetchWithColdStart(API_BASE + '/portfolio/optimize/stream', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body),
-                });
+                }, { retryOnNotFound: true });
                 if (!resp.ok) { showError('Server error ' + resp.status); return; }
                 const reader = resp.body.getReader();
                 const decoder = new TextDecoder();
@@ -1646,11 +1718,11 @@
             const total = (body.strategy_ids || body.csv_paths || []).length;
             _showBatchProgress(total);
             try {
-                const resp = await fetch(API_BASE + '/analyze/batch/stream', {
+                const resp = await fetchWithColdStart(API_BASE + '/analyze/batch/stream', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body),
-                });
+                }, { retryOnNotFound: true });
                 if (!resp.ok) { showError('Server error ' + resp.status); return; }
                 const reader = resp.body.getReader();
                 const decoder = new TextDecoder();
@@ -1695,9 +1767,10 @@
             btn.disabled = true; spinner.style.display = 'block';
             try {
                 const url = `${API_BASE}/leaderboard?simulation_type=${simType}&metric=${metric}&limit=${limit}`;
-                const resp = await fetch(url);
-                const data = await resp.json();
-                if (!resp.ok || data.error) { showError((data.error || 'Server error') + ''); return; }
+                const resp = await fetchWithColdStart(url, {}, { retryOnNotFound: true });
+                const data = await readJsonSafe(resp);
+                const err = apiErrorMessage(resp, data);
+                if (err) { showError(err + ''); return; }
                 if (!data.length) {
                     showError('No leaderboard data yet for this mode. Run some simulations first.');
                     return;
@@ -1831,13 +1904,14 @@
             const spinner = document.getElementById('spinner');
             btn.disabled = true; spinner.style.display = 'block';
             try {
-                const resp = await fetch(API_BASE + '/analyze/rescue', {
+                const resp = await fetchWithColdStart(API_BASE + '/analyze/rescue', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body),
-                });
-                const data = await resp.json();
-                if (!resp.ok || data.error) { showError(data.error || 'Server error'); return; }
+                }, { retryOnNotFound: true });
+                const data = await readJsonSafe(resp);
+                const err = apiErrorMessage(resp, data);
+                if (err) { showError(err); return; }
                 document.body.classList.add('rescue-mode');
                 const card = document.getElementById('rescue-panel-card');
                 card.style.display = 'block';
@@ -2773,6 +2847,7 @@
         }
 
         // -- Init ---------------------------------------------------------------
+        document.getElementById("api-subtitle").textContent = `API test UI — backing API: ${API_BASE}`;
         loadStrategies();
     </script>
 </body>
