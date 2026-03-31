@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zentro Outreach</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+
+  <!-- Header -->
+  <header id="header">
+    <div class="header-left">
+      <div class="logo">Z</div>
+      <span class="header-title">Zentro Outreach</span>
+    </div>
+    <div class="header-right">
+      <span id="user-badge" class="user-badge"></span>
+      <button class="btn-icon" id="btn-settings" title="Settings">⚙</button>
+    </div>
+  </header>
+
+  <!-- Tab Bar -->
+  <nav class="tab-bar">
+    <button class="tab active" data-tab="compose">Compose</button>
+    <button class="tab" data-tab="history">History</button>
+    <button class="tab" data-tab="stats">Stats</button>
+  </nav>
+
+  <!-- Notices -->
+  <div id="notice-area"></div>
+
+  <!-- ── TAB: COMPOSE ─────────────────────────────────────────────────────────── -->
+  <div id="tab-compose" class="tab-content active">
+
+    <!-- Scrape bar -->
+    <div id="scrape-bar" class="scrape-bar hidden">
+      <span id="scrape-status" class="scrape-status"></span>
+      <button class="btn-sm btn-accent" id="btn-scrape">Scrape</button>
+    </div>
+    <div id="not-linkedin" class="not-linkedin hidden">
+      <span>⚠ Open a LinkedIn profile tab to auto-fill</span>
+    </div>
+
+    <!-- Form -->
+    <div class="form-section">
+      <div class="form-row">
+        <label>LinkedIn URL <span class="req">*</span></label>
+        <input type="text" id="linkedin_url" placeholder="linkedin.com/in/sarah-chen" />
+      </div>
+      <div class="form-grid2">
+        <div class="form-row">
+          <label>Name <span class="req">*</span></label>
+          <input type="text" id="name" placeholder="Sarah Chen" />
+        </div>
+        <div class="form-row">
+          <label>Company <span class="req">*</span></label>
+          <input type="text" id="company" placeholder="Stripe" />
+        </div>
+      </div>
+      <div class="form-grid2">
+        <div class="form-row">
+          <label>Role / Headline</label>
+          <input type="text" id="role" placeholder="SWE Intern" />
+        </div>
+        <div class="form-row">
+          <label>School</label>
+          <input type="text" id="school" placeholder="Stanford" />
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Signal <span class="muted">(optional)</span></label>
+        <textarea id="signal" rows="2" placeholder='e.g. "Posted: so excited for my SF summer!"'></textarea>
+      </div>
+      <div class="form-row">
+        <label>Template</label>
+        <select id="template">
+          <option value="faang">FAANG — Google, Meta, Apple, Amazon, Microsoft</option>
+          <option value="startup">Startup — Stripe, Notion, Figma, Airbnb…</option>
+          <option value="school">School — Lead with university connection</option>
+          <option value="high_intent">High Intent — Posted about housing/moving</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Generate button -->
+    <div class="action-row">
+      <button class="btn btn-primary flex-1" id="btn-generate">Generate Message</button>
+      <button class="btn btn-ghost" id="btn-clear" title="Clear form">✕</button>
+    </div>
+
+    <!-- Output -->
+    <div class="output-section" id="output-section">
+      <div class="output-header">
+        <span class="section-label">Generated Message</span>
+        <span id="word-count" class="word-count"></span>
+      </div>
+      <div class="message-output" id="output-area">
+        Message will appear here…
+      </div>
+      <div class="output-actions">
+        <button class="btn btn-ghost flex-1" id="btn-copy" disabled>Copy</button>
+        <button class="btn btn-accent flex-1" id="btn-send" disabled>Open &amp; Fill on LinkedIn</button>
+        <button class="btn btn-primary" id="btn-log" disabled>Log &amp; Next</button>
+      </div>
+      <div id="copy-confirm" class="copy-confirm hidden">✓ Copied</div>
+      <div id="send-status" class="send-status hidden"></div>
+    </div>
+  </div>
+
+  <!-- ── TAB: HISTORY ──────────────────────────────────────────────────────────── -->
+  <div id="tab-history" class="tab-content hidden">
+    <div class="history-header">
+      <span class="section-label">Outreach Log</span>
+      <button class="btn-sm btn-ghost" id="btn-export">↓ CSV</button>
+    </div>
+    <div id="history-list"></div>
+    <div id="history-empty" class="empty-state">No outreach logged yet.</div>
+  </div>
+
+  <!-- ── TAB: STATS ─────────────────────────────────────────────────────────────── -->
+  <div id="tab-stats" class="tab-content hidden">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Today</div>
+        <div class="stat-value accent" id="stat-today">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">All Time</div>
+        <div class="stat-value" id="stat-total">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Companies</div>
+        <div class="stat-value" id="stat-companies">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Replies</div>
+        <div class="stat-value accent" id="stat-replies">0</div>
+      </div>
+    </div>
+
+    <div class="section-label mt" style="margin-bottom:8px;">By Template</div>
+    <div id="template-breakdown" class="template-breakdown"></div>
+  </div>
+
+  <!-- ── SETTINGS PANEL ─────────────────────────────────────────────────────────── -->
+  <div id="settings-panel" class="settings-panel hidden">
+    <div class="settings-header">
+      <span class="section-label">Settings</span>
+      <button class="btn-icon" id="btn-close-settings">✕</button>
+    </div>
+    <div class="form-row">
+      <label>Your Name</label>
+      <input type="text" id="setting-name" placeholder="e.g. Alex" />
+    </div>
+    <div class="form-row">
+      <label>OpenAI API Key <span class="warn-label">⚠ keep private</span></label>
+      <input type="password" id="setting-apikey" placeholder="sk-..." />
+    </div>
+    <div class="settings-actions">
+      <button class="btn btn-primary" id="btn-save-settings">Save</button>
+      <button class="btn btn-danger" id="btn-clear-data">Clear All Data</button>
+    </div>
+    <div id="settings-saved" class="settings-saved hidden">✓ Saved</div>
+    <div class="settings-note">API key stored only in this browser's local storage.</div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div id="detail-modal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span id="modal-name" class="modal-title"></span>
+        <button class="btn-icon" id="btn-close-modal">✕</button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+      <div class="modal-footer">
+        <label class="modal-label">Update Status</label>
+        <select id="modal-status-select" class="modal-select">
+          <option value="messaged">Messaged</option>
+          <option value="replied">Replied</option>
+          <option value="converted">Converted</option>
+          <option value="no_response">No Response</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Override Modal -->
+  <div id="override-modal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-title warn">Duplicate Detected</div>
+      <p id="override-msg" class="modal-p"></p>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btn-override-confirm">Generate Anyway</button>
+        <button class="btn btn-ghost" id="btn-override-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>

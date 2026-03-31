@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Zentro Outreach",
+  "version": "1.0",
+  "description": "LinkedIn outreach companion — scrape profile, generate message, send from browser.",
+  "permissions": ["storage", "activeTab", "scripting", "tabs", "clipboardWrite"],
+  "host_permissions": ["https://www.linkedin.com/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Zentro Outreach"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.linkedin.com/in/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
