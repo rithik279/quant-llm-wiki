@@ -1,85 +1,50 @@
 """
 strategy_db.py
 ==============
-SQLite-backed strategy registry for PassPlan.
-
-Replaces the flat strategies/registry.json file with a proper SQLite database
-at strategies/strategies.db.
+Postgres-backed strategy registry for PassPlan (via Supabase).
 
 Public API — Strategies
 -----------------------
-  initialize_db()                       — create DB + tables if missing
-  insert_strategy(id, filename, path,   — add a new row
-      uploaded_at, file_hash)
-  get_strategy(strategy_id)             — fetch one row as dict (or None)
-  find_by_hash(file_hash)               — deduplication: fetch by SHA-256 hash
-  list_strategies()                     — all rows, newest first
-  delete_strategy(strategy_id)          — remove DB row (caller deletes file)
-  migrate_from_json(registry_path)      — one-shot import of old registry.json
+  initialize_db()
+  insert_strategy(id, filename, path, uploaded_at, file_hash)
+  get_strategy(strategy_id)
+  find_by_hash(file_hash)
+  list_strategies(source=None)
+  delete_strategy(strategy_id)
+  migrate_from_json(registry_path)
 
 Public API — Leaderboard
 ------------------------
-  insert_simulation_result(...)         — persist one simulation run
-  get_leaderboard(simulation_type,      — ranked rows for a given metric
-      metric, limit)
-  get_strategy_performance(strategy_id) — all simulation records for a strategy
-  delete_simulation_results(strategy_id)— remove all records for a strategy
+  insert_simulation_result(...)
+  get_leaderboard(simulation_type, metric, limit)
+  get_strategy_performance(strategy_id)
+  delete_simulation_results(strategy_id)
 
 Public API — Strategy Features
 ------------------------------
-  insert_strategy_features(strategy_id, features) — store extracted feature dict
-  get_strategy_features(strategy_id)              — fetch features for one strategy
-  list_all_strategy_features()                    — all feature rows, newest first
-
-Thread safety
--------------
-  SQLite itself handles concurrent access safely.  We pass
-  check_same_thread=False so uvicorn worker threads can share the connection.
-  All writes use context managers that commit/rollback atomically.
+  insert_strategy_features(strategy_id, features)
+  get_strategy_features(strategy_id)
+  list_all_strategy_features()
 """
 
 from __future__ import annotations
 
 import json
 import logging
-import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from db import get_conn, rows_as_dicts
+
 log = logging.getLogger(__name__)
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Paths
-# ─────────────────────────────────────────────────────────────────────────────
-
-STRATEGIES_DIR = Path("strategies")
-DB_PATH        = STRATEGIES_DIR / "strategies.db"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Internal helpers
+# Helpers
 # ─────────────────────────────────────────────────────────────────────────────
-
-def _connect() -> sqlite3.Connection:
-    """Open (or reopen) a connection to the SQLite file."""
-    STRATEGIES_DIR.mkdir(exist_ok=True)
-    conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
-    conn.row_factory = sqlite3.Row          # rows behave like dicts
-    conn.execute("PRAGMA journal_mode=WAL") # safer for concurrent readers
-    return conn
-
-
-def _row_to_dict(row: sqlite3.Row) -> Dict[str, Any]:
-    return dict(row)
-
 
 def infer_strategy_source(strategy_id: str) -> str:
-    """Infer strategy source from ID prefix.
-
-    Convention:
-      - mt5_<uuid>          -> mt5
-      - ninjatrader_<uuid>  -> ninjatrader
-      - everything else     -> tradingview
-    """
     if strategy_id.startswith("mt5_"):
         return "mt5"
     if strategy_id.startswith("ninjatrader_"):
@@ -98,81 +63,75 @@ def _attach_source(row: Dict[str, Any]) -> Dict[str, Any]:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def initialize_db() -> None:
-    """Create the database and all tables if they do not exist."""
-    with _connect() as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS strategies (
-                strategy_id TEXT PRIMARY KEY,
-                filename    TEXT NOT NULL,
-                path        TEXT NOT NULL,
-                uploaded_at TEXT NOT NULL,
-                file_hash   TEXT
-            )
-            """
-        )
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS simulation_results (
-                id                     INTEGER PRIMARY KEY AUTOINCREMENT,
-                strategy_id            TEXT    NOT NULL,
-                simulation_type        TEXT    NOT NULL,
-                pass_probability       REAL,
-                fail_probability       REAL,
-                expected_resets        REAL,
-                expected_cost          REAL,
-                expected_monthly_payout REAL,
-                max_drawdown           REAL,
-                sharpe                 REAL,
-                profit_factor          REAL,
-                num_simulations        INTEGER,
-                created_at             TEXT    NOT NULL
-            )
-            """
-        )
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_simres_strategy ON simulation_results (strategy_id)"
-        )
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_simres_type ON simulation_results (simulation_type)"
-        )
-        # ── Migrate: add recency columns to existing databases ────────────────
-        for _migration in [
-            "ALTER TABLE simulation_results ADD COLUMN recent_pass_probability REAL",
-            "ALTER TABLE simulation_results ADD COLUMN probability_delta        REAL",
-            "ALTER TABLE simulation_results ADD COLUMN recency_status           TEXT",
-        ]:
-            try:
-                conn.execute(_migration)
-            except sqlite3.OperationalError:
-                pass   # column already exists — safe to ignore
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS strategy_features (
-                strategy_id      TEXT PRIMARY KEY,
-                num_trades       INTEGER,
-                win_rate         REAL,
-                avg_win          REAL,
-                avg_loss         REAL,
-                rr_ratio         REAL,
-                expectancy       REAL,
-                profit_factor    REAL,
-                std_dev          REAL,
-                variance         REAL,
-                skew             REAL,
-                kurtosis         REAL,
-                max_drawdown     REAL,
-                max_win_streak   INTEGER,
-                max_loss_streak  INTEGER,
-                created_at       TEXT NOT NULL
-            )
-            """
-        )
-    log.info("strategy_db: database ready at %s", DB_PATH)
+    """Create all tables if they don't exist. Safe to call on every startup."""
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS strategies (
+                    strategy_id TEXT PRIMARY KEY,
+                    filename    TEXT NOT NULL,
+                    path        TEXT NOT NULL,
+                    uploaded_at TEXT NOT NULL,
+                    file_hash   TEXT
+                )
+            """)
+
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS simulation_results (
+                    id                       SERIAL PRIMARY KEY,
+                    strategy_id              TEXT    NOT NULL,
+                    simulation_type          TEXT    NOT NULL,
+                    pass_probability         REAL,
+                    fail_probability         REAL,
+                    expected_resets          REAL,
+                    expected_cost            REAL,
+                    expected_monthly_payout  REAL,
+                    max_drawdown             REAL,
+                    sharpe                   REAL,
+                    profit_factor            REAL,
+                    num_simulations          INTEGER,
+                    created_at               TEXT    NOT NULL,
+                    recent_pass_probability  REAL,
+                    probability_delta        REAL,
+                    recency_status           TEXT
+                )
+            """)
+
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_simres_strategy
+                    ON simulation_results (strategy_id)
+            """)
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_simres_type
+                    ON simulation_results (simulation_type)
+            """)
+
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS strategy_features (
+                    strategy_id      TEXT PRIMARY KEY,
+                    num_trades       INTEGER,
+                    win_rate         REAL,
+                    avg_win          REAL,
+                    avg_loss         REAL,
+                    rr_ratio         REAL,
+                    expectancy       REAL,
+                    profit_factor    REAL,
+                    std_dev          REAL,
+                    variance         REAL,
+                    skew             REAL,
+                    kurtosis         REAL,
+                    max_drawdown     REAL,
+                    max_win_streak   INTEGER,
+                    max_loss_streak  INTEGER,
+                    created_at       TEXT NOT NULL
+                )
+            """)
+
+    log.info("[strategy_db] Postgres tables ready")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CRUD
+# Strategies CRUD
 # ─────────────────────────────────────────────────────────────────────────────
 
 def insert_strategy(
@@ -182,42 +141,40 @@ def insert_strategy(
     uploaded_at: str,
     file_hash: Optional[str] = None,
 ) -> None:
-    """Insert a new strategy row.  Raises sqlite3.IntegrityError on duplicate PK."""
-    with _connect() as conn:
-        conn.execute(
-            """
-            INSERT INTO strategies (strategy_id, filename, path, uploaded_at, file_hash)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            (strategy_id, filename, path, uploaded_at, file_hash),
-        )
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO strategies (strategy_id, filename, path, uploaded_at, file_hash)
+                VALUES (%s, %s, %s, %s, %s)
+                """,
+                (strategy_id, filename, path, uploaded_at, file_hash),
+            )
 
 
 def get_strategy(strategy_id: str) -> Optional[Dict[str, Any]]:
-    """Return the strategy dict for *strategy_id*, or None if not found."""
-    with _connect() as conn:
-        row = conn.execute(
-            "SELECT * FROM strategies WHERE strategy_id = ?",
-            (strategy_id,),
-        ).fetchone()
-    return _attach_source(_row_to_dict(row)) if row else None
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT * FROM strategies WHERE strategy_id = %s",
+                (strategy_id,),
+            )
+            rows = rows_as_dicts(cur)
+    return _attach_source(rows[0]) if rows else None
 
 
 def find_by_hash(file_hash: str) -> Optional[Dict[str, Any]]:
-    """
-    Return the first strategy whose file_hash matches, or None.
-    Used for deduplication on upload.
-    """
-    with _connect() as conn:
-        row = conn.execute(
-            "SELECT * FROM strategies WHERE file_hash = ? LIMIT 1",
-            (file_hash,),
-        ).fetchone()
-    return _attach_source(_row_to_dict(row)) if row else None
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT * FROM strategies WHERE file_hash = %s LIMIT 1",
+                (file_hash,),
+            )
+            rows = rows_as_dicts(cur)
+    return _attach_source(rows[0]) if rows else None
 
 
 def find_by_hash_and_source(file_hash: str, source: str) -> Optional[Dict[str, Any]]:
-    """Return the first strategy matching *file_hash* and inferred *source*."""
     rows = list_strategies(source=source)
     for row in rows:
         if row.get("file_hash") == file_hash:
@@ -226,12 +183,11 @@ def find_by_hash_and_source(file_hash: str, source: str) -> Optional[Dict[str, A
 
 
 def list_strategies(source: Optional[str] = None) -> List[Dict[str, Any]]:
-    """Return strategies sorted by upload time (newest first), optionally source-filtered."""
-    with _connect() as conn:
-        rows = conn.execute(
-            "SELECT * FROM strategies ORDER BY uploaded_at DESC"
-        ).fetchall()
-    out = [_attach_source(_row_to_dict(r)) for r in rows]
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM strategies ORDER BY uploaded_at DESC")
+            rows = rows_as_dicts(cur)
+    out = [_attach_source(r) for r in rows]
     if not source:
         return out
     source_norm = source.strip().lower()
@@ -239,32 +195,27 @@ def list_strategies(source: Optional[str] = None) -> List[Dict[str, Any]]:
 
 
 def delete_strategy(strategy_id: str) -> bool:
-    """
-    Delete the DB row for *strategy_id*.
-    Returns True if a row was deleted, False if it did not exist.
-    The caller is responsible for deleting the CSV file on disk.
-    """
-    with _connect() as conn:
-        cursor = conn.execute(
-            "DELETE FROM strategies WHERE strategy_id = ?",
-            (strategy_id,),
-        )
-    return cursor.rowcount > 0
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "DELETE FROM strategies WHERE strategy_id = %s",
+                (strategy_id,),
+            )
+            return cur.rowcount > 0
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Leaderboard — simulation results
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Allowed metric columns and their sort direction (True = DESC, False = ASC)
 _METRIC_CONFIG: Dict[str, tuple] = {
-    "pass_probability":          ("pass_probability",          True),
-    "expected_monthly_payout":   ("expected_monthly_payout",   True),
-    "sharpe":                    ("sharpe",                    True),
-    "profit_factor":             ("profit_factor",             True),
-    "max_drawdown":               ("max_drawdown",               False),  # lower is better
-    "recent_pass_probability":   ("recent_pass_probability",   True),   # recency: highest recent pass % first
-    "probability_delta":          ("probability_delta",          True),   # recency: most improving first
+    "pass_probability":         ("pass_probability",         True),
+    "expected_monthly_payout":  ("expected_monthly_payout",  True),
+    "sharpe":                   ("sharpe",                   True),
+    "profit_factor":            ("profit_factor",            True),
+    "max_drawdown":             ("max_drawdown",             False),
+    "recent_pass_probability":  ("recent_pass_probability",  True),
+    "probability_delta":        ("probability_delta",        True),
 }
 
 _VALID_SIM_TYPES = {"until_payout", "full_period", "batch", "multi_account"}
@@ -288,40 +239,35 @@ def insert_simulation_result(
     recency_status: Optional[str] = None,
     created_at: Optional[str] = None,
 ) -> int:
-    """
-    Persist one simulation run.  Returns the new row id.
-
-    All metric fields are optional — pass only the ones your simulation type
-    produces; the rest are stored as NULL.
-    """
     if created_at is None:
-        from datetime import datetime, timezone
         created_at = datetime.now(timezone.utc).isoformat()
 
-    with _connect() as conn:
-        cursor = conn.execute(
-            """
-            INSERT INTO simulation_results (
-                strategy_id, simulation_type,
-                pass_probability, fail_probability,
-                expected_resets, expected_cost,
-                expected_monthly_payout, max_drawdown,
-                sharpe, profit_factor,
-                num_simulations, created_at,
-                recent_pass_probability, probability_delta, recency_status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                strategy_id, simulation_type,
-                pass_probability, fail_probability,
-                expected_resets, expected_cost,
-                expected_monthly_payout, max_drawdown,
-                sharpe, profit_factor,
-                num_simulations, created_at,
-                recent_pass_probability, probability_delta, recency_status,
-            ),
-        )
-    return cursor.lastrowid
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO simulation_results (
+                    strategy_id, simulation_type,
+                    pass_probability, fail_probability,
+                    expected_resets, expected_cost,
+                    expected_monthly_payout, max_drawdown,
+                    sharpe, profit_factor,
+                    num_simulations, created_at,
+                    recent_pass_probability, probability_delta, recency_status
+                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                RETURNING id
+                """,
+                (
+                    strategy_id, simulation_type,
+                    pass_probability, fail_probability,
+                    expected_resets, expected_cost,
+                    expected_monthly_payout, max_drawdown,
+                    sharpe, profit_factor,
+                    num_simulations, created_at,
+                    recent_pass_probability, probability_delta, recency_status,
+                ),
+            )
+            return cur.fetchone()[0]
 
 
 def get_leaderboard(
@@ -329,12 +275,6 @@ def get_leaderboard(
     metric: str = "pass_probability",
     limit: int = 20,
 ) -> List[Dict[str, Any]]:
-    """
-    Return up to *limit* rows ranked by *metric* for *simulation_type*.
-
-    Each strategy is represented by its most recent simulation result only.
-    Invalid simulation_type / metric values return an empty list.
-    """
     if simulation_type not in _VALID_SIM_TYPES:
         return []
     if metric not in _METRIC_CONFIG:
@@ -343,26 +283,18 @@ def get_leaderboard(
     col, desc = _METRIC_CONFIG[metric]
     direction = "DESC" if desc else "ASC"
 
-    # One row per strategy — keep the most recent run
+    # Column names are whitelisted above — safe to interpolate
     sql = f"""
         SELECT
-            s.strategy_id,
-            s.filename,
-            r.pass_probability,
-            r.fail_probability,
-            r.expected_monthly_payout,
-            r.max_drawdown,
-            r.sharpe,
-            r.profit_factor,
-            r.num_simulations,
-            r.simulation_type,
-            r.created_at,
-            r.recent_pass_probability,
-            r.probability_delta,
-            r.recency_status
+            s.strategy_id, s.filename,
+            r.pass_probability, r.fail_probability,
+            r.expected_monthly_payout, r.max_drawdown,
+            r.sharpe, r.profit_factor,
+            r.num_simulations, r.simulation_type, r.created_at,
+            r.recent_pass_probability, r.probability_delta, r.recency_status
         FROM simulation_results r
         JOIN strategies s ON r.strategy_id = s.strategy_id
-        WHERE r.simulation_type = ?
+        WHERE r.simulation_type = %s
           AND r.{col} IS NOT NULL
           AND r.id = (
               SELECT id FROM simulation_results r2
@@ -371,168 +303,130 @@ def get_leaderboard(
               ORDER BY r2.id DESC LIMIT 1
           )
         ORDER BY r.{col} {direction}
-        LIMIT ?
+        LIMIT %s
     """
-    with _connect() as conn:
-        rows = conn.execute(sql, (simulation_type, limit)).fetchall()
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, (simulation_type, limit))
+            rows = rows_as_dicts(cur)
 
-    result = []
-    for rank, row in enumerate(rows, 1):
-        d = _row_to_dict(row)
-        d["rank"] = rank
-        result.append(d)
-    return result
+    return [{**r, "rank": i + 1} for i, r in enumerate(rows)]
 
 
 def get_strategy_performance(strategy_id: str) -> List[Dict[str, Any]]:
-    """
-    Return all simulation records for a strategy, newest first.
-    """
-    with _connect() as conn:
-        rows = conn.execute(
-            """
-            SELECT * FROM simulation_results
-            WHERE strategy_id = ?
-            ORDER BY id DESC
-            """,
-            (strategy_id,),
-        ).fetchall()
-    return [_row_to_dict(r) for r in rows]
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT * FROM simulation_results WHERE strategy_id = %s ORDER BY id DESC",
+                (strategy_id,),
+            )
+            return rows_as_dicts(cur)
 
 
 def delete_simulation_results(strategy_id: str) -> int:
-    """Remove all simulation records for *strategy_id*.  Returns rows deleted."""
-    with _connect() as conn:
-        cursor = conn.execute(
-            "DELETE FROM simulation_results WHERE strategy_id = ?",
-            (strategy_id,),
-        )
-    return cursor.rowcount
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "DELETE FROM simulation_results WHERE strategy_id = %s",
+                (strategy_id,),
+            )
+            return cur.rowcount
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Strategy features
 # ─────────────────────────────────────────────────────────────────────────────
 
-_FEATURE_COLS = (
-    "num_trades", "win_rate", "avg_win", "avg_loss", "rr_ratio",
-    "expectancy", "profit_factor", "std_dev", "variance",
-    "skew", "kurtosis", "max_drawdown", "max_win_streak", "max_loss_streak",
-)
-
-
-def insert_strategy_features(
-    strategy_id: str,
-    features: Dict[str, Any],
-) -> None:
-    """
-    Upsert the extracted feature dict for *strategy_id*.
-
-    Uses INSERT OR REPLACE so re-uploading an identical hash still works if the
-    deduplication check is bypassed (e.g. during testing).
-    """
-    from datetime import datetime, timezone
+def insert_strategy_features(strategy_id: str, features: Dict[str, Any]) -> None:
     created_at = datetime.now(timezone.utc).isoformat()
-
-    with _connect() as conn:
-        conn.execute(
-            f"""
-            INSERT OR REPLACE INTO strategy_features
-                (strategy_id,
-                 num_trades, win_rate, avg_win, avg_loss,
-                 rr_ratio, expectancy, profit_factor,
-                 std_dev, variance, skew, kurtosis,
-                 max_drawdown, max_win_streak, max_loss_streak,
-                 created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                strategy_id,
-                features.get("num_trades"),
-                features.get("win_rate"),
-                features.get("avg_win"),
-                features.get("avg_loss"),
-                features.get("rr_ratio"),
-                features.get("expectancy"),
-                features.get("profit_factor"),
-                features.get("std_dev"),
-                features.get("variance"),
-                features.get("skew"),
-                features.get("kurtosis"),
-                features.get("max_drawdown"),
-                features.get("max_win_streak"),
-                features.get("max_loss_streak"),
-                created_at,
-            ),
-        )
-    log.info("strategy_db: features stored for strategy %s (%d trades)",
-             strategy_id, features.get("num_trades", 0))
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO strategy_features
+                    (strategy_id, num_trades, win_rate, avg_win, avg_loss,
+                     rr_ratio, expectancy, profit_factor,
+                     std_dev, variance, skew, kurtosis,
+                     max_drawdown, max_win_streak, max_loss_streak, created_at)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                ON CONFLICT (strategy_id) DO UPDATE SET
+                    num_trades=EXCLUDED.num_trades, win_rate=EXCLUDED.win_rate,
+                    avg_win=EXCLUDED.avg_win, avg_loss=EXCLUDED.avg_loss,
+                    rr_ratio=EXCLUDED.rr_ratio, expectancy=EXCLUDED.expectancy,
+                    profit_factor=EXCLUDED.profit_factor, std_dev=EXCLUDED.std_dev,
+                    variance=EXCLUDED.variance, skew=EXCLUDED.skew,
+                    kurtosis=EXCLUDED.kurtosis, max_drawdown=EXCLUDED.max_drawdown,
+                    max_win_streak=EXCLUDED.max_win_streak,
+                    max_loss_streak=EXCLUDED.max_loss_streak,
+                    created_at=EXCLUDED.created_at
+                """,
+                (
+                    strategy_id,
+                    features.get("num_trades"), features.get("win_rate"),
+                    features.get("avg_win"),    features.get("avg_loss"),
+                    features.get("rr_ratio"),   features.get("expectancy"),
+                    features.get("profit_factor"), features.get("std_dev"),
+                    features.get("variance"),   features.get("skew"),
+                    features.get("kurtosis"),   features.get("max_drawdown"),
+                    features.get("max_win_streak"), features.get("max_loss_streak"),
+                    created_at,
+                ),
+            )
+    log.info("[strategy_db] features stored for %s", strategy_id)
 
 
 def get_strategy_features(strategy_id: str) -> Optional[Dict[str, Any]]:
-    """Return the feature dict for *strategy_id*, or None if not found."""
-    with _connect() as conn:
-        row = conn.execute(
-            "SELECT * FROM strategy_features WHERE strategy_id = ?",
-            (strategy_id,),
-        ).fetchone()
-    return _row_to_dict(row) if row else None
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT * FROM strategy_features WHERE strategy_id = %s",
+                (strategy_id,),
+            )
+            rows = rows_as_dicts(cur)
+    return rows[0] if rows else None
 
 
 def list_all_strategy_features() -> List[Dict[str, Any]]:
-    """Return all feature rows, newest first."""
-    with _connect() as conn:
-        rows = conn.execute(
-            "SELECT * FROM strategy_features ORDER BY created_at DESC"
-        ).fetchall()
-    return [_row_to_dict(r) for r in rows]
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM strategy_features ORDER BY created_at DESC")
+            return rows_as_dicts(cur)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# One-shot migration from legacy registry.json
+# One-shot migration from legacy registry.json (local dev only)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def migrate_from_json(registry_path: Path) -> None:
-    """
-    Import every entry from a legacy registry.json into SQLite, then rename
-    the JSON file to registry_migrated_backup.json so it is never re-processed.
-
-    Safe to call even when registry.json does not exist or is already migrated.
-    """
     if not registry_path.exists():
         return
-
     backup_path = registry_path.parent / "registry_migrated_backup.json"
     if backup_path.exists():
-        # Migration already ran; nothing to do.
         return
 
-    log.info("strategy_db: migrating %s → SQLite …", registry_path)
-
+    log.info("[strategy_db] migrating %s → Postgres …", registry_path)
     try:
         with registry_path.open(encoding="utf-8") as fh:
             data: Dict[str, Any] = json.load(fh)
     except Exception as exc:
-        log.warning("strategy_db: could not read registry.json (%s) — skipping migration", exc)
+        log.warning("[strategy_db] could not read registry.json (%s) — skipping", exc)
         return
 
     migrated = 0
     for strategy_id, entry in data.items():
-        # Skip if already present (idempotent)
         if get_strategy(strategy_id) is not None:
             continue
         try:
             insert_strategy(
-                strategy_id = strategy_id,
-                filename    = entry.get("filename", "unknown.csv"),
-                path        = entry.get("path", ""),
-                uploaded_at = entry.get("uploaded_at", ""),
-                file_hash   = entry.get("file_hash"),   # may not exist in old data
+                strategy_id=strategy_id,
+                filename=entry.get("filename", "unknown.csv"),
+                path=entry.get("path", ""),
+                uploaded_at=entry.get("uploaded_at", ""),
+                file_hash=entry.get("file_hash"),
             )
             migrated += 1
         except Exception as exc:
-            log.warning("strategy_db: skipping %s during migration (%s)", strategy_id, exc)
+            log.warning("[strategy_db] skipping %s (%s)", strategy_id, exc)
 
-    # Rename so we never process it again
     registry_path.rename(backup_path)
-    log.info("strategy_db: migrated %d entries; registry renamed to %s", migrated, backup_path.name)
+    log.info("[strategy_db] migrated %d entries", migrated)
