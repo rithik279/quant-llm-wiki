@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
-    // If accessing protected product routes, check auth
-    if (request.nextUrl.pathname.startsWith('/simulator') || request.nextUrl.pathname.startsWith('/passplan')) {
-        const auth = request.cookies.get('simulator_auth')?.value;
+    const protected_prefixes = ['/simulator', '/passplan', '/execution'];
+    const isProtected = protected_prefixes.some(p => request.nextUrl.pathname.startsWith(p));
 
+    if (isProtected) {
+        const auth = request.cookies.get('simulator_auth')?.value;
         if (!auth) {
-            // Redirect to login
             return NextResponse.redirect(new URL('/login', request.url));
         }
     }
@@ -15,5 +15,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/simulator/:path*', '/passplan/:path*'],
+    matcher: ['/simulator/:path*', '/passplan/:path*', '/execution/:path*'],
 };
