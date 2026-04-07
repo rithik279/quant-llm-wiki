@@ -47,6 +47,7 @@ PMT_TOV_TOLERANCE_SEC = 60
 @router.on_event("startup")
 def _init():
     execution_db.init_db()
+    journal_db.init_db()  # ensure journal tables exist even if /journal endpoint is never hit
 
 
 # ---------------------------------------------------------------------------
@@ -105,6 +106,7 @@ async def upload_execution(
 
     # Auto-save to journal if account_id provided
     journal_saved = False
+    journal_error = None
     if account_id and account_id.strip():
         try:
             journal_trades = _tov_to_journal_trades(tov)
@@ -116,12 +118,17 @@ async def upload_execution(
                     filename=tov_file.filename or "tov.csv",
                 )
                 journal_saved = True
-        except Exception:
-            log.exception("Journal auto-save failed (non-fatal)")
+                log.info("[execution] journal auto-saved %d trades for account %s",
+                         len(journal_trades), account_id.strip())
+        except Exception as e:
+            log.exception("Journal auto-save failed")
+            journal_error = str(e)
 
     resp = _session_response(session_id, session_date, trades_list, unmatched_pmt,
                              pmt_file.filename, tov_file.filename)
     resp["journal_saved"] = journal_saved
+    if journal_error:
+        resp["journal_error"] = journal_error
     return resp
 
 

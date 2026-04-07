@@ -45,6 +45,8 @@ interface Session {
   total_slippage_pnl: number | null;
   total_tov_pnl: number | null;
   trades?: Trade[];
+  journal_saved?: boolean;
+  journal_error?: string;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -477,6 +479,19 @@ export default function ExecutionPage() {
               </div>
 
               {/* Session results */}
+              {session && session.journal_saved && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", borderRadius: 10, background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.2)", fontSize: 12.5 }}>
+                  <CheckCircle size={14} color="#4ade80" />
+                  <span style={{ color: "#4ade80", fontWeight: 600 }}>Journal updated</span>
+                  <span style={{ color: "rgba(255,255,255,0.4)" }}>— trades from this session are now in your <a href="/journal" style={{ color: "rgba(255,255,255,0.6)", textDecoration: "underline" }}>journal calendar</a>.</span>
+                </div>
+              )}
+              {session && session.journal_error && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", borderRadius: 10, background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.2)", fontSize: 12.5 }}>
+                  <AlertTriangle size={14} color="#f87171" />
+                  <span style={{ color: "#f87171" }}>Journal save failed: {session.journal_error}</span>
+                </div>
+              )}
               {session && <SessionResults session={session} />}
             </>
           )}
