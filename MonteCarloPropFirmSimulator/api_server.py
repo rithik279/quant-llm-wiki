@@ -71,6 +71,7 @@ from apex_engine_v3_1 import load_daily_pnl as load_mt5_daily_pnl
 from routers.upload_mt5 import router as upload_mt5_router
 from routers.upload_ninjatrader import router as upload_ninjatrader_router
 from routers.execution import router as execution_router
+from routers.journal import router as journal_router
 
 # ─────────────────────────────────────────────────────────────────────────────
 # App
@@ -108,6 +109,7 @@ app.add_middleware(
 app.include_router(upload_mt5_router)
 app.include_router(upload_ninjatrader_router)
 app.include_router(execution_router)
+app.include_router(journal_router)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Strategy storage — SQLite-backed; CSV files live in strategies/

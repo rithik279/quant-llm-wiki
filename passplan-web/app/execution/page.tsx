@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   BarChart2, Activity, LayoutDashboard, Upload, Clock,
   TrendingDown, DollarSign, ArrowLeft, RefreshCw, ChevronRight,
-  CheckCircle, AlertTriangle, X,
+  CheckCircle, AlertTriangle, X, BookOpen,
 } from "lucide-react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -357,6 +357,7 @@ export default function ExecutionPage() {
   const NAV = [
     { label: "Simulator",  icon: LayoutDashboard, href: "/simulator" },
     { label: "Execution",  icon: Activity,        href: "/execution" },
+    { label: "Journal",    icon: BookOpen,        href: "/journal" },
   ];
 
   return (

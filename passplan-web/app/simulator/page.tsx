@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, Compass, Trophy, BarChart2, ArrowLeft, Activity } from "lucide-react";
+import { LayoutDashboard, Compass, Trophy, BarChart2, ArrowLeft, Activity, BookOpen } from "lucide-react";
 import { useState } from "react";
 
 const NAV = [
@@ -9,6 +9,7 @@ const NAV = [
   { label: "Discover", icon: Compass, href: "/discover" },
   { label: "Leaderboard", icon: Trophy, href: "/simulator" },
   { label: "Execution", icon: Activity, href: "/execution" },
+  { label: "Journal", icon: BookOpen, href: "/journal" },
 ];
 
 const ACCENT = "linear-gradient(135deg, #FF7A18 0%, #FFB347 100%)";
