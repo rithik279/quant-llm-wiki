@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
-    // If accessing simulator routes, check auth
-    if (request.nextUrl.pathname.startsWith('/simulator')) {
-        const auth = request.cookies.get('simulator_auth')?.value;
+    const protected_prefixes = ['/simulator', '/execution'];
+    const isProtected = protected_prefixes.some(p => request.nextUrl.pathname.startsWith(p));
 
+    if (isProtected) {
+        const auth = request.cookies.get('simulator_auth')?.value;
         if (!auth) {
-            // Redirect to login
             return NextResponse.redirect(new URL('/login', request.url));
         }
     }
@@ -15,5 +15,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/simulator/:path*'],
+    matcher: ['/simulator/:path*', '/execution/:path*'],
 };

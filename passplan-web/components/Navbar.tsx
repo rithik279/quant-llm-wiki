@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, BarChart2 } from "lucide-react";
+import { Menu, X, BarChart2, Activity } from "lucide-react";
 
 export default function Navbar() {
     const [open, setOpen] = useState(false);
@@ -35,6 +35,13 @@ export default function Navbar() {
                         Discover
                     </a>
                     <Link
+                        href="/execution"
+                        className="text-sm text-white/50 hover:text-white transition-colors duration-200 flex items-center gap-1.5"
+                    >
+                        <Activity className="w-3.5 h-3.5" />
+                        Execution
+                    </Link>
+                    <Link
                         href="/simulator"
                         className="btn-glow inline-flex items-center gap-2 rounded-lg bg-accent-gradient px-4 py-2 text-sm font-semibold text-white transition-all duration-300"
                     >
@@ -59,6 +66,10 @@ export default function Navbar() {
                         <a href="#how-it-works" className="text-sm text-white/60 hover:text-white transition-colors">How it works</a>
                         <a href="#docs" className="text-sm text-white/60 hover:text-white transition-colors">Docs</a>
                         <a href="/discover" className="text-sm text-white/60 hover:text-white transition-colors">Discover</a>
+                        <Link href="/execution" className="text-sm text-white/60 hover:text-white transition-colors flex items-center gap-1.5">
+                            <Activity className="w-3.5 h-3.5" />
+                            Execution
+                        </Link>
                         <Link
                             href="/simulator"
                             className="btn-glow inline-flex justify-center rounded-lg bg-accent-gradient px-4 py-2.5 text-sm font-semibold text-white"
