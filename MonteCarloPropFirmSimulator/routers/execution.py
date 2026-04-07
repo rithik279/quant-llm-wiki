@@ -17,10 +17,11 @@ import logging
 import sys
 from datetime import timezone
 from pathlib import Path
+from typing import Optional
 from uuid import uuid4
 
 import pandas as pd
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 
 # Make ExecutionDashboard importable regardless of working directory
@@ -33,6 +34,7 @@ from matcher import match_pmt_to_tradeovate
 from metrics import compute_metrics, select_output_columns
 
 import execution_db
+import journal_db
 
 log = logging.getLogger(__name__)
 
@@ -55,6 +57,7 @@ def _init():
 async def upload_execution(
     pmt_file: UploadFile = File(..., description="PickMyTrade alerts CSV"),
     tov_file: UploadFile = File(..., description="Tradeovate Performance CSV"),
+    account_id: Optional[str] = Form(None, description="Tradeovate account ID — if provided, trades are also saved to the journal"),
 ):
     pmt_bytes = await pmt_file.read()
     tov_bytes = await tov_file.read()
@@ -100,8 +103,26 @@ async def upload_execution(
         unmatched_pmt=unmatched_pmt,
     )
 
-    return _session_response(session_id, session_date, trades_list, unmatched_pmt,
+    # Auto-save to journal if account_id provided
+    journal_saved = False
+    if account_id and account_id.strip():
+        try:
+            journal_trades = _tov_to_journal_trades(tov)
+            if journal_trades:
+                journal_db.upsert_account(account_id.strip())
+                journal_db.save_trades(
+                    account_id=account_id.strip(),
+                    trades=journal_trades,
+                    filename=tov_file.filename or "tov.csv",
+                )
+                journal_saved = True
+        except Exception:
+            log.exception("Journal auto-save failed (non-fatal)")
+
+    resp = _session_response(session_id, session_date, trades_list, unmatched_pmt,
                              pmt_file.filename, tov_file.filename)
+    resp["journal_saved"] = journal_saved
+    return resp
 
 
 # ---------------------------------------------------------------------------
@@ -169,6 +190,35 @@ def _session_response(session_id, session_date, trades, unmatched_pmt,
         "total_tov_pnl":       round(sum(t["tov_pnl"] for t in trades), 2) if n else None,
         "trades":              trades,
     }
+
+
+def _tov_to_journal_trades(tov: pd.DataFrame) -> list[dict]:
+    """Convert normalized Tradeovate DataFrame into journal_db.save_trades() format."""
+    records = []
+    for _, row in tov.iterrows():
+        entry_time = row.get("entry_time")
+        exit_time  = row.get("exit_time")
+        if not hasattr(entry_time, "date"):
+            continue
+        duration_sec = None
+        if hasattr(entry_time, "timestamp") and hasattr(exit_time, "timestamp"):
+            try:
+                duration_sec = (exit_time - entry_time).total_seconds()
+            except Exception:
+                pass
+        records.append({
+            "trade_date":   entry_time.date().isoformat(),
+            "symbol":       str(row["symbol"]) if pd.notna(row.get("symbol")) else None,
+            "direction":    str(row["direction"]) if pd.notna(row.get("direction")) else None,
+            "entry_time":   entry_time.isoformat(),
+            "entry_price":  float(row["entry_price"]) if pd.notna(row.get("entry_price")) else None,
+            "exit_time":    exit_time.isoformat() if pd.notna(exit_time) else None,
+            "exit_price":   float(row["exit_price"]) if pd.notna(row.get("exit_price")) else None,
+            "qty":          int(row["qty"]) if pd.notna(row.get("qty")) else None,
+            "pnl":          float(row["pnl"]) if pd.notna(row.get("pnl")) else None,
+            "duration_sec": duration_sec,
+        })
+    return records
 
 
 def _safe(v):

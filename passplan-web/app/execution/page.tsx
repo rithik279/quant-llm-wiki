@@ -296,6 +296,7 @@ export default function ExecutionPage() {
   const [tab, setTab] = useState<"analyze" | "history">("analyze");
   const [pmtFile, setPmtFile] = useState<File | null>(null);
   const [tovFile, setTovFile] = useState<File | null>(null);
+  const [accountId, setAccountId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -326,6 +327,7 @@ export default function ExecutionPage() {
       const form = new FormData();
       form.append("pmt_file", pmtFile);
       form.append("tov_file", tovFile);
+      if (accountId.trim()) form.append("account_id", accountId.trim());
       const res = await fetch(`${BACKEND}/execution/upload`, { method: "POST", body: form });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ detail: res.statusText }));
@@ -436,6 +438,22 @@ export default function ExecutionPage() {
                 <div style={{ display: "flex", gap: 12 }}>
                   <FileZone label="PickMyTrade Alerts CSV" file={pmtFile} onFile={setPmtFile} />
                   <FileZone label="Tradeovate Performance CSV" file={tovFile} onFile={setTovFile} />
+                </div>
+
+                <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 11, color: TEXT_DIM, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                    Account ID
+                  </span>
+                  <input
+                    value={accountId}
+                    onChange={e => setAccountId(e.target.value)}
+                    placeholder="Tradeovate account ID — saves to journal automatically"
+                    style={{
+                      flex: 1, background: "#0B0B0F", border: `1px solid ${BORDER}`,
+                      borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 12.5,
+                      outline: "none",
+                    }}
+                  />
                 </div>
 
                 {error && (
