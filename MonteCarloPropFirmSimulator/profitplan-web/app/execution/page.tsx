@@ -105,6 +105,23 @@ function MetricCard({ icon: Icon, label, value, sub, color = "#FF7A18" }: {
   );
 }
 
+function SlippageTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number; payload: { pnl_cost: number } }[]; label?: string }) {
+  if (!active || !payload?.length) return null;
+  const slip = payload[0].value;
+  const cost = payload[0].payload.pnl_cost;
+  return (
+    <div style={{ background: "#1e1e24", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "10px 14px", fontSize: 13, color: "#fff", boxShadow: "0 4px 20px rgba(0,0,0,0.5)" }}>
+      <div style={{ fontWeight: 700, marginBottom: 6, color: "rgba(255,255,255,0.7)", fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase" }}>{label}</div>
+      <div style={{ color: slippageColor(slip), fontWeight: 700 }}>
+        Slippage: {slip > 0 ? "+" : ""}{slip.toFixed(2)} pts
+      </div>
+      <div style={{ color: cost >= 0 ? "#f87171" : "#4ade80", marginTop: 3 }}>
+        P&L cost: {cost >= 0 ? "-" : "+"}${Math.abs(cost).toFixed(2)}
+      </div>
+    </div>
+  );
+}
+
 function SlippageChart({ trades }: { trades: Trade[] }) {
   const data = trades.map((t, i) => ({
     name: `${i + 1} ${t.direction}`,
@@ -122,10 +139,7 @@ function SlippageChart({ trades }: { trades: Trade[] }) {
           <XAxis dataKey="name" tick={{ fontSize: 10, fill: TEXT_DIM }} />
           <YAxis tick={{ fontSize: 10, fill: TEXT_DIM }} />
           <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" />
-          <Tooltip
-            contentStyle={{ background: "#1a1a1f", border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 12 }}
-            formatter={(v: unknown) => { const n = Number(v); return [`${n > 0 ? "+" : ""}${n.toFixed(2)} pts`, "Slippage"]; }}
-          />
+          <Tooltip content={<SlippageTooltip />} />
           <Bar dataKey="slippage" radius={[4, 4, 0, 0]}>
             {data.map((d, i) => <Cell key={i} fill={slippageColor(d.slippage)} />)}
           </Bar>
@@ -140,21 +154,28 @@ function LatencyChart({ trades }: { trades: Trade[] }) {
     name: `${i + 1}`,
     latency: Math.max(0, t.fill_latency_sec),
   }));
+  const maxLatency = Math.max(...data.map(d => d.latency), 0.1);
+  const yMax = parseFloat((maxLatency * 1.3).toFixed(3));
+  const yMin = 0;
   return (
     <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "18px 22px" }}>
       <p style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.6)", margin: "0 0 16px", letterSpacing: "0.06em", textTransform: "uppercase" }}>
         Fill Latency per Trade (s)
       </p>
       <ResponsiveContainer width="100%" height={180}>
-        <LineChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: -10 }}>
+        <LineChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: 10 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
           <XAxis dataKey="name" tick={{ fontSize: 10, fill: TEXT_DIM }} />
-          <YAxis tick={{ fontSize: 10, fill: TEXT_DIM }} />
+          <YAxis
+            tick={{ fontSize: 10, fill: TEXT_DIM }}
+            domain={[yMin, yMax]}
+            tickFormatter={(v: number) => `${v.toFixed(2)}s`}
+          />
           <Tooltip
-            contentStyle={{ background: "#1a1a1f", border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 12 }}
+            contentStyle={{ background: "#1e1e24", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, fontSize: 13, color: "#fff" }}
             formatter={(v: unknown) => [`${Number(v).toFixed(3)}s`, "Latency"]}
           />
-          <Line type="monotone" dataKey="latency" stroke="#FF7A18" strokeWidth={2} dot={{ r: 3, fill: "#FF7A18" }} />
+          <Line type="monotone" dataKey="latency" stroke="#FF7A18" strokeWidth={2} dot={{ r: 5, fill: "#FF7A18", strokeWidth: 0 }} activeDot={{ r: 7 }} />
         </LineChart>
       </ResponsiveContainer>
     </div>
