@@ -44,7 +44,13 @@ def normalize_tradingview(path: PathOrBuffer) -> pd.DataFrame:
     )
     entry['signal_time']  = pd.to_datetime(entry['signal_time'])
     entry['signal_price'] = entry['signal_price'].astype(float)
-    entry['tv_pnl']       = entry['tv_pnl'].astype(float)
+    entry['tv_pnl'] = (
+        entry['tv_pnl']
+        .astype(str)
+        .str.strip()
+        .apply(lambda v: '-' + v[1:-1] if v.startswith('(') and v.endswith(')') else v)
+        .astype(float)
+    )
 
     exit_['tv_exit_time']  = pd.to_datetime(exit_['tv_exit_time'])
     exit_['tv_exit_price'] = exit_['tv_exit_price'].astype(float)
