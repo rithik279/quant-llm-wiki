@@ -110,7 +110,7 @@ function SlippageTooltip({ active, payload, label }: { active?: boolean; payload
   const slip = payload[0].value;
   const cost = payload[0].payload.pnl_cost;
   return (
-    <div style={{ background: "#1e1e24", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "10px 14px", fontSize: 13, color: "#fff", boxShadow: "0 4px 20px rgba(0,0,0,0.5)" }}>
+    <div style={{ background: "#1e1e24", border: "1px solid rgba(255,255,255,0.20)", borderRadius: 10, padding: "10px 14px", fontSize: 13, color: "#fff", boxShadow: "0 4px 20px rgba(0,0,0,0.8)", zIndex: 999 }}>
       <div style={{ fontWeight: 700, marginBottom: 6, color: "rgba(255,255,255,0.7)", fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase" }}>{label}</div>
       <div style={{ color: slippageColor(slip), fontWeight: 700 }}>
         Slippage: {slip > 0 ? "+" : ""}{slip.toFixed(2)} pts
