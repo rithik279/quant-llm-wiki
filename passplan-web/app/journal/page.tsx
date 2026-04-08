@@ -73,7 +73,7 @@ const DAYS_OF_WEEK = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const fmt = {
-  pnl:  (v: number | null) => v == null ? "—" : `${v >= 0 ? "+" : ""}$${Math.abs(v).toFixed(2)}`,
+  pnl:  (v: number | null) => v == null ? "—" : `${v >= 0 ? "+" : "-"}$${Math.abs(v).toFixed(2)}`,
   time: (s: string | null) => {
     if (!s) return "—";
     try { return new Date(s).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }); }
@@ -292,7 +292,10 @@ function DayModal({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${BACKEND}/journal/day?account_id=${encodeURIComponent(accountId)}&date=${date}`)
+    const url = accountId === MASTER_ID
+      ? `${BACKEND}/journal/day/master?date=${date}`
+      : `${BACKEND}/journal/day?account_id=${encodeURIComponent(accountId)}&date=${date}`;
+    fetch(url)
       .then(r => r.json())
       .then(setData)
       .finally(() => setLoading(false));
@@ -343,7 +346,7 @@ function DayModal({
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
               <thead>
                 <tr style={{ background: SURFACE }}>
-                  {["Symbol","Dir","Entry Time","Entry","Exit Time","Exit","Qty","Duration","P&L"].map(h => (
+                  {[...(accountId === MASTER_ID ? ["Account"] : []), "Symbol","Dir","Entry Time","Entry","Exit Time","Exit","Qty","Duration","P&L"].map(h => (
                     <th key={h} style={{ padding: "10px 16px", textAlign: "left", color: TEXT_DIM, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", fontSize: 10, borderBottom: `1px solid ${BORDER}`, whiteSpace: "nowrap" }}>{h}</th>
                   ))}
                 </tr>
@@ -351,6 +354,7 @@ function DayModal({
               <tbody>
                 {data.trades.map((t, i) => (
                   <tr key={t.id} style={{ background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)", borderBottom: `1px solid ${BORDER}` }}>
+                    {accountId === MASTER_ID && <td style={{ padding: "10px 16px", color: TEXT_DIM, fontSize: 11 }}>{t.account_id}</td>}
                     <td style={{ padding: "10px 16px", color: "#fff", fontWeight: 600 }}>{t.symbol}</td>
                     <td style={{ padding: "10px 16px", color: t.direction === "LONG" ? GREEN : RED, fontWeight: 600, fontSize: 11 }}>{t.direction}</td>
                     <td style={{ padding: "10px 16px", color: "rgba(255,255,255,0.6)" }}>{fmt.time(t.entry_time)}</td>
@@ -373,6 +377,8 @@ function DayModal({
 
 // ─── Calendar ────────────────────────────────────────────────────────────────
 
+const MASTER_ID = "__master__";
+
 function Calendar({
   accountId, year, month,
   onDayClick,
@@ -388,7 +394,10 @@ function Calendar({
   useEffect(() => {
     if (!accountId) return;
     setLoading(true);
-    fetch(`${BACKEND}/journal/calendar?account_id=${encodeURIComponent(accountId)}&year=${year}&month=${month}`)
+    const url = accountId === MASTER_ID
+      ? `${BACKEND}/journal/calendar/master?year=${year}&month=${month}`
+      : `${BACKEND}/journal/calendar?account_id=${encodeURIComponent(accountId)}&year=${year}&month=${month}`;
+    fetch(url)
       .then(r => r.json())
       .then(d => setDays(d.days ?? []))
       .catch(() => setDays([]))
@@ -557,6 +566,9 @@ export default function JournalPage() {
               style={{ background: SURFACE2, border: `1px solid ${BORDER}`, borderRadius: 8, color: "#fff", fontSize: 12.5, padding: "6px 10px", outline: "none", cursor: "pointer" }}
             >
               {accounts.length === 0 && <option value="">— upload first —</option>}
+              {accounts.length > 0 && (
+                <option value={MASTER_ID}>⬡ Master P&amp;L (all accounts)</option>
+              )}
               {accounts.map(a => (
                 <option key={a.account_id} value={a.account_id}>
                   {a.account_name ? `${a.account_name} (${a.account_id})` : a.account_id}

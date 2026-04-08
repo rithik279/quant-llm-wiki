@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   BarChart2, Activity, LayoutDashboard, Upload, Clock,
   TrendingDown, DollarSign, ArrowLeft, RefreshCw, ChevronRight,
-  CheckCircle, AlertTriangle, X, BookOpen,
+  CheckCircle, AlertTriangle, X,
 } from "lucide-react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -45,8 +45,6 @@ interface Session {
   total_slippage_pnl: number | null;
   total_tov_pnl: number | null;
   trades?: Trade[];
-  journal_saved?: boolean;
-  journal_error?: string;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -107,6 +105,23 @@ function MetricCard({ icon: Icon, label, value, sub, color = "#FF7A18" }: {
   );
 }
 
+function SlippageTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number; payload: { pnl_cost: number } }[]; label?: string }) {
+  if (!active || !payload?.length) return null;
+  const slip = payload[0].value;
+  const cost = payload[0].payload.pnl_cost;
+  return (
+    <div style={{ background: "#1e1e24", border: "1px solid rgba(255,255,255,0.20)", borderRadius: 10, padding: "10px 14px", fontSize: 13, color: "#fff", boxShadow: "0 4px 20px rgba(0,0,0,0.8)", zIndex: 999 }}>
+      <div style={{ fontWeight: 700, marginBottom: 6, color: "rgba(255,255,255,0.7)", fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase" }}>{label}</div>
+      <div style={{ color: slippageColor(slip), fontWeight: 700 }}>
+        Slippage: {slip > 0 ? "+" : ""}{slip.toFixed(2)} pts
+      </div>
+      <div style={{ color: cost >= 0 ? "#f87171" : "#4ade80", marginTop: 3 }}>
+        P&L cost: {cost >= 0 ? "-" : "+"}${Math.abs(cost).toFixed(2)}
+      </div>
+    </div>
+  );
+}
+
 function SlippageChart({ trades }: { trades: Trade[] }) {
   const data = trades.map((t, i) => ({
     name: `${i + 1} ${t.direction}`,
@@ -124,10 +139,7 @@ function SlippageChart({ trades }: { trades: Trade[] }) {
           <XAxis dataKey="name" tick={{ fontSize: 10, fill: TEXT_DIM }} />
           <YAxis tick={{ fontSize: 10, fill: TEXT_DIM }} />
           <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" />
-          <Tooltip
-            contentStyle={{ background: "#1a1a1f", border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 12 }}
-            formatter={(v: unknown) => { const n = Number(v); return [`${n > 0 ? "+" : ""}${n.toFixed(2)} pts`, "Slippage"]; }}
-          />
+          <Tooltip content={<SlippageTooltip />} />
           <Bar dataKey="slippage" radius={[4, 4, 0, 0]}>
             {data.map((d, i) => <Cell key={i} fill={slippageColor(d.slippage)} />)}
           </Bar>
@@ -142,21 +154,28 @@ function LatencyChart({ trades }: { trades: Trade[] }) {
     name: `${i + 1}`,
     latency: Math.max(0, t.fill_latency_sec),
   }));
+  const maxLatency = Math.max(...data.map(d => d.latency), 0.1);
+  const yMax = parseFloat((maxLatency * 1.3).toFixed(3));
+  const yMin = 0;
   return (
     <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "18px 22px" }}>
       <p style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.6)", margin: "0 0 16px", letterSpacing: "0.06em", textTransform: "uppercase" }}>
         Fill Latency per Trade (s)
       </p>
       <ResponsiveContainer width="100%" height={180}>
-        <LineChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: -10 }}>
+        <LineChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: 10 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
           <XAxis dataKey="name" tick={{ fontSize: 10, fill: TEXT_DIM }} />
-          <YAxis tick={{ fontSize: 10, fill: TEXT_DIM }} />
+          <YAxis
+            tick={{ fontSize: 10, fill: TEXT_DIM }}
+            domain={[yMin, yMax]}
+            tickFormatter={(v: number) => `${v.toFixed(2)}s`}
+          />
           <Tooltip
-            contentStyle={{ background: "#1a1a1f", border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 12 }}
+            contentStyle={{ background: "#1e1e24", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, fontSize: 13, color: "#fff" }}
             formatter={(v: unknown) => [`${Number(v).toFixed(3)}s`, "Latency"]}
           />
-          <Line type="monotone" dataKey="latency" stroke="#FF7A18" strokeWidth={2} dot={{ r: 3, fill: "#FF7A18" }} />
+          <Line type="monotone" dataKey="latency" stroke="#FF7A18" strokeWidth={2} dot={{ r: 5, fill: "#FF7A18", strokeWidth: 0 }} activeDot={{ r: 7 }} />
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -298,7 +317,6 @@ export default function ExecutionPage() {
   const [tab, setTab] = useState<"analyze" | "history">("analyze");
   const [pmtFile, setPmtFile] = useState<File | null>(null);
   const [tovFile, setTovFile] = useState<File | null>(null);
-  const [accountId, setAccountId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -329,7 +347,6 @@ export default function ExecutionPage() {
       const form = new FormData();
       form.append("pmt_file", pmtFile);
       form.append("tov_file", tovFile);
-      if (accountId.trim()) form.append("account_id", accountId.trim());
       const res = await fetch(`${BACKEND}/execution/upload`, { method: "POST", body: form });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ detail: res.statusText }));
@@ -361,7 +378,6 @@ export default function ExecutionPage() {
   const NAV = [
     { label: "Simulator",  icon: LayoutDashboard, href: "/simulator" },
     { label: "Execution",  icon: Activity,        href: "/execution" },
-    { label: "Journal",    icon: BookOpen,        href: "/journal" },
   ];
 
   return (
@@ -442,22 +458,6 @@ export default function ExecutionPage() {
                   <FileZone label="Tradeovate Performance CSV" file={tovFile} onFile={setTovFile} />
                 </div>
 
-                <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 11, color: TEXT_DIM, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
-                    Account ID
-                  </span>
-                  <input
-                    value={accountId}
-                    onChange={e => setAccountId(e.target.value)}
-                    placeholder="Tradeovate account ID — saves to journal automatically"
-                    style={{
-                      flex: 1, background: "#0B0B0F", border: `1px solid ${BORDER}`,
-                      borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 12.5,
-                      outline: "none",
-                    }}
-                  />
-                </div>
-
                 {error && (
                   <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "rgba(248,113,113,0.10)", border: "1px solid rgba(248,113,113,0.25)", display: "flex", alignItems: "center", gap: 8 }}>
                     <AlertTriangle size={14} color="#f87171" />
@@ -479,19 +479,6 @@ export default function ExecutionPage() {
               </div>
 
               {/* Session results */}
-              {session && session.journal_saved && (
-                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", borderRadius: 10, background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.2)", fontSize: 12.5 }}>
-                  <CheckCircle size={14} color="#4ade80" />
-                  <span style={{ color: "#4ade80", fontWeight: 600 }}>Journal updated</span>
-                  <span style={{ color: "rgba(255,255,255,0.4)" }}>— trades from this session are now in your <a href="/journal" style={{ color: "rgba(255,255,255,0.6)", textDecoration: "underline" }}>journal calendar</a>.</span>
-                </div>
-              )}
-              {session && session.journal_error && (
-                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", borderRadius: 10, background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.2)", fontSize: 12.5 }}>
-                  <AlertTriangle size={14} color="#f87171" />
-                  <span style={{ color: "#f87171" }}>Journal save failed: {session.journal_error}</span>
-                </div>
-              )}
               {session && <SessionResults session={session} />}
             </>
           )}
