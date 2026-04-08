@@ -164,6 +164,29 @@ def get_day(
 
 
 # ---------------------------------------------------------------------------
+# GET /journal/calendar/master  — combined P&L across ALL accounts
+# ---------------------------------------------------------------------------
+
+@router.get("/calendar/master")
+def get_calendar_master(year: int = Query(...), month: int = Query(...)):
+    if not (1 <= month <= 12):
+        raise HTTPException(status_code=422, detail="month must be 1–12")
+    days = journal_db.get_calendar_master(year, month)
+    return {"year": year, "month": month, "days": days}
+
+
+# ---------------------------------------------------------------------------
+# GET /journal/day/master  — all trades across ALL accounts for one day
+# ---------------------------------------------------------------------------
+
+@router.get("/day/master")
+def get_day_master(date: str = Query(..., description="YYYY-MM-DD")):
+    trades = journal_db.get_day_trades_master(date)
+    total_pnl = sum(t["pnl"] for t in trades if t.get("pnl") is not None)
+    return {"date": date, "trade_count": len(trades), "total_pnl": round(total_pnl, 2), "trades": trades}
+
+
+# ---------------------------------------------------------------------------
 # GET /journal/stats
 # ---------------------------------------------------------------------------
 

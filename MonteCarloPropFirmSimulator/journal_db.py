@@ -248,6 +248,48 @@ def get_day_trades(account_id: str, date: str) -> List[Dict[str, Any]]:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Master calendar / day — across ALL accounts
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_calendar_master(year: int, month: int) -> List[Dict[str, Any]]:
+    """Return one row per trading day in the month, summed across all accounts."""
+    month_str = f"{year:04d}-{month:02d}"
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT
+                    trade_date,
+                    SUM(pnl)                                     AS total_pnl,
+                    COUNT(*)                                     AS trade_count,
+                    COUNT(*) FILTER (WHERE pnl > 0)              AS win_count,
+                    COUNT(*) FILTER (WHERE pnl <= 0)             AS loss_count
+                FROM journal_trades
+                WHERE trade_date LIKE %s
+                GROUP BY trade_date
+                ORDER BY trade_date
+                """,
+                (f"{month_str}-%",),
+            )
+            return rows_as_dicts(cur)
+
+
+def get_day_trades_master(date: str) -> List[Dict[str, Any]]:
+    """Return all trades across all accounts for a given date, ordered by entry_time."""
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT * FROM journal_trades
+                WHERE trade_date = %s
+                ORDER BY entry_time
+                """,
+                (date,),
+            )
+            return rows_as_dicts(cur)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Summary stats — account-level aggregates
 # ─────────────────────────────────────────────────────────────────────────────
 
