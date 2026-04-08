@@ -116,6 +116,8 @@ def normalize_tradeovate(path: PathOrBuffer) -> pd.DataFrame:
         .astype(str)
         .str.replace('$', '', regex=False)
         .str.replace(',', '', regex=False)
+        .str.strip()
+        .apply(lambda v: '-' + v[1:-1] if v.startswith('(') and v.endswith(')') else v)
         .astype(float)
     )
     tov['bought_time'] = pd.to_datetime(df['boughtTimestamp'])
