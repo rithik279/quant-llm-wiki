@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
-    const protected_prefixes = ['/simulator', '/execution', '/journal'];
+    const protected_prefixes = ['/simulator', '/pass', '/execution', '/journal'];
     const isProtected = protected_prefixes.some(p => request.nextUrl.pathname.startsWith(p));
 
     if (isProtected) {
@@ -15,5 +15,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/simulator/:path*', '/execution/:path*', '/journal/:path*'],
+    matcher: ['/simulator/:path*', '/pass/:path*', '/execution/:path*', '/journal/:path*'],
 };
