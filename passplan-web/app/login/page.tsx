@@ -21,7 +21,7 @@ export default function LoginPage() {
             });
 
             if (res.ok) {
-                router.push('/simulator/mt5');
+                router.push('/pass');
                 return;
             }
 
@@ -180,7 +180,7 @@ export default function LoginPage() {
                             e.currentTarget.style.opacity = '1';
                         }}
                     >
-                        Access Simulator
+                        Access Pass Landing
                     </button>
                 </form>
 
