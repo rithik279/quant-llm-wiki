@@ -111,11 +111,13 @@ ALPHA_FUTURES_50K_ZERO: dict[str, Any] = {
     "key":                "alpha_futures_50k_zero",
 
     # Account geometry
-    # Static (non-trailing) $2,000 max drawdown — hard floor at $48,000
+    # EOD trailing DD of $2,000.  Starts at $48,000 and trails up with EOD balance.
+    # Ceiling: stops trailing once it reaches the starting balance ($50,000),
+    # after which it locks at $50,000 for the account lifetime.
     "account_size":       50_000.0,
     "trailing_dd":        2_000.0,
-    "trail_stop_level":   48_000.0,   # hard floor = account_size - drawdown; never moves
-    "payout_threshold":   48_200.0,   # floor + min qualifying payout ($200)
+    "trail_stop_level":   50_000.0,   # ceiling where trailing locks (= account_size)
+    "payout_threshold":   50_400.0,   # floor ($50,000) + offset ($200) + min payout ($200)
 
     # Daily caps
     "daily_loss_limit":   -1_000.0,   # Daily Loss Guard
