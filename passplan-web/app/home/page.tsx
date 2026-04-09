@@ -1,5 +1,1 @@
-import { redirect } from "next/navigation";
-
-export default function HomeAliasPage() {
-    redirect("/pass");
-}
+export { default } from "../pass/page";
