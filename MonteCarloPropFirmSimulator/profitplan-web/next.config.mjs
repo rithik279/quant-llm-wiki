@@ -13,6 +13,10 @@ const nextConfig = {
                 destination: "/passplan",
             },
             {
+                source: "/plan",
+                destination: "/passplan",
+            },
+            {
                 source: "/api-backend/:path*",
                 destination: `${backendOrigin}/:path*`,
             },
