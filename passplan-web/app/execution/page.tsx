@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
-  BarChart2, Activity, LayoutDashboard, Upload, Clock,
+  BarChart2, Activity, LayoutDashboard, BookOpen, Upload, Clock,
   TrendingDown, DollarSign, ArrowLeft, RefreshCw, ChevronRight,
   CheckCircle, AlertTriangle, X,
 } from "lucide-react";
@@ -49,11 +49,11 @@ interface Session {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const ACCENT  = "linear-gradient(135deg, #FF7A18 0%, #FFB347 100%)";
-const BG      = "#0B0B0F";
+const ACCENT = "linear-gradient(135deg, #FF7A18 0%, #FFB347 100%)";
+const BG = "#0B0B0F";
 const SURFACE = "#0e0e12";
-const BORDER  = "rgba(255,255,255,0.06)";
-const ACTIVE_BG     = "rgba(255,122,24,0.10)";
+const BORDER = "rgba(255,255,255,0.06)";
+const ACTIVE_BG = "rgba(255,122,24,0.10)";
 const ACTIVE_BORDER = "rgba(255,122,24,0.22)";
 const TEXT_DIM = "rgba(255,255,255,0.38)";
 
@@ -62,9 +62,9 @@ const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const fmt = {
-  pts:  (v: number | null) => v == null ? "—" : `${v > 0 ? "+" : ""}${v.toFixed(2)} pts`,
-  pnl:  (v: number | null) => v == null ? "—" : `${v >= 0 ? "+" : ""}$${Math.abs(v).toFixed(2)}`,
-  sec:  (v: number | null) => v == null ? "—" : `${v.toFixed(2)}s`,
+  pts: (v: number | null) => v == null ? "—" : `${v > 0 ? "+" : ""}${v.toFixed(2)} pts`,
+  pnl: (v: number | null) => v == null ? "—" : `${v >= 0 ? "+" : ""}$${Math.abs(v).toFixed(2)}`,
+  sec: (v: number | null) => v == null ? "—" : `${v.toFixed(2)}s`,
   date: (s: string) => new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
   time: (s: string) => {
     try { return new Date(s).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }); }
@@ -73,8 +73,8 @@ const fmt = {
 };
 
 function slippageColor(v: number) {
-  if (v > 1)  return "#f87171";   // bad
-  if (v > 0)  return "#fb923c";   // slight
+  if (v > 1) return "#f87171";   // bad
+  if (v > 0) return "#fb923c";   // slight
   return "#4ade80";               // favorable
 }
 
@@ -376,8 +376,9 @@ export default function ExecutionPage() {
 
   // ── Sidebar nav ────────────────────────────────────────────────────────────
   const NAV = [
-    { label: "Simulator",  icon: LayoutDashboard, href: "/simulator" },
-    { label: "Execution",  icon: Activity,        href: "/execution" },
+    { label: "Simulator", icon: LayoutDashboard, href: "/simulator" },
+    { label: "Execution", icon: Activity, href: "/execution" },
+    { label: "Journal", icon: BookOpen, href: "/journal" },
   ];
 
   return (
