@@ -23,6 +23,7 @@ import numpy as np
 import pandas as pd
 from apex_engine_v3_1 import load_daily_pnl, run_simulations
 from strategy_score import score
+from rulesets import get_ruleset
 
 # ---------------------------------------------------------------------------
 # Config
@@ -40,6 +41,7 @@ RESET_COST   = 137     # Apex reset fee ($)
 SAMPLING_MODE          = "uniform"
 SAMPLING_WEIGHT_STR    = 3.0    # weight_strength for recency_weighted
 SAMPLING_RECENT_WINDOW = 50     # lookback days for recent_only
+RULESET                = get_ruleset("apex_50k_legacy")  # change to "apex_50k_eod" for new rules
 
 # ---------------------------------------------------------------------------
 # ANSI colours
@@ -62,7 +64,7 @@ def _col(label): return _C.get(label, "") + label + _C["RESET"]
 # Single-CSV simulation
 # ---------------------------------------------------------------------------
 
-def simulate_csv(csv_path: str, n_sims: int) -> dict:
+def simulate_csv(csv_path: str, n_sims: int, ruleset: dict | None = None) -> dict:
     # Load empirical daily PnL distribution in dollars (v3 engine)
     daily_pnl = load_daily_pnl(csv_path)
 
@@ -76,6 +78,7 @@ def simulate_csv(csv_path: str, n_sims: int) -> dict:
         mode            = SAMPLING_MODE,
         weight_strength = SAMPLING_WEIGHT_STR,
         recent_window   = SAMPLING_RECENT_WINDOW,
+        ruleset         = ruleset,
     )
     utp_payout_p = utp["pass_rate"]
     utp_mean_pay = utp["average_payout"]
@@ -91,6 +94,7 @@ def simulate_csv(csv_path: str, n_sims: int) -> dict:
         mode            = SAMPLING_MODE,
         weight_strength = SAMPLING_WEIGHT_STR,
         recent_window   = SAMPLING_RECENT_WINDOW,
+        ruleset         = ruleset,
     )
     fp_payout_p  = fp["pass_rate"]
     fp_blow_only = sum(
@@ -135,13 +139,13 @@ def main():
         print("No CSV files found. Pass filenames as arguments or run from the folder containing CSVs.")
         sys.exit(1)
 
-    print(f"\nBatch running {len(csv_files)} CSV(s) with {N_SIMS:,} sims each  [mode={SAMPLING_MODE}]...\n")
+    print(f"\nBatch running {len(csv_files)} CSV(s) with {N_SIMS:,} sims each  [mode={SAMPLING_MODE}]  [ruleset={RULESET['name']}]...\n")
 
     rows = []
     for i, csv in enumerate(csv_files, 1):
         print(f"  [{i}/{len(csv_files)}] {csv} ...", end=" ", flush=True)
         try:
-            r = simulate_csv(csv, N_SIMS)
+            r = simulate_csv(csv, N_SIMS, ruleset=RULESET)
             rows.append(r)
             print(f"UTP {r['utp_payout_p']:.1%} {r['utp_rating']}  |  FP {r['fp_payout_p']:.1%} {r['fp_rating']}  |  EV ${r['fp_ev_net']:,.0f}")
         except Exception as e:

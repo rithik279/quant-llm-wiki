@@ -41,6 +41,7 @@ from apex_engine_v3_1 import (
     PAYOUT_THRESHOLD,
     MAX_PAYOUT,
 )
+from rulesets import get_ruleset, list_rulesets
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MODULE-LEVEL CONSTANTS  (identical to original; used by CLI output functions)
@@ -101,6 +102,7 @@ def run_multi_account_analysis(
     weight_strength: float = 3.0,
     recent_window: int = 50,
     n_path_sims: int = 150,
+    ruleset: dict | None = None,
 ) -> dict:
     """Run multi-account Monte Carlo analysis.
 
@@ -157,8 +159,9 @@ def run_multi_account_analysis(
                 mode            = sampling_mode,
                 weight_strength = weight_strength,
                 recent_window   = recent_window,
+                ruleset         = ruleset,
             )
-            total_payout += result["payout"]
+            total_payout += result.get("total_payout", result["payout"])
             account_end_balances[sim, acct_idx] = result["balance"]
             if result["outcome"] == "blow":
                 blown_count += 1
@@ -233,6 +236,7 @@ def run_multi_account_analysis(
             "weight_strength":  weight_strength,
             "recent_window":    recent_window,
             "n_path_sims":      n_path_sims,
+            "ruleset":          ruleset["name"] if ruleset else "Apex 50K Legacy (default)",
         },
         "portfolio": {
             "mean_total_payout":          float(np.mean(portfolio_payouts)),
@@ -443,6 +447,17 @@ def main() -> None:
 
     n_accounts = ask_int("Number of accounts: ")
 
+    print("\n  Available rulesets:")
+    for r in list_rulesets():
+        print(f"    {r['key']:<20}  {r['name']}")
+    ruleset_key = input("  Ruleset [apex_50k_legacy]: ").strip() or "apex_50k_legacy"
+    try:
+        ruleset = get_ruleset(ruleset_key)
+        print(f"  Using ruleset: {ruleset['name']}")
+    except KeyError as e:
+        print(f"  {e}  — using apex_50k_legacy")
+        ruleset = get_ruleset("apex_50k_legacy")
+
     use_apex = ask_yes_no("Use default Apex settings? (yes/no): ")
 
     if use_apex:
@@ -484,6 +499,7 @@ def main() -> None:
         sampling_mode   = sampling_mode,
         weight_strength = weight_strength,
         recent_window   = recent_window,
+        ruleset         = ruleset,
     )
 
     # ── Display results ───────────────────────────────────────────────────────

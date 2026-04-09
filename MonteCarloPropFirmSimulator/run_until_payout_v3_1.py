@@ -62,6 +62,7 @@ from apex_engine_v3_1 import (
     compute_diagnostics,
     run_simulations,
 )
+from rulesets import get_ruleset
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -78,6 +79,7 @@ N_PLOT_PATHS    = 60
 SAMPLING_MODE   = "uniform"     # "uniform" | "recency_weighted" | "recent_only"
 WEIGHT_STRENGTH = 3.0           # exponential steepness (recency_weighted only)
 RECENT_WINDOW   = 50            # lookback in trading days (recent_only only)
+RULESET         = get_ruleset("apex_50k_legacy")  # change to "apex_50k_eod" for new rules
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -245,6 +247,7 @@ def run_until_payout_analysis(
     sampling_mode: str = SAMPLING_MODE,
     weight_strength: float = WEIGHT_STRENGTH,
     recent_window: int = RECENT_WINDOW,
+    ruleset: dict | None = None,
 ) -> dict:
     """Run-until-payout Monte Carlo analysis.
 
@@ -281,6 +284,7 @@ def run_until_payout_analysis(
         mode            = sampling_mode,
         weight_strength = weight_strength,
         recent_window   = recent_window,
+        ruleset         = ruleset,
     )
 
     outcomes    = results["outcomes"]
@@ -297,6 +301,7 @@ def run_until_payout_analysis(
             "sampling_mode":    sampling_mode,
             "weight_strength":  weight_strength,
             "recent_window":    recent_window,
+            "ruleset":          ruleset["name"] if ruleset else "Apex 50K Legacy (default)",
         },
         "payout_prob":            results["pass_rate"],
         "blow_prob":              results["fail_rate"],
@@ -340,6 +345,7 @@ def main():
         sampling_mode   = SAMPLING_MODE,
         weight_strength = WEIGHT_STRENGTH,
         recent_window   = RECENT_WINDOW,
+        ruleset         = RULESET,
     )
 
     print_results(result["_sim_results"], N_SIMS)

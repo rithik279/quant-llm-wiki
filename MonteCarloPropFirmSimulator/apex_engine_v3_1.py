@@ -297,6 +297,8 @@ def simulate_path(
     mode: str = "uniform",
     weight_strength: float = 3.0,
     recent_window: int = 50,
+    # ── ruleset (optional — defaults to legacy Apex constants) ───────────────
+    ruleset: dict | None = None,
 ) -> dict:
     """
     Simulate a single Apex account equity path at the daily level.
@@ -308,39 +310,77 @@ def simulate_path(
                             governed by weight_strength (see compute_sampling_weights)
     mode="recent_only"      sample only from the last `recent_window` days
 
-    All other mechanics (trailing DD, caps, payout rules) are unchanged.
+    Ruleset (new)
+    -------------
+    Pass a ruleset dict from rulesets.py to override the hardcoded Apex constants.
+    If None, the legacy module-level constants are used (backward compatible).
 
     Returns
     -------
-    dict: outcome, balance, days, payout, equity_path
+    dict: outcome, balance, days, payout, total_payout, payout_count, equity_path
     """
+    # ── Resolve ruleset constants ─────────────────────────────────────────────
+    if ruleset is None:
+        rs_account_size      = ACCOUNT_SIZE
+        rs_trailing_dd       = TRAILING_DD
+        rs_trail_stop        = TRAIL_STOP_LEVEL
+        rs_payout_threshold  = PAYOUT_THRESHOLD
+        rs_daily_loss_limit  = DAILY_LOSS_LIMIT
+        rs_daily_profit_cap  = DAILY_PROFIT_CAP
+        rs_green_day_min     = GREEN_DAY_MIN
+        rs_min_trading_days  = MIN_DAYS
+        rs_min_green_days    = MIN_GREEN_DAYS
+        rs_min_payout        = 500.0
+        rs_concentration     = 0.30
+        rs_consistency       = None
+        rs_payout_mode       = "single"
+        rs_max_payouts       = 1
+        rs_payout_caps       = [MAX_PAYOUT]
+        rs_floor_offset      = 500.0
+        rs_dd_resets         = False
+    else:
+        rs_account_size      = ruleset["account_size"]
+        rs_trailing_dd       = ruleset["trailing_dd"]
+        rs_trail_stop        = ruleset["trail_stop_level"]
+        rs_payout_threshold  = ruleset["payout_threshold"]
+        rs_daily_loss_limit  = ruleset["daily_loss_limit"]
+        rs_daily_profit_cap  = ruleset["daily_profit_cap"]
+        rs_green_day_min     = ruleset["green_day_min"]
+        rs_min_trading_days  = ruleset["min_trading_days"]
+        rs_min_green_days    = ruleset["min_green_days"]
+        rs_min_payout        = ruleset["min_payout"]
+        rs_concentration     = ruleset.get("concentration_rule")
+        rs_consistency       = ruleset.get("consistency_rule")
+        rs_payout_mode       = ruleset.get("payout_mode", "single")
+        rs_max_payouts       = ruleset.get("max_payouts", 1)
+        rs_payout_caps       = ruleset.get("payout_caps", [MAX_PAYOUT])
+        rs_floor_offset      = ruleset.get("payout_floor_offset", 500.0)
+        rs_dd_resets         = ruleset.get("dd_resets_after_payout", False)
+
     # ── Pre-compute sampling pool and weights ONCE per path ──────────────────
-    # This is done before the day-loop so the same weights apply throughout
-    # the entire path (they're resampled fresh for each new simulation run).
     pool, weights = compute_sampling_weights(
         daily_pnl, mode=mode, weight_strength=weight_strength,
         recent_window=recent_window,
     )
 
     # ── Account state ─────────────────────────────────────────────────────────
-    balance       = ACCOUNT_SIZE
-    peak          = ACCOUNT_SIZE
-    trading_days  = 0
-    green_days    = 0
-    max_day_pnl   = 0.0
-    total_profit  = 0.0
-    payout_amount = 0.0
+    balance        = rs_account_size
+    peak           = rs_account_size
+    trading_days   = 0
+    green_days     = 0
+    max_day_pnl    = 0.0          # tracks best day since last payout (consistency)
+    total_profit   = 0.0          # cumulative profit since last payout
+    payout_amount  = 0.0          # last payout
+    total_payout   = 0.0          # sum of all payouts (tiered mode)
+    payout_count   = 0            # number of payouts taken
 
     equity_path = [balance]
 
     for _day in range(max_days):
 
-        # ── Sample daily PnL (mode-aware) ─────────────────────────────────────
-        # weights is None for uniform modes → np.random.choice uses equal probability
+        # ── Sample daily PnL ──────────────────────────────────────────────────
         raw_pnl = float(np.random.choice(pool, p=weights)) * risk_multiplier
-
-        # ── Apply Apex daily caps (unchanged) ─────────────────────────────────
-        pnl = max(DAILY_LOSS_LIMIT, min(DAILY_PROFIT_CAP, raw_pnl))
+        pnl = max(rs_daily_loss_limit, min(rs_daily_profit_cap, raw_pnl))
 
         balance += pnl
         equity_path.append(balance)
@@ -350,59 +390,91 @@ def simulate_path(
         if balance > peak:
             peak = balance
 
-        # ── Apex trailing drawdown floor (unchanged) ───────────────────────────
-        if peak - TRAILING_DD < TRAIL_STOP_LEVEL:
-            trailing_floor = peak - TRAILING_DD
+        # ── Trailing drawdown floor ────────────────────────────────────────────
+        if peak - rs_trailing_dd < rs_trail_stop:
+            trailing_floor = peak - rs_trailing_dd
         else:
-            trailing_floor = TRAIL_STOP_LEVEL
+            trailing_floor = rs_trail_stop
 
-        # ── Green-day tracking (unchanged) ────────────────────────────────────
-        if pnl >= GREEN_DAY_MIN:
+        # ── Green-day / qualifying-day tracking ───────────────────────────────
+        if pnl >= rs_green_day_min:
             green_days += 1
 
-        # ── 30 % concentration tracking (unchanged) ────────────────────────────
+        # ── Concentration / consistency tracking ──────────────────────────────
         if pnl > max_day_pnl:
             max_day_pnl = pnl
 
-        # ── Blow-up check (unchanged) ──────────────────────────────────────────
+        # ── Blow-up check ──────────────────────────────────────────────────────
         if balance < trailing_floor:
             return {
-                "outcome":     "blow",
-                "balance":     balance,
-                "days":        trading_days,
-                "payout":      payout_amount,
-                "equity_path": equity_path,
+                "outcome":      "blow",
+                "balance":      balance,
+                "days":         trading_days,
+                "payout":       payout_amount,
+                "total_payout": total_payout,
+                "payout_count": payout_count,
+                "equity_path":  equity_path,
             }
 
-        # ── Payout eligibility (unchanged) ────────────────────────────────────
-        if balance >= PAYOUT_THRESHOLD:
-            total_profit = balance - ACCOUNT_SIZE
-            eligible = (
-                trading_days >= MIN_DAYS
-                and green_days >= MIN_GREEN_DAYS
-                and total_profit > 0
-                and max_day_pnl <= 0.30 * total_profit
+        # ── Payout eligibility ────────────────────────────────────────────────
+        if balance >= rs_payout_threshold and payout_count < rs_max_payouts:
+            total_profit = balance - rs_account_size - total_payout
+
+            # Days requirement: legacy uses total days, EOD uses qualifying days
+            days_ok = (
+                trading_days >= rs_min_trading_days
+                and green_days >= rs_min_green_days
             )
+
+            # Concentration rule (legacy: no single day > 30% of total profit)
+            conc_ok = True
+            if rs_concentration is not None and total_profit > 0:
+                conc_ok = max_day_pnl <= rs_concentration * total_profit
+
+            # Consistency rule (EOD: no single day >= 50% of total profit)
+            cons_ok = True
+            if rs_consistency is not None and total_profit > 0:
+                cons_ok = max_day_pnl < rs_consistency * total_profit
+
+            eligible = days_ok and conc_ok and cons_ok and total_profit > 0
+
             if eligible:
-                payout_floor = PAYOUT_THRESHOLD - 500.0
+                payout_floor = rs_trail_stop + rs_floor_offset
                 withdrawable = balance - payout_floor
-                if withdrawable >= 500.0:
-                    payout_amount = min(withdrawable, MAX_PAYOUT)
-                    if stop_at_payout:
+                if withdrawable >= rs_min_payout:
+                    cap = rs_payout_caps[min(payout_count, len(rs_payout_caps) - 1)]
+                    payout_amount = min(withdrawable, cap)
+                    total_payout += payout_amount
+                    payout_count += 1
+
+                    if rs_payout_mode == "single" or stop_at_payout:
                         return {
-                            "outcome":     "payout",
-                            "balance":     balance,
-                            "days":        trading_days,
-                            "payout":      payout_amount,
-                            "equity_path": equity_path,
+                            "outcome":      "payout",
+                            "balance":      balance,
+                            "days":         trading_days,
+                            "payout":       payout_amount,
+                            "total_payout": total_payout,
+                            "payout_count": payout_count,
+                            "equity_path":  equity_path,
                         }
 
+                    # Tiered mode: deduct payout, reset per-cycle trackers
+                    balance     -= payout_amount
+                    equity_path.append(balance)
+                    peak         = max(peak, balance)
+                    # DD floor stays at trail_stop (rs_dd_resets=False always here)
+                    # Reset cycle counters for next payout window
+                    green_days   = 0
+                    max_day_pnl  = 0.0
+
     return {
-        "outcome":     "timeout",
-        "balance":     balance,
-        "days":        trading_days,
-        "payout":      payout_amount,
-        "equity_path": equity_path,
+        "outcome":      "timeout",
+        "balance":      balance,
+        "days":         trading_days,
+        "payout":       payout_amount,
+        "total_payout": total_payout,
+        "payout_count": payout_count,
+        "equity_path":  equity_path,
     }
 
 
@@ -422,6 +494,8 @@ def run_simulations(
     mode: str = "uniform",
     weight_strength: float = 3.0,
     recent_window: int = 50,
+    # ── ruleset (optional — defaults to legacy Apex constants) ───────────────
+    ruleset: dict | None = None,
 ) -> dict:
     """
     Run n_sims Monte Carlo paths and return aggregate statistics.
@@ -432,16 +506,21 @@ def run_simulations(
     weight_strength : float — exponential steepness for "recency_weighted"
     recent_window   : int   — lookback window size for "recent_only"
 
-    All other parameters and returned keys are identical to v3.
+    Ruleset (new)
+    -------------
+    Pass a ruleset dict from rulesets.py to use different firm/account rules.
+    If None, legacy module-level Apex constants are used (backward compatible).
     """
     if seed is not None:
         np.random.seed(seed)
 
-    outcomes     = []
-    balances     = []
-    payouts      = []
-    days_list    = []
-    equity_paths = []
+    outcomes      = []
+    balances      = []
+    payouts       = []
+    total_payouts = []
+    payout_counts = []
+    days_list     = []
+    equity_paths  = []
 
     for i in range(n_sims):
         result = simulate_path(
@@ -452,10 +531,13 @@ def run_simulations(
             mode            = mode,
             weight_strength = weight_strength,
             recent_window   = recent_window,
+            ruleset         = ruleset,
         )
         outcomes.append(result["outcome"])
         balances.append(result["balance"])
         payouts.append(result["payout"])
+        total_payouts.append(result.get("total_payout", result["payout"]))
+        payout_counts.append(result.get("payout_count", 1 if result["payout"] > 0 else 0))
         days_list.append(result["days"])
         if i < n_paths:
             equity_paths.append(result["equity_path"])
@@ -463,10 +545,10 @@ def run_simulations(
         if (i + 1) % 5_000 == 0:
             print(f"  ... {i + 1:,} / {n_sims:,} simulations complete")
 
-    winning_payouts = [p for p in payouts if p > 0]
+    winning_payouts = [p for p in total_payouts if p > 0]
 
     return {
-        "pass_rate":      sum(1 for p in payouts if p > 0) / n_sims,
+        "pass_rate":      sum(1 for p in total_payouts if p > 0) / n_sims,
         "fail_rate":      outcomes.count("blow")    / n_sims,
         "timeout_rate":   outcomes.count("timeout") / n_sims,
         "average_days":   float(np.mean(days_list)),
@@ -474,6 +556,8 @@ def run_simulations(
         "outcomes":       outcomes,
         "balances":       balances,
         "payouts":        payouts,
+        "total_payouts":  total_payouts,
+        "payout_counts":  payout_counts,
         "days":           days_list,
         "equity_paths":   equity_paths,
     }
