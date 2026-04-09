@@ -5,6 +5,14 @@ const nextConfig = {
     async rewrites() {
         return [
             {
+                source: "/home",
+                destination: "/login",
+            },
+            {
+                source: "/pass",
+                destination: "/passplan",
+            },
+            {
                 source: "/api-backend/:path*",
                 destination: `${backendOrigin}/:path*`,
             },
