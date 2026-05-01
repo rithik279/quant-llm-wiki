@@ -47,3 +47,39 @@ Traditional equity analysis misses this because:
 - [[Situational-Awareness]]
 - [[Infrastructure-Buildout]]
 - [[Portfolio-holdings]]
+- [[Agilith-Alpha-Stack-System]] — Alpha Layer 1 = direct Leopold execution
+- [[RocketShip-Framework]] — BottleneckScore maps Leopold to trading signal
+- [[Agent-Tools]] — detect_bottleneck_emergence tool IS Leopold monitoring
+- [[Regime-modeling]] — RISK_ON = Leopold uptrend, RISK_OFF = Leopold thesis paused
+- [[RL-Training-Setup]] — RL state space includes bottleneck_score, training scenarios rotate through Leopold plays
+- [[4-Month-Build-Plan]] — Month 1 builds Leopold-aware pipeline
+- [[Agilith-Investment-Thesis]] — "bottleneck moved to infrastructure" = Leopold pitch to Patrick
+- [[Alpha-Math]] — $10M AUM opportunity, 5 bottleneck plays justify spend
+- [[Tool-Comparison]] — Why RocketShip chosen: focused on thesis (Leopold), not generic agents
+- [[Failure-Patterns]] — Post-trade reflection checks bottleneck thesis validity
+- [[Agilith-System-Architecture]] — Agent feature layer monitors infrastructure constraints
+- [[Agilith-Strat-Priorities]] — Advanced alpha (6-10) builds on Leopold foundation
+- [[Agilith-Research-Plan]] — Tier A alpha ideas all derive from Leopold bottleneck rotation
+
+## Leopold as Keystone
+
+Leopold connects everything:
+```
+Infrastructure Buildout
+    ↓ Leopold IS the buildout thesis
+Bottleneck Analysis (5 bottlenecks)
+    ↓ maps to
+Alpha Stack Layer 1 (Infrastructure Constraint Nowcast)
+    ↓ feeds
+RocketShip BottleneckScore (0.4× technical + 0.3× bottleneck_fit)
+    ↓ executed via
+Agent Tools (detect_bottleneck_emergence)
+    ↓ timed by
+Regime Modeling (RISK_ON = full Leopold exposure)
+    ↓ trained in
+RL Setup (scenarios rotate through bottleneck plays)
+    ↓ tracked in
+Post-Trade Reflection (checks bottleneck thesis validity)
+```
+
+Every component: feeds or derives from Leopold.
