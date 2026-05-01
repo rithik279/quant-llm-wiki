@@ -1,0 +1,368 @@
+TITLE: Agilith Capital Internship – Alpha Research + Resource Planning Discussion (Raw Input)
+
+DATE RANGE: April 2026 (Call + Follow-up Planning)
+
+---
+
+SECTION 1: CALL CONTEXT
+
+Participants:
+- Rithik Singh
+- Aiden Horan
+
+Purpose of Call:
+- Expand on submitted one-pager proposal
+- Align on potential internship role scope
+- Define next steps for research plan and resource requirements
+- Discuss potential structure of quantitative + AI-driven research system
+
+---
+
+SECTION 2: HIGH-LEVEL SYSTEM ARCHITECTURE DISCUSSED
+
+The system was described as having two major components:
+
+1. Quantitative Modeling System
+2. AI / LLM-Based Analyst System
+
+These systems are intended to work together.
+
+---
+
+SECTION 3: QUANTITATIVE MODELING PIPELINE (FROM AIDEN)
+
+Phase 1:
+- Identify gaps in existing quantitative models (from LSEG)
+- Models currently exist but are:
+  - Designed primarily for US markets
+  - Less effective in Canadian markets
+- Task:
+  - Rebuild or adapt models using raw data
+  - Evaluate predictive alignment with market movements
+
+Phase 2:
+- Signal detection layer
+- Identify when:
+  - Quant models are insufficient
+  - Additional analysis is required
+- Goal:
+  - Trigger deeper research when anomalies or signals appear
+
+Phase 3:
+- Portfolio construction
+- Use outputs of models to:
+  - Allocate capital
+  - Balance risk
+- Described as relatively “solved,” but still requires implementation
+
+Phase 4:
+- Alpha discovery
+- Identify new predictive signals from:
+  - Data patterns
+  - Market behavior
+  - External indicators (e.g., money flow)
+
+Additional concept:
+- Money Flow Analysis
+  - Identify large players accumulating or distributing stock
+  - Hypothesis: large players act before price reflects it
+
+---
+
+SECTION 4: AI ANALYST SYSTEM (FROM AIDEN)
+
+Goal:
+- Create an AI system that generates structured research outputs
+
+Function:
+- Take quantitative signals as input
+- Pull:
+  - News
+  - filings
+  - sentiment
+- Generate:
+  - structured research reports (“snapshots in time”)
+
+Outputs stored in:
+- database
+- used for:
+  - temporal tracking of companies
+  - future analysis context
+
+Purpose:
+- build mapping of:
+  - company evolution
+  - market behavior over time
+
+---
+
+SECTION 5: CORE INVESTMENT FRAMEWORK DISCUSSED
+
+Three layers:
+
+1. Quantitative Models
+   - short to mid-term signals
+
+2. LLM / AI Analysis
+   - mid-term interpretation
+
+3. Fundamental Investing (Patrick / team)
+   - long-term conviction (5–8 year horizon)
+
+Goal:
+- combine all three into unified system
+
+---
+
+SECTION 6: RITHIK’S PROPOSED IDEAS
+
+6.1 Market Focus
+- US growth equities
+- AI-related sectors:
+  - semiconductors
+  - infrastructure
+  - cooling (liquid cooling, chip-level cooling)
+- focus on second and third-order effects of AI growth
+
+---
+
+6.2 Strategy Concepts
+
+Momentum-based strategy:
+- identify early-stage momentum
+- combine with fundamentals
+
+Regime-based strategy:
+- classify market conditions
+- adjust strategies accordingly
+
+Pairs trading:
+- identify correlated stocks
+- exploit divergence
+
+Options overlay:
+- use long-dated options (LEAPS)
+- apply to high conviction ideas
+
+---
+
+6.3 Mathematical / Statistical Methods Mentioned
+
+- Hidden Markov Models (HMM)
+- Hurst Exponent
+- ADX (trend strength indicator)
+- moving average derivatives (1st and 2nd derivative of EMA)
+
+---
+
+6.4 Custom Indicators Developed
+
+Momentum indicator:
+- based on:
+  - slope (first derivative)
+  - acceleration (second derivative)
+- applied to:
+  - exponential moving averages
+- signal logic:
+  - accelerating trend → continuation
+
+---
+
+6.5 Simulation and Validation System
+
+Monte Carlo simulation engine:
+- takes trade distributions
+- generates simulated paths
+- evaluates:
+  - probability of hitting profit vs drawdown thresholds
+
+Portfolio optimizer:
+- allocates capital across strategies
+- based on:
+  - risk
+  - return distribution
+- outputs optimal allocation weights
+
+---
+
+SECTION 7: RESEARCH WORKFLOW (RITHIK)
+
+Proposed workflow:
+
+1. Generate ideas
+2. Build features from data
+3. Backtest strategies
+4. Validate using:
+   - walk-forward testing
+   - Monte Carlo simulation
+5. Analyze:
+   - robustness
+   - sensitivity
+6. deploy if validated
+
+---
+
+SECTION 8: REGIME DETECTION LOGIC
+
+Core idea:
+- strategies perform differently depending on market condition
+
+Examples:
+- trending markets → momentum works
+- mean-reverting markets → reversal strategies work
+
+Goal:
+- detect current regime
+- select appropriate strategy
+
+Additional idea:
+- use “overfitting insight”
+  - if strategy overfits a period:
+    - identify conditions of that period
+    - reuse strategy when conditions repeat
+
+---
+
+SECTION 9: DATA DISCUSSION
+
+Key requirement:
+- define data sources needed
+
+Types discussed:
+
+Structured data:
+- price data
+- fundamentals
+- LSEG datasets
+
+Event-based data:
+- insider trading
+
+Text data:
+- news
+- earnings calls
+- sentiment
+
+Alternative data:
+- prediction markets
+
+---
+
+SECTION 10: COMPUTE + INFRASTRUCTURE DISCUSSION
+
+Requirements:
+- cloud compute (preferred)
+- ability to:
+  - run backtests
+  - run simulations
+  - process text data
+
+Approach:
+- start small
+- scale after validation
+
+---
+
+SECTION 11: COST FRAMEWORK DISCUSSED
+
+Key idea:
+- do not optimize for cost first
+- optimize for value
+
+Example:
+- +5% alpha improvement could justify large cost (e.g. ~$50K)
+
+Strategy:
+1. test with low-cost tools
+2. validate signal
+3. scale investment
+
+---
+
+SECTION 12: AI / TOOL REFERENCES PROVIDED
+
+Alpha-GPT:
+- LLM system for generating and testing trading strategies
+
+Arxiv paper (LLM trading):
+- describes automated strategy generation loop
+
+Increase Alpha:
+- NLP-based alpha extraction from filings
+
+3AI:
+- ML models built on LSEG financial data
+
+Purpose:
+- examples of:
+  - AI-assisted research
+  - text-based alpha
+  - structured data modeling
+
+---
+
+SECTION 13: ROLE STRUCTURE (FROM AIDEN)
+
+Split into two parts:
+
+1. Core work:
+   - improve existing models
+   - build required infrastructure
+
+2. Independent research:
+   - explore new alpha ideas
+   - test hypotheses
+
+---
+
+SECTION 14: EXPECTATIONS FOR NEXT STEP
+
+Deliverable before next meeting:
+
+- select 1–2 core ideas
+- define:
+  - required data
+  - required compute
+  - required tools
+- create:
+  - cost vs benefit analysis
+- include:
+  - justification for each resource
+
+---
+
+SECTION 15: MEETING SCHEDULE
+
+Next meeting planned:
+- April 9–10 (flexible)
+- dependent on:
+  - Patrick’s availability
+  - submission of proposal
+
+---
+
+SECTION 16: ADDITIONAL DISCUSSION POINTS
+
+- role expected to be:
+  - full-time
+  - remote
+- structure:
+  - project-based
+  - not strict hourly tracking
+- meetings:
+  - regular check-ins with Aiden
+  - periodic discussions with Patrick
+
+---
+
+SECTION 17: SUCCESS METRICS (PROPOSED)
+
+To be defined, but suggested:
+- measurable research output
+- validated strategies
+- usable models
+- contribution to fund-level decision making
+
+---
+
+END OF DOCUMENT

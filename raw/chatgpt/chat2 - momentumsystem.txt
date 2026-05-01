@@ -1,0 +1,409 @@
+TITLE: AI FUND + MOMENTUM SYSTEM + LLM WIKI BUILD (RAW CHAT EXTRACTION)
+
+---
+
+SECTION 1: OBJECTIVE CONTEXT
+
+User is:
+
+* Building a momentum-based trading system focused on US growth equities
+* Using breakout screener as initial signal generator
+* Interested in transforming this into a systematic, fund-like strategy
+* Integrating AI/agent-based workflows into research and decision-making
+* Building an LLM knowledge base (wiki) from chats and research
+* Preparing for a call where they will present:
+
+  1. AI macro thesis (based on paper)
+  2. Fund design principles
+  3. Alpha ideas
+  4. Tools
+  5. Role discussion
+
+---
+
+SECTION 2: BREAKOUT STRATEGY FOUNDATION
+
+Initial system:
+
+* Breakout screener identifies stocks making new highs
+* Outputs different tickers daily (rolling signals)
+
+Proposed baseline test:
+
+* Entry: buy on signal day (close or next open)
+* Exit: fixed holding period (~40 trading days / 2 months)
+
+Data structure:
+
+* Each (date, ticker) = one independent trade
+* Dataset includes:
+
+  * date
+  * ticker
+  * entry price
+  * exit price
+  * return
+
+Evaluation approach:
+
+1. Signal-level evaluation:
+
+   * mean return
+   * median return
+   * win rate
+   * return distribution
+   * tail behavior
+
+2. Portfolio-level simulation:
+
+   * max positions constraint (e.g., 10)
+   * equal weighting
+   * rolling entries/exits
+   * daily rebalancing
+   * track:
+
+     * portfolio value
+     * drawdown
+     * Sharpe
+
+3. Time segmentation:
+
+   * evaluate across:
+
+     * bull markets
+     * bear markets
+     * sideways regimes
+
+4. Time decay analysis:
+
+   * returns at:
+
+     * 5 days
+     * 10 days
+     * 20 days
+     * 40 days
+
+Observations:
+
+* signals overlap (non-independent)
+* distribution more important than mean
+* momentum expected to have fat tails
+
+---
+
+SECTION 3: POST-SCREENER SYSTEM DESIGN
+
+Upgrade from:
+
+* “list of breakouts”
+
+To:
+
+* “ranked + filtered breakout candidates”
+
+Four scoring dimensions:
+
+1. Trend Strength
+
+   * 20D return
+   * 60D return
+   * distance from moving averages
+   * price structure
+
+2. Relative Strength
+
+   * vs QQQ
+   * vs sector
+   * leadership detection
+
+3. Confirmation
+
+   * volume spike
+   * follow-through
+   * consolidation quality
+   * rejection behavior
+
+4. Growth / Fundamentals
+
+   * EPS revisions
+   * revenue growth
+   * earnings surprises
+   * guidance
+
+Example weighting:
+
+* Trend: 35%
+* Relative Strength: 30%
+* Confirmation: 20%
+* Growth: 15%
+
+---
+
+SECTION 4: AGENT-BASED LAYER (FROM PAPER FRAMEWORK)
+
+Agent operates using structured tools, not raw data.
+
+Tool examples:
+
+* get_momentum_profile
+* get_relative_strength
+* get_breakout_quality
+* get_growth_snapshot
+* get_risk_flags
+
+Defined scenarios:
+
+1. Ranking Explanation
+
+   * explain why top candidates rank highly
+   * identify key drivers
+   * identify invalidation conditions
+
+2. Trade Decision
+
+   * output: BUY / WATCH / SKIP
+   * include:
+
+     * reasoning
+     * risk level
+     * expected continuation
+
+3. Factor Weighting
+
+   * adjust importance of factors based on regime
+   * examples:
+
+     * strong trend → momentum weight high
+     * chop → confirmation weight high
+
+4. Post-Trade Reflection
+
+   * evaluate:
+
+     * entry quality
+     * regime alignment
+     * cause of outcome
+
+5. Regime Classification
+
+   * identify:
+
+     * trend
+     * chop
+     * risk-off
+
+---
+
+SECTION 5: REGIME CLASSIFICATION
+
+Three-state model:
+
+* Trend (risk-on)
+* Chop (mean-reversion)
+* Risk-off (downtrend)
+
+Initial approach: rule-based
+
+Features:
+
+* index vs 50DMA / 200DMA
+* breadth (% above MA)
+* volatility
+* breakout performance
+
+Later approach: Hidden Markov Model (HMM)
+
+HMM inputs:
+
+* index returns
+* volatility
+* breadth
+* momentum factor returns
+* breakout strategy returns
+
+Output:
+
+* latent states mapped to regimes
+
+Alternative approach:
+
+* classify regimes directly from strategy performance
+  (“when breakouts work vs fail”)
+
+Usage:
+
+* adjust:
+
+  * position sizing
+  * trade frequency
+  * entry strictness
+
+---
+
+SECTION 6: BACKTEST + EVALUATION FRAMEWORK
+
+Evaluation is scenario-based, not just PnL.
+
+Example eval scenarios:
+
+1. Clean breakout
+2. Fake breakout
+3. Late-stage extension
+4. Earnings-driven breakout
+5. Leader breakdown
+6. Low-quality growth trap
+
+Goal:
+
+* train system to classify breakout quality
+
+Reward design:
+
+* forward return (risk-adjusted)
+* drawdown penalty
+* overextension penalty
+* regime alignment
+* reasoning quality
+
+---
+
+SECTION 7: AI PAPER INSIGHTS (MACRO FRAMEWORK)
+
+Three drivers of AI progress:
+
+* compute scaling
+* algorithmic improvements
+* “unhobbling” (agents vs chat models)
+
+Implications:
+
+* AI is a full-stack economic shift
+* value distributed across layers:
+
+  * infrastructure
+  * algorithms
+  * deployment
+
+Key layers:
+
+1. Infrastructure
+
+   * compute
+   * data centers
+   * power
+   * networking
+
+2. Algorithms
+
+   * efficiency improvements
+   * non-hardware gains
+
+3. Agent / Application layer
+
+   * workflow automation
+   * real economic replacement
+
+4. Security layer
+
+   * model weights as strategic assets
+   * algorithmic edge vs compute advantage
+
+Key principle:
+
+* bottlenecks shift over time
+* edge comes from tracking bottleneck movement
+
+---
+
+SECTION 8: FUND DESIGN IMPLICATIONS
+
+Not:
+
+* single-theme AI fund
+
+But:
+
+* multi-layer exposure
+
+Barbell structure:
+
+Side 1:
+
+* infrastructure / picks-and-shovels
+
+Side 2:
+
+* agent / application / asymmetric upside
+
+Key characteristics:
+
+* adaptive allocation
+* dynamic thesis updating
+* regime-aware positioning
+
+---
+
+SECTION 9: CALL STRUCTURE (USER INTENT)
+
+User plans to present:
+
+1. Opening:
+
+   * AI framework from paper
+   * three drivers
+   * shifting stack concept
+
+2. Design principles:
+
+   * system-based investing
+   * multi-layer approach
+   * adaptive strategy
+
+3. Alpha ideas:
+
+   * momentum system
+   * breakout ranking
+   * regime filtering
+
+4. Tools:
+
+   * data sources
+   * agent systems
+   * LLM workflows
+
+5. Final:
+
+   * role discussion
+
+---
+
+SECTION 10: LLM WIKI SYSTEM
+
+Goal:
+
+* convert chats into structured knowledge
+
+Three-layer structure:
+
+1. Insights
+2. Systems
+3. Frameworks
+
+Storage format:
+
+* markdown
+* chunked entries (100–300 words)
+
+Metadata:
+
+* source
+* topic
+* type
+* timestamp
+
+Pipeline:
+Raw Chat → Structured Extraction → Markdown → Chunking → Embeddings → Vector DB → Retrieval
+
+---
+
+END OF FILE

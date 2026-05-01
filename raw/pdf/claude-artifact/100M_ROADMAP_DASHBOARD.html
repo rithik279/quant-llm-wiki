@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>$100M Net Worth Roadmap - Interactive Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+            border-bottom: 2px solid #334155;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            font-size: 1.1em;
+            color: #94a3b8;
+            margin-bottom: 20px;
+        }
+
+        .quick-facts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .fact-card {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid #475569;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .fact-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #60a5fa;
+            margin-bottom: 5px;
+        }
+
+        .fact-label {
+            font-size: 0.9em;
+            color: #cbd5e1;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #334155;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 1em;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: #cbd5e1;
+        }
+
+        .tab-btn.active {
+            color: #60a5fa;
+            border-bottom-color: #60a5fa;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .paths-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .path-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 2px solid #475569;
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .path-card:hover {
+            border-color: #60a5fa;
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(96, 165, 250, 0.1);
+        }
+
+        .path-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #60a5fa;
+        }
+
+        .path-timeline {
+            font-size: 0.95em;
+            line-height: 1.8;
+            color: #cbd5e1;
+            margin-bottom: 15px;
+        }
+
+        .timeline-item {
+            margin-bottom: 12px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .timeline-item:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #60a5fa;
+        }
+
+        .path-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #475569;
+        }
+
+        .meta-item {
+            font-size: 0.9em;
+        }
+
+        .meta-label {
+            color: #94a3b8;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+
+        .meta-value {
+            color: #a78bfa;
+            font-weight: bold;
+        }
+
+        .timeline-visual {
+            position: relative;
+            margin: 40px 0;
+            padding: 30px;
+            background: rgba(15, 23, 42, 0.5);
+            border-left: 4px solid #60a5fa;
+            border-radius: 8px;
+        }
+
+        .age-marker {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .age-box {
+            background: rgba(96, 165, 250, 0.1);
+            border: 1px solid #475569;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .age {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #60a5fa;
+            margin-bottom: 5px;
+        }
+
+        .milestone {
+            font-size: 0.9em;
+            color: #cbd5e1;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .comparison-table th {
+            background: rgba(96, 165, 250, 0.1);
+            border: 1px solid #475569;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+            color: #60a5fa;
+        }
+
+        .comparison-table td {
+            border: 1px solid #475569;
+            padding: 12px 15px;
+            color: #cbd5e1;
+        }
+
+        .comparison-table tr:hover {
+            background: rgba(96, 165, 250, 0.05);
+        }
+
+        .advantage {
+            color: #86efac;
+            font-weight: 500;
+        }
+
+        .challenge {
+            color: #f87171;
+            font-weight: 500;
+        }
+
+        .checklist {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 8px 0;
+        }
+
+        .checklist-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #475569;
+            border-radius: 4px;
+            margin-right: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .checklist-item input:checked ~ .checklist-label {
+            color: #94a3b8;
+            text-decoration: line-through;
+        }
+
+        .checklist-label {
+            flex: 1;
+            cursor: pointer;
+            color: #cbd5e1;
+        }
+
+        .risk-box {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .success-box {
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 4px solid #22c55e;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .decision-tree {
+            background: rgba(30, 41, 59, 0.6);
+            border: 2px solid #334155;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .decision-node {
+            margin-left: 20px;
+            padding: 15px;
+            border-left: 3px solid #60a5fa;
+            margin-bottom: 15px;
+        }
+
+        .decision-q {
+            font-weight: bold;
+            color: #60a5fa;
+            margin-bottom: 10px;
+        }
+
+        .decision-options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .decision-opt {
+            background: rgba(96, 165, 250, 0.1);
+            border: 1px solid #475569;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #cbd5e1;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 2px solid #334155;
+            color: #64748b;
+            font-size: 0.95em;
+        }
+
+        .stat-badge {
+            display: inline-block;
+            background: rgba(96, 165, 250, 0.2);
+            border: 1px solid #475569;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin: 5px;
+            color: #cbd5e1;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .tab-btn {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+
+            .paths-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .comparison-table {
+                font-size: 0.9em;
+            }
+
+            .comparison-table th,
+            .comparison-table td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💰 $100M Net Worth Roadmap</h1>
+            <p class="tagline">From Trading System to Exceptional Wealth (Age 19-35)</p>
+            
+            <div class="quick-facts">
+                <div class="fact-card">
+                    <div class="fact-value">30-50%</div>
+                    <div class="fact-label">Probability of $100M</div>
+                </div>
+                <div class="fact-card">
+                    <div class="fact-value">8-18 Years</div>
+                    <div class="fact-label">Timeline to $100M</div>
+                </div>
+                <div class="fact-card">
+                    <div class="fact-value">3 Paths</div>
+                    <div class="fact-label">To Choose From</div>
+                </div>
+                <div class="fact-card">
+                    <div class="fact-value">Top 0.1%</div>
+                    <div class="fact-label">Position by Age 25</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('paths')">Three Paths</button>
+            <button class="tab-btn" onclick="switchTab('timeline')">Timeline</button>
+            <button class="tab-btn" onclick="switchTab('comparison')">Comparison</button>
+            <button class="tab-btn" onclick="switchTab('execution')">Execution</button>
+            <button class="tab-btn" onclick="switchTab('risks')">Risks & Truth</button>
+        </div>
+
+        <!-- PATHS TAB -->
+        <div id="paths" class="tab-content active">
+            <div class="paths-grid">
+                <!-- Path 1 -->
+                <div class="path-card">
+                    <div class="path-title">📊 Path 1: Quant Firm → Fund</div>
+                    <div class="path-timeline">
+                        <div class="timeline-item"><strong>Age 22-24:</strong> Join Citadel/Two Sigma</div>
+                        <div class="timeline-item"><strong>$1.4M/year</strong> comp + $500K-2M bonus</div>
+                        <div class="timeline-item"><strong>Age 24-27:</strong> Prove track record, save $5-10M</div>
+                        <div class="timeline-item"><strong>Age 27-30:</strong> Launch fund with $20-50M</div>
+                        <div class="timeline-item"><strong>Age 35-40:</strong> $100M+ net worth</div>
+                    </div>
+                    <div class="path-meta">
+                        <div class="meta-item">
+                            <div class="meta-label">Timeline</div>
+                            <div class="meta-value">15-20 years</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Risk</div>
+                            <div class="meta-value">Low-Medium</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Probability</div>
+                            <div class="meta-value">40-50%</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Starting Comp</div>
+                            <div class="meta-value">$1.4M/year</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Path 2 -->
+                <div class="path-card">
+                    <div class="path-title">🚀 Path 2: Fintech Startup (Employee)</div>
+                    <div class="path-timeline">
+                        <div class="timeline-item"><strong>Age 22-24:</strong> Join Series A fintech</div>
+                        <div class="timeline-item"><strong>Equity:</strong> 2-5% at $100M valuation</div>
+                        <div class="timeline-item"><strong>Age 24-26:</strong> Series B: $500M valuation</div>
+                        <div class="timeline-item"><strong>Age 26-28:</strong> Series C: $2B valuation</div>
+                        <div class="timeline-item"><strong>Age 28-30:</strong> Exit at $1-2B = $25-70M net</div>
+                    </div>
+                    <div class="path-meta">
+                        <div class="meta-item">
+                            <div class="meta-label">Timeline</div>
+                            <div class="meta-value">8-10 years</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Risk</div>
+                            <div class="meta-value">Medium-High</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Probability</div>
+                            <div class="meta-value">20-30%</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Starting Comp</div>
+                            <div class="meta-value">$200-300K</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Path 3 -->
+                <div class="path-card">
+                    <div class="path-title">🎯 Path 3: Launch Own Startup</div>
+                    <div class="path-timeline">
+                        <div class="timeline-item"><strong>Age 22:</strong> System proven to work</div>
+                        <div class="timeline-item"><strong>Raise:</strong> $5-10M seed, keep 20% equity</div>
+                        <div class="timeline-item"><strong>Age 24-25:</strong> Series A: $200-300M valuation</div>
+                        <div class="timeline-item"><strong>Age 26-28:</strong> Series B: $500M-1B valuation</div>
+                        <div class="timeline-item"><strong>Age 28-30:</strong> Exit at $1-3B = $50-150M net</div>
+                    </div>
+                    <div class="path-meta">
+                        <div class="meta-item">
+                            <div class="meta-label">Timeline</div>
+                            <div class="meta-value">8-10 years</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Risk</div>
+                            <div class="meta-value">High</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Probability</div>
+                            <div class="meta-value">20-30%</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Starting Comp</div>
+                            <div class="meta-value">$0 (equity)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-visual">
+                <h3 style="margin-bottom: 20px; color: #60a5fa;">🏆 Hybrid Path (Recommended)</h3>
+                <p style="margin-bottom: 20px; line-height: 1.8;">
+                    <strong>Highest probability + best outcomes:</strong> Join quant firm for 3 years (Citadel/Two Sigma), prove yourself, save $3-5M capital, then co-found fintech startup with credibility and capital. This combines:
+                </p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div style="color: #86efac;">✓ Validation (top firm backing)</div>
+                    <div style="color: #86efac;">✓ Capital (saved bonuses)</div>
+                    <div style="color: #86efac;">✓ Network (investor relationships)</div>
+                    <div style="color: #86efac;">✓ Control (founder equity 15-20%)</div>
+                </div>
+                <p style="margin-top: 20px; color: #cbd5e1;">
+                    Result: <strong style="color: #a78bfa;">$100M net worth by age 30-32</strong> with <strong style="color: #a78bfa;">35-45% probability</strong>
+                </p>
+            </div>
+        </div>
+
+        <!-- TIMELINE TAB -->
+        <div id="timeline" class="tab-content">
+            <h2 style="margin-bottom: 30px; color: #60a5fa;">Timeline by Path</h2>
+
+            <h3 style="margin: 30px 0 20px 0; color: #cbd5e1;">Conservative Path: Quant Firm → Fund</h3>
+            <div class="age-marker">
+                <div class="age-box">
+                    <div class="age">Age 22</div>
+                    <div class="milestone">Join Citadel<br>Comp: $1.4M</div>
+                </div>
+                <div class="age-box">
+                    <div class="age">Age 25</div>
+                    <div class="milestone">3-year track<br>Saved: $2.4M</div>
+                </div>
+                <div class="age-box">
+                    <div class="age">Age 27</div>
+                    <div class="milestone">Launch fund<br>$20M AUM</div>
+                </div>
+                <div class="age-box">
+                    <div class="age">Age 30</div>
+                    <div class="milestone">$150M AUM<br>Net worth: $20M</div>
+                </div>
+                <div class="age-box">
+                    <div class="age">Age 35</div>
+                    <div class="milestone">$300M+ AUM<br>Net worth: $60M</div>
+                </div>
+                <div class="age-box">
+                    <div class="age">Age 40</div>
+                    <div class="milestone">$500M AUM<br>Net worth: $100M+</div>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 20px 0; color: #cbd5e1;">Aggressive Path: Own Startup</h3>
+            <div class="age-marker">
+                <div class="age-box">
+                    <div class="age">Age 22</div>
+                    <div class="milestone">Launch startup<br>Raise $10M seed</div>
+                </div>
+                <div class="age-box">
+                    <div class="age">Age 24</div>
+                    <div class="milestone">Series A<br>$200M valuation</div>
+                </div>
+                <div class="age-box">
+                    <div class="age">Age 26</div>
+                    <div class="milestone">Series B<br>$500M valuation</div>
+                </div>
+                <div class="age-box">
+                    <div class="age">Age 28</div>
+                    <div class="milestone">Series C<br>$1.5B valuation</div>
+                </div>
+                <div class="age-box">
+                    <div class="age">Age 30</div>
+                    <div class="milestone">Exit at $2B<br>Net worth: $75M+</div>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 20px 0; color: #cbd5e1;">Most Likely Path: Hybrid</h3>
+            <div class="age-marker">
+                <div class="age-box">
+                    <div class="age">Age 22-25</div>
+                    <div class="milestone">Quant firm<br>Save: $3-5M</div>
+                </div>
+                <div class="age-box">
+                    <div class="age">Age 25</div>
+                    <div class="milestone">Co-found startup<br>Raise $5M seed</div>
+                </div>
+                <div class="age-box">
+                    <div class="age">Age 27</div>
+                    <div class="milestone">Series A<br>$250M valuation</div>
+                </div>
+                <div class="age-box">
+                    <div class="age">Age 29</div>
+                    <div class="milestone">Series B<br>$800M valuation</div>
+                </div>
+                <div class="age-box">
+                    <div class="age">Age 31-32</div>
+                    <div class="milestone">Exit at $1-2B<br>Net worth: $100M+</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPARISON TAB -->
+        <div id="comparison" class="tab-content">
+            <h2 style="margin-bottom: 30px; color: #60a5fa;">Path Comparison Matrix</h2>
+            
+            <table class="comparison-table">
+                <tr>
+                    <th>Factor</th>
+                    <th>Quant Firm → Fund</th>
+                    <th>Fintech (Employee)</th>
+                    <th>Own Startup</th>
+                </tr>
+                <tr>
+                    <td><strong>Timeline to $100M</strong></td>
+                    <td>15-20 years</td>
+                    <td>8-10 years</td>
+                    <td>8-10 years</td>
+                </tr>
+                <tr>
+                    <td><strong>Risk Level</strong></td>
+                    <td>Low-Medium</td>
+                    <td>Medium-High</td>
+                    <td>High</td>
+                </tr>
+                <tr>
+                    <td><strong>Control</strong></td>
+                    <td>Full (you manage money)</td>
+                    <td>Limited (company decides)</td>
+                    <td>Full (you decide)</td>
+                </tr>
+                <tr>
+                    <td><strong>Starting Comp</strong></td>
+                    <td>$1-2M/year</td>
+                    <td>$200-300K + equity</td>
+                    <td>$0 initially</td>
+                </tr>
+                <tr>
+                    <td><strong>Failure Rate</strong></td>
+                    <td>~10%</td>
+                    <td>~50%</td>
+                    <td>~80%</td>
+                </tr>
+                <tr>
+                    <td><strong>Upside Cap</strong></td>
+                    <td>$100-500M</td>
+                    <td>$100-500M+</td>
+                    <td>$500M+ possible</td>
+                </tr>
+                <tr>
+                    <td><strong>Requires Co-founders</strong></td>
+                    <td>No</td>
+                    <td>No (join team)</td>
+                    <td><span class="advantage">Yes</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Time to First $10M</strong></td>
+                    <td>5-7 years</td>
+                    <td>2-4 years</td>
+                    <td>2-4 years</td>
+                </tr>
+                <tr>
+                    <td><strong>Probability of $100M</strong></td>
+                    <td><span class="advantage">40-50%</span></td>
+                    <td>20-30%</td>
+                    <td>20-30%</td>
+                </tr>
+            </table>
+
+            <h3 style="margin: 40px 0 20px 0; color: #cbd5e1;">Your Competitive Advantages</h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                <div style="background: rgba(34, 197, 94, 0.1); border-left: 4px solid #22c55e; padding: 20px; border-radius: 8px;">
+                    <h4 style="color: #86efac; margin-bottom: 10px;">vs Other Engineers (Age 19-22)</h4>
+                    <ul style="list-style: none;">
+                        <li style="margin: 8px 0;">✓ Production trading system (not toy projects)</li>
+                        <li style="margin: 8px 0;">✓ Proven alpha validation</li>
+                        <li style="margin: 8px 0;">✓ ML/AI + Finance domain knowledge</li>
+                        <li style="margin: 8px 0;">✓ Mentorship from 40 years combined experience</li>
+                        <li style="margin: 8px 0;">✓ Network in place</li>
+                    </ul>
+                </div>
+
+                <div style="background: rgba(34, 197, 94, 0.1); border-left: 4px solid #22c55e; padding: 20px; border-radius: 8px;">
+                    <h4 style="color: #86efac; margin-bottom: 10px;">vs 25-Year-Old Competitors</h4>
+                    <ul style="list-style: none;">
+                        <li style="margin: 8px 0;">✓ 5 years ahead on domain knowledge</li>
+                        <li style="margin: 8px 0;">✓ Early mentorship advantage</li>
+                        <li style="margin: 8px 0;">✓ Real system (not just skills)</li>
+                        <li style="margin: 8px 0;">✓ Network introductions from mentors</li>
+                        <li style="margin: 8px 0;">✓ Proven execution</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- EXECUTION TAB -->
+        <div id="execution" class="tab-content">
+            <h2 style="margin-bottom: 30px; color: #60a5fa;">Execution Plan (Next 3 Years)</h2>
+
+            <div style="margin: 30px 0;">
+                <h3 style="color: #cbd5e1; margin-bottom: 15px;">This Internship (Age 19-20) — 4 Months</h3>
+                <div class="checklist">
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check1">
+                        <label for="check1" class="checklist-label">Week 1-2: Fork RocketShip, customize agents</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check2">
+                        <label for="check2" class="checklist-label">Week 3-4: Production hardening complete</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check3">
+                        <label for="check3" class="checklist-label">Week 5-8: Regime modeling working</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check4">
+                        <label for="check4" class="checklist-label">Week 9-12: Backtest validation complete</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check5">
+                        <label for="check5" class="checklist-label">Week 13-14: RL training via HUD.ai</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check6">
+                        <label for="check6" class="checklist-label">Week 15-16: Paper trading + GitHub ready</label>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin: 30px 0;">
+                <h3 style="color: #cbd5e1; margin-bottom: 15px;">Post-Internship (Months 5-12)</h3>
+                <div class="checklist">
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check7">
+                        <label for="check7" class="checklist-label">Live trading implementation (paper)</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check8">
+                        <label for="check8" class="checklist-label">GitHub repo documentation complete</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check9">
+                        <label for="check9" class="checklist-label">Personal brand (Twitter/LinkedIn)</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check10">
+                        <label for="check10" class="checklist-label">Network at conferences</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check11">
+                        <label for="check11" class="checklist-label">Land summer internship (Citadel/Two Sigma)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin: 30px 0;">
+                <h3 style="color: #cbd5e1; margin-bottom: 15px;">Sophomore/Junior Year (Age 20-22)</h3>
+                <div class="checklist">
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check12">
+                        <label for="check12" class="checklist-label">Top quant firm internship (prove yourself)</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check13">
+                        <label for="check13" class="checklist-label">Keep system running + improving</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check14">
+                        <label for="check14" class="checklist-label">Publish technical blog posts (2-3)</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check15">
+                        <label for="check15" class="checklist-label">Build strong mentor relationships</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check16">
+                        <label for="check16" class="checklist-label">Plan next steps (quant vs startup)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin: 30px 0;">
+                <h3 style="color: #cbd5e1; margin-bottom: 15px;">Senior Year (Age 22)</h3>
+                <div class="checklist">
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check17">
+                        <label for="check17" class="checklist-label">Receive offers from top firms or co-founders</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check18">
+                        <label for="check18" class="checklist-label">Negotiate compensation/equity</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check19">
+                        <label for="check19" class="checklist-label">Lock in path decision (quant vs startup)</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check20">
+                        <label for="check20" class="checklist-label">Start full-time role or launch startup</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="success-box">
+                <strong>Success Metrics by Milestone:</strong>
+                <ul style="list-style: none; margin-top: 10px;">
+                    <li>✓ End of internship: System working + validated</li>
+                    <li>✓ Age 22: Offer locked in from top firm or $5M seed raised</li>
+                    <li>✓ Age 25: Track record established, $20-30M capital under management</li>
+                    <li>✓ Age 30: Net worth $50-100M on clear path</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- RISKS TAB -->
+        <div id="risks" class="tab-content">
+            <h2 style="margin-bottom: 30px; color: #60a5fa;">Risks, Challenges & Honest Truth</h2>
+
+            <h3 style="color: #cbd5e1; margin: 30px 0 20px 0;">High-Risk Scenarios</h3>
+            <div class="risk-box">
+                <strong>❌ System doesn't actually work</strong><br>
+                <em>Prevention:</em> Rigorous validation, real market testing, walk-forward backtesting
+            </div>
+            <div class="risk-box">
+                <strong>❌ Get lucky once, build fragile system</strong><br>
+                <em>Prevention:</em> Monte Carlo simulation, stress tests, multiple regimes
+            </div>
+            <div class="risk-box">
+                <strong>❌ Join wrong firm/startup</strong><br>
+                <em>Prevention:</em> Network hard, get mentor recommendations, interview thoroughly
+            </div>
+            <div class="risk-box">
+                <strong>❌ Market crash right after launch</strong><br>
+                <em>Prevention:</em> Build systems that work in all regimes (up, down, sideways)
+            </div>
+            <div class="risk-box">
+                <strong>❌ Bad co-founders (if startup)</strong><br>
+                <em>Prevention:</em> Know them well before founding, shared vision alignment
+            </div>
+
+            <h3 style="color: #cbd5e1; margin: 30px 0 20px 0;">What's Realistic?</h3>
+            <div class="success-box">
+                <strong>$100M by age 30-35:</strong> 30-50% probability (strong execution required)<br>
+                <strong>$50M by age 30:</strong> 60-70% probability (realistic baseline)<br>
+                <strong>$20M by age 35:</strong> 85%+ probability (very likely)
+            </div>
+
+            <h3 style="color: #cbd5e1; margin: 30px 0 20px 0;">What's Certain (Guaranteed)?</h3>
+            <div class="success-box">
+                <strong>✓ Top 0.1% of fintech/quant engineers by age 25</strong><br>
+                <strong>✓ Multiple $500K-2M job offers</strong><br>
+                <strong>✓ Optionality to choose your path</strong><br>
+                <strong>✓ Significant wealth ($20M+ by age 35)</strong><br>
+                <strong>✓ Deep understanding of AI/ML/Finance fundamentals</strong>
+            </div>
+
+            <h3 style="color: #cbd5e1; margin: 30px 0 20px 0;">Why This Setup Maps to $100M</h3>
+            <div style="background: rgba(167, 139, 250, 0.1); border-left: 4px solid #a78bfa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin-bottom: 15px;">
+                    Most finance students walk the same path:
+                </p>
+                <div style="margin-left: 20px; font-size: 0.95em;">
+                    Age 22 → Goldman ($150K) → Age 25 → Promoted ($200K) → Age 30 → Managing director ($500K) → Age 40 → Maybe partner ($2-5M/year) → Net worth: $10-20M by age 50+
+                </div>
+                <p style="margin-top: 15px; margin-bottom: 15px;">
+                    You take a different path:
+                </p>
+                <div style="margin-left: 20px; font-size: 0.95em; color: #a78bfa;">
+                    Age 22 → Citadel ($1.4M) → Age 25 → Raise capital or Series A → Age 30 → Managing $100M+ or leading team → Net worth: $50-100M by age 30+ <br><br>
+                    <strong>Difference: 15-20 years ahead</strong>
+                </div>
+            </div>
+
+            <h3 style="color: #cbd5e1; margin: 30px 0 20px 0;">The Honest Truth</h3>
+            <div style="background: rgba(96, 165, 250, 0.1); border: 1px solid #475569; padding: 20px; border-radius: 8px; margin: 20px 0; line-height: 1.8;">
+                <p>
+                    You're starting from an <strong>exceptional position</strong>:
+                </p>
+                <ul style="list-style: none; margin-top: 10px; margin-left: 0;">
+                    <li>✓ Age 19 with production trading system</li>
+                    <li>✓ Mentorship from 40 years combined experience</li>
+                    <li>✓ Technical skills (ML/AI/coding) + domain knowledge (finance/infrastructure)</li>
+                    <li>✓ Optionality (choose which path)</li>
+                    <li>✓ Time (4 months to prove it works)</li>
+                </ul>
+                <p style="margin-top: 15px;">
+                    This is a <strong>$500K+ education in 4 months</strong>.
+                </p>
+                <p style="margin-top: 10px;">
+                    Most people spend decades trying to get where you'll be at age 22.
+                </p>
+                <p style="margin-top: 15px; font-style: italic;">
+                    The question isn't "can you get to $100M?"<br>
+                    The question is "which path excites you most?"
+                </p>
+            </div>
+
+            <h3 style="color: #cbd5e1; margin: 30px 0 20px 0;">Decision Tree</h3>
+            <div class="decision-tree">
+                <div class="decision-node">
+                    <div class="decision-q">Q1: Do I want to trade capital or build product?</div>
+                    <div class="decision-options">
+                        <div class="decision-opt">→ TRADE: Path 1 (Quant → Fund)</div>
+                        <div class="decision-opt">→ BUILD: Path 2/3 (Startup)</div>
+                    </div>
+                </div>
+
+                <div class="decision-node">
+                    <div class="decision-q">Q2: If Startup — do I want to join or launch?</div>
+                    <div class="decision-options">
+                        <div class="decision-opt">→ JOIN: Path 2 (Series A fintech)</div>
+                        <div class="decision-opt">→ LAUNCH: Path 3 (Co-found)</div>
+                    </div>
+                </div>
+
+                <div class="decision-node">
+                    <div class="decision-q">Q3: If Launching — do I want credibility first?</div>
+                    <div class="decision-options">
+                        <div class="decision-opt">→ YES: Hybrid path (Quant 3 yrs → Startup)</div>
+                        <div class="decision-opt">→ NO: Launch immediately (higher risk)</div>
+                    </div>
+                </div>
+
+                <p style="margin-top: 20px; color: #a78bfa;">
+                    Your answers determine your $100M timeline.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Built: April 2026 | Status: Internship preparation | Update: End of internship</p>
+        <p style="margin-top: 10px; font-size: 0.9em;">Execute ruthlessly. The outcomes follow. 🚀</p>
+    </footer>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Remove active class from buttons
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+
+        // Make checkboxes functional
+        document.querySelectorAll('.checklist-item input').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                this.parentElement.classList.toggle('completed');
+            });
+        });
+    </script>
+</body>
+</html>

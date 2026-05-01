@@ -1,0 +1,632 @@
+================================================================================
+ROCKETSHIP FRAMEWORK: CORE ARCHITECTURE FOR LEOPOLD TRADING SYSTEM
+Detailed Analysis & Implementation Strategy
+================================================================================
+
+STATUS: Critical foundational decision for Month 1 build plan
+DECISION DATE: Before April 20, 2026 (4-month internship start)
+DECISION MAKER: Intern with Portfolio Manager mentor
+IMPACT LEVEL: High (determines agent loop structure, tool design, scalability)
+
+================================================================================
+OVERVIEW: WHAT IS ROCKETSHIP?
+================================================================================
+
+ROCKETSHIP is an agentic AI framework for building reasoning-based trading systems.
+
+SOURCE:
+Repository: https://github.com/ammar-adam/rocketship
+Author: Ammar Adam
+Purpose: Template for creating LLM-powered trading agents with iterative reasoning
+
+FRAMEWORK TYPE:
+- Not a full trading system (you build the system)
+- Is a structure for how agents should reason about trading decisions
+- Provides: agentic loop, tool integration, reasoning framework
+- Leaves to you: domain logic, tool definitions, backtesting
+
+AVAILABILITY:
+- Open source on GitHub
+- Forkable
+- Well-documented
+- Active maintenance
+
+================================================================================
+THE DECISION: FORK ROCKETSHIP (NOT BUILD FROM SCRATCH)
+================================================================================
+
+INTERN'S CHOICE:
+Fork RocketShip, customize for Leopold thesis, integrate Leopold-specific signals
+
+ALTERNATIVE NOT CHOSEN:
+Build agent loop from scratch (would take 2-3 weeks of infrastructure work)
+
+WHY FORK ROCKETSHIP (DECISION RATIONALE):
+
+1. **Time Efficiency**
+   - Don't rebuild agentic loop (already done correctly)
+   - Don't reinvent tool integration pattern
+   - Don't debug basic reasoning flow
+   - Save 100-150 hours of infrastructure work
+   - Focus effort on domain logic (Leopold thesis)
+
+2. **Proven Architecture**
+   - RocketShip has been tested by other traders
+   - Agentic loop is solid
+   - Tool framework is robust
+   - Better to start proven than custom
+
+3. **Maintenance Burden**
+   - Open source project
+   - Updates and bug fixes happen
+   - Community support
+   - Custom solution = you maintain forever
+
+4. **Scalability**
+   - RocketShip designed for iterative reasoning
+   - Handles complex tool chains
+   - Can scale agent complexity
+   - Foundation for Month 3-4 RL training
+
+5. **Integration with HUD.ai**
+   - RocketShip designed to work with LLM training
+   - HUD.ai can train on RocketShip decisions
+   - Natural fit for RL optimization phase
+   - Not forcing incompatible architectures
+
+================================================================================
+ROCKETSHIP CORE CONCEPTS
+================================================================================
+
+AGENTIC LOOP (What RocketShip provides):
+
+1. **Input**: Market state, portfolio, reasoning prompt
+2. **Reasoning**: LLM (Claude) thinks through trading decision
+3. **Tool Calls**: Claude calls tools to gather data, compute metrics
+4. **Iteration**: Loop until decision is made (or max iterations)
+5. **Action**: Execute trade decision (or decline)
+6. **Feedback**: Record results, learn from outcome
+
+BASIC STRUCTURE:
+```
+Market Data → Claude Reasoning Loop → Tool Calls → Decision → Trade → Feedback
+                        ↑                                              ↓
+                        └──────────── Learning Signal ──────────────┘
+```
+
+TOOL INTEGRATION:
+RocketShip provides framework for:
+- Defining tools (what Claude can call)
+- Tool validation (can it be called now?)
+- Tool execution (run the tool, get results)
+- Result parsing (Claude reads results)
+- Loop management (when to stop iterating)
+
+REASONING FRAMEWORK:
+- Claude thinks step-by-step about decision
+- Can call tools mid-reasoning
+- Refines reasoning based on tool results
+- Decides when enough information to trade
+- Explains reasoning to you (transparency)
+
+================================================================================
+HOW ROCKETSHIP FITS THE LEOPOLD SYSTEM
+================================================================================
+
+MONTH 1: FOUNDATION + TOOL DESIGN (Using RocketShip)
+
+ACTIVITY:
+- Fork RocketShip repo
+- Customize for Leopold thesis
+- Design 8-10 domain-specific tools
+- Build 30-scenario test harness
+- Get system running with evals
+
+TOOLS DESIGNED FOR ROCKETSHIP LOOP:
+
+Leopold-specific tools that Claude will call during reasoning:
+
+1. **fetch_thesis_alignment**
+   - Input: Current market conditions
+   - Output: Which Leopold bottlenecks are most interesting now?
+   - Use: Claude checks if market aligns with thesis
+
+2. **fetch_sentiment_signals**
+   - Input: Market state
+   - Output: Sentiment across media, social, technical
+   - Use: Claude incorporates sentiment into decision
+
+3. **compute_bottleneck_severity**
+   - Input: Bottleneck type (power/compute/memory/storage/optical)
+   - Output: Current severity (supply/demand imbalance)
+   - Use: Claude evaluates which bottleneck matters most
+
+4. **estimate_market_timing**
+   - Input: Portfolio, regimes, technical indicators
+   - Output: Timing signals (entry/exit confidence)
+   - Use: Claude decides when to trade (not just what)
+
+5. **reason_to_trade**
+   - Input: All gathered signals
+   - Output: Trade recommendation (stock, side, size)
+   - Use: Claude's final decision
+
+6. **compute_portfolio_snapshot**
+   - Input: None (reads current portfolio)
+   - Output: Current holdings, P&L, exposure
+   - Use: Claude checks constraints before trading
+
+7. **evaluate_conviction_level**
+   - Input: All reasoning so far
+   - Output: Confidence score (0-100)
+   - Use: Claude decides if conviction is high enough to trade
+
+8. **post_trade_reflection**
+   - Input: Trade just executed
+   - Output: Was it wise? What would you change?
+   - Use: Claude learns from own trades (feedback loop)
+
+9. **identify_failure_patterns**
+   - Input: Trade history
+   - Output: Patterns in losing trades
+   - Use: Claude avoids repeating mistakes
+
+10. **adjust_factor_weights**
+    - Input: Regime, signal quality
+    - Output: New weights for Leopold factors
+    - Use: Claude adapts model to current regime
+
+These tools are SPECIFIC to Leopold, but architecture is RocketShip.
+
+ROCKETSHIP PROVIDES: The loop, tool integration, reasoning framework
+LEOPOLD PROVIDES: The domain logic, tool implementations, thesis validation
+
+================================================================================
+ROCKETSHIP INTEGRATION WITH MONTH 1 WORK
+================================================================================
+
+WEEK 1-2: FORK & CUSTOMIZE
+
+1. Clone RocketShip from GitHub
+2. Read codebase (understand agentic loop)
+3. Review tool interface (how to define tools)
+4. Understand reasoning prompt structure
+
+DELIVERABLE: Fork working, understood
+
+3. WEEK 3-4: TOOL DESIGN & SCENARIO BUILD
+
+1. Define each of the 10 tools (signatures, inputs, outputs)
+2. Implement tools (use real market data APIs)
+3. Create 30 test scenarios:
+   - Different market regimes
+   - Different portfolio states
+   - Different sentiment signals
+   - Edge cases
+
+4. Integrate into RocketShip loop
+5. Test: Claude reasons → calls tools → gets results → decides
+
+DELIVERABLE: RocketShip-based system running with evals
+
+================================================================================
+ROCKETSHIP ADVANTAGES FOR LEOPOLD
+================================================================================
+
+ADVANTAGE 1: Iterative Reasoning
+Leopold thesis is complex (5 bottlenecks, 4 regimes, sentiment, technical).
+RocketShip allows Claude to reason iteratively:
+- Start: "Should I trade?"
+- Check thesis alignment (tool call)
+- Evaluate bottleneck severity (tool call)
+- Check sentiment (tool call)
+- Check regime (tool call)
+- Check portfolio constraints (tool call)
+- Conclude: "Yes, buy CRWV" or "No, wait"
+
+This is better than hardcoded rules.
+
+ADVANTAGE 2: Transparency
+Claude explains its reasoning at each step.
+You can see:
+- Why it called each tool
+- What it learned from tool results
+- Why it made the final decision
+
+This is crucial for learning what the agent actually thinks.
+
+ADVANTAGE 3: Tool Composition
+Tools can be simple, composed into complex reasoning:
+- Individual tool: "compute bottleneck severity"
+- Composed: Claude uses 5 calls to "evaluate all bottlenecks"
+- Emergent: Complex analysis from simple tools
+
+ADVANTAGE 4: Easy Testing
+RocketShip's scenario framework makes testing easy:
+- Define scenario (market state, portfolio)
+- Run agent
+- Check: Did it make right decision?
+- Adjust tools/prompts if needed
+
+This is your eval feedback loop.
+
+ADVANTAGE 5: Scalable for RL Training
+By Month 3, you train on RocketShip decisions:
+- RocketShip makes 100,000 trades in backtest
+- Each has a decision + outcome
+- HUD.ai trains on: "Given this scenario, was the decision good?"
+- Learns to weight tools differently in each regime
+
+Can't do this easily without structured agent.
+
+ADVANTAGE 6: Regime Awareness
+Leopold system has 4 regimes (RISK_ON, TRANSITION, RISK_OFF, RECOVERY).
+RocketShip tools can be regime-aware:
+- Same market signal means different things in RISK_ON vs RISK_OFF
+- Tools can check regime (tool call)
+- Claude reasons differently in each regime
+- Natural fit for regime-aware trading
+
+================================================================================
+ROCKETSHIP LIMITATIONS & MITIGATIONS
+================================================================================
+
+LIMITATION 1: Learning Curve
+RocketShip is a framework, not a tutorial.
+You need to understand agentic loops.
+
+MITIGATION: Week 1-2, read codebase deeply. Ask questions.
+Resource: Ernest Chan's "Generative AI for Trading" covers agentic patterns.
+
+LIMITATION 2: Not a Trading System
+RocketShip doesn't have market connectivity built in.
+You need to add:
+- Market data APIs (IBKR, Yahoo Finance, etc.)
+- Order execution (IBKR API)
+- Backtesting framework (Backtrader, VectorBT, etc.)
+
+MITIGATION: These are straightforward integrations.
+IBKR has Python API. Backtesting is standard.
+RocketShip handles the reasoning; you handle the infrastructure.
+
+LIMITATION 3: Claude API Costs
+Each reasoning loop calls Claude (cost per API call).
+Backtesting 2000-2024 = millions of API calls = $thousands.
+
+MITIGATION: Month 1-2: Use expensive evals (learn).
+Month 3: Batch API calls, optimize prompts.
+Month 4: Train own model (Mistral 7B via HUD.ai) to replace Claude.
+Alternative: Use cheaper models (Claude Haiku) for most decisions.
+
+LIMITATION 4: Latency
+Each trade decision = Claude API call = 1-5 seconds.
+Doesn't work for high-frequency trading.
+
+MITIGATION: Not an issue for Leopold system.
+You're trading daily/weekly, not microsecond-scale.
+RocketShip response time is fine.
+
+LIMITATION 5: Non-Deterministic
+Claude reasoning isn't deterministic (temperature > 0).
+Same inputs might give different outputs.
+
+MITIGATION: This is actually a feature for robustness testing.
+Backtest with multiple runs, see variance.
+Train RL to reduce variance in Month 4.
+
+================================================================================
+ROCKETSHIP vs ALTERNATIVES (Why Not Other Frameworks?)
+================================================================================
+
+ALTERNATIVE 1: Build Custom Agent Loop
+Pros: Full control
+Cons: 150+ hours, error-prone, maintains forever
+VERDICT: Not worth it. RocketShip solves this.
+
+ALTERNATIVE 2: Use AgentKit / LangChain
+Pros: Lots of documentation
+Cons: Overkill for trading, abstracts away understanding
+VERDICT: Could work, but RocketShip is simpler.
+
+ALTERNATIVE 3: Use Trading Bots (MetaTrader, TradingBot, etc.)
+Pros: Ready-made platform
+Cons: Can't do LLM reasoning, proprietary, expensive
+VERDICT: Wrong tool. Need agentic reasoning.
+
+ALTERNATIVE 4: Hard-Coded Rules (If-Then)
+Pros: Fast, simple
+Cons: Can't adapt, can't learn, fragile to market changes
+VERDICT: Works until it doesn't. RocketShip + rules = better.
+
+ROCKETSHIP: Best fit for Leopold because:
+- Right level of abstraction (agentic loop + tool framework)
+- Designed for reasoning-based trading
+- Not too high-level (still control reasoning)
+- Not too low-level (don't rebuild basics)
+- Scales from evals to RL training
+
+================================================================================
+ROCKETSHIP WORKFLOW: HOW YOU'LL USE IT
+================================================================================
+
+MONTH 1: Foundation (40-50 hours)
+```
+Fork RocketShip
+    ↓
+Understand agentic loop (8 hours)
+    ↓
+Design 10 tools (8 hours)
+    ↓
+Implement tools (12 hours)
+    ↓
+Build 30-scenario test set (6 hours)
+    ↓
+Integrate tools into RocketShip (6 hours)
+    ↓
+Run evals, get baseline metrics (6 hours)
+    ↓
+DELIVERABLE: RocketShip running, tools working, evals showing 40-60% win rate
+```
+
+MONTH 2: Regime Modeling (50-60 hours)
+```
+Extend tools to be regime-aware
+    ↓
+In RISK_ON: Aggressive, no stops
+In RISK_OFF: Conservative, tight stops
+In RECOVERY: Rebuilding positions
+    ↓
+Backtest 2000-2024 with regime logic
+    ↓
+Evals now show: -45% → -12% max DD, Sharpe 0.8 → 1.4
+    ↓
+DELIVERABLE: RocketShip + regime logic working
+```
+
+MONTH 3: Backtesting & RL Setup (60-70 hours)
+```
+Full backtest 2000-2024
+    ↓
+Capture 100k+ scenarios
+    ↓
+Design reward function for HUD.ai
+    ↓
+Create 230-scenario RL training set
+    ↓
+DELIVERABLE: RL training data ready, RocketShip proved
+```
+
+MONTH 4: RL Training & Deployment (50-60 hours)
+```
+Train Mistral 7B on RocketShip decisions
+    ↓
+Replace Claude calls with Mistral (cheaper, faster)
+    ↓
+Paper trade 2 weeks with trained model
+    ↓
+Measure: 14% return, -10% max DD, 1.8+ Sharpe
+    ↓
+DELIVERABLE: Live system, GitHub repo, writeup
+```
+
+================================================================================
+ROCKETSHIP DECISION IMPACT (Why This Matters)
+================================================================================
+
+IMPACT 1: Schedule
+- Fork RocketShip: 4-month plan is achievable
+- Build custom: Would need 6+ months (too long for internship)
+
+IMPACT 2: Quality
+- RocketShip: Battle-tested agentic loop
+- Custom: Would have bugs, takes weeks to debug
+
+IMPACT 3: Scalability
+- RocketShip: Designed to scale to RL training
+- Custom: Would need rearchitecture for RL
+
+IMPACT 4: Mentorship
+- Portfolio manager can advise on Leopold logic
+- Queen's AI engineer can advise on RocketShip/RL
+- Both have familiarity with RocketShip patterns
+
+IMPACT 5: Proof of Concept
+- By month 2: Can show regime-aware trading logic works
+- By month 3: Can backtest and prove alpha
+- By month 4: Can show RL improves performance
+- Progression is clear
+
+IMPACT 6: Career Narrative
+- "I built a regime-aware trading agent using RocketShip framework"
+- "I trained Mistral 7B to improve trading decisions"
+- "System achieved 14% returns, -10% max drawdown in backtests"
+- Strong story for interviews
+
+================================================================================
+ROCKETSHIP INTEGRATION WITH DOMAIN WIKI
+================================================================================
+
+When building domain wiki, RocketShip appears in multiple places:
+
+**In wiki/architecture/:**
+- RocketShip-fork.md (which version, customizations)
+- Tool-design.md (the 10 tools, signatures, implementations)
+- Agent-loop.md (how reasoning works)
+- Scenario-framework.md (test scenarios for evals)
+
+**In wiki/decisions/:**
+- 2026-04-20_fork-rocketship-decision.md (why fork not build)
+- Why RocketShip over alternatives
+- Alternative implementations considered
+- Trade-offs analyzed
+
+**In wiki/_meta/:**
+- RocketShip listed as critical source/dependency
+- Versioning (which version forked)
+- GitHub fork URL
+- Configuration notes
+
+**In wiki/log.md:**
+- When RocketShip was forked
+- When tools were integrated
+- When first evals ran
+- Progress with RocketShip improvements
+
+================================================================================
+KEY ROCKETSHIP METRICS & SUCCESS CRITERIA
+================================================================================
+
+MONTH 1 SUCCESS (RocketShip Working):
+- ✓ Fork running locally
+- ✓ Tools integrated
+- ✓ 30 scenarios created
+- ✓ Baseline evals: 40-60% win rate
+- ✓ Claude explains reasoning
+- ✓ Tool calls working correctly
+
+MONTH 2 SUCCESS (Regime Logic Added):
+- ✓ 4 regimes implemented
+- ✓ Regime detection working
+- ✓ Backtests show regime-aware improvement
+- ✓ Max drawdown: -45% → -12%
+- ✓ Sharpe: 0.8 → 1.4
+
+MONTH 3 SUCCESS (Ready for RL):
+- ✓ 2000-2024 backtest complete
+- ✓ 100k+ scenarios captured
+- ✓ Alpha proved (95%+ confidence)
+- ✓ RL training data ready
+- ✓ Reward function defined
+
+MONTH 4 SUCCESS (RL Trained & Live):
+- ✓ Mistral 7B trained (30-60 min compute)
+- ✓ Inference faster than Claude
+- ✓ Performance held or improved
+- ✓ Paper trading shows 14% return
+- ✓ Code on GitHub
+- ✓ Writeup complete
+
+================================================================================
+ROCKETSHIP RESOURCES & LEARNING
+================================================================================
+
+PRIMARY RESOURCE:
+GitHub: https://github.com/ammar-adam/rocketship
+- Read README
+- Review codebase structure
+- Understand tool interface
+- Look at example scenarios
+
+SUPPORTING RESOURCES:
+- Ernest Chan: "Generative AI for Trading" (Chapters 1-6 for agent concepts)
+- Ernest Chan: "Hands-On AI for Trading" (Chapter 9-11 for implementation)
+- Anthropic Skilljar: Claude Code 101 (agentic patterns, tool use)
+
+EXTERNAL REFERENCES:
+- OpenAI: Function Calling Docs (tools in LLM context)
+- LangChain Agent Architecture (general agentic patterns)
+- ReAct Paper (reasoning + acting framework)
+
+MENTORSHIP:
+- Portfolio Manager: Domain logic, Leopold thesis, when to trade
+- Queen's AI Engineer: RocketShip implementation, RL training, optimization
+
+================================================================================
+ROCKETSHIP CUSTOMIZATION FOR LEOPOLD
+================================================================================
+
+BASE ROCKETSHIP:
+Generic agentic loop for any trading system.
+Provides: Reasoning structure, tool framework, iteration logic.
+
+LEOPOLD CUSTOMIZATION:
+- 5 bottleneck analysis (tools for each)
+- 4 regime logic (regime-aware reasoning)
+- Portfolio constraints (BE, CRWV, LITE, MU, SNDK, SPY)
+- Sentiment integration (add sentiment tool)
+- Risk management (max position sizes, stop losses)
+
+WHAT YOU MODIFY:
+1. Tools (domain-specific)
+2. Reasoning prompt (Leopold thesis guidance)
+3. Test scenarios (Leopold-relevant markets)
+4. Success criteria (14-18% return, -10% max DD)
+
+WHAT YOU KEEP:
+1. Agentic loop (reuse RocketShip's)
+2. Tool framework (reuse RocketShip's)
+3. Error handling (reuse RocketShip's)
+4. Logging (reuse RocketShip's)
+
+MODULARITY:
+RocketShip designed to be customizable at all these levels.
+You override what you need, keep what you don't.
+
+================================================================================
+ROCKETSHIP IN CONTEXT: THE FULL SYSTEM
+================================================================================
+
+Your 4-month system architecture:
+
+```
+Market Data
+    ↓
+RocketShip Loop (reasoning)
+    ├─ Claude (Months 1-3)
+    └─ Mistral 7B (Month 4)
+         ↓
+    Tool Calls
+    ├─ fetch_thesis_alignment (Leopold logic)
+    ├─ fetch_sentiment_signals (market sentiment)
+    ├─ compute_bottleneck_severity (5 bottlenecks)
+    ├─ estimate_market_timing (technical analysis)
+    ├─ etc.
+         ↓
+    Decision: Trade or Hold
+         ↓
+    Execution: IBKR API
+         ↓
+    Feedback: Record outcome
+         ↓
+    Learning: Train RL (HUD.ai)
+```
+
+RocketShip is the spine of this system.
+Everything else hangs off it.
+
+================================================================================
+CONCLUSION: WHY ROCKETSHIP MATTERS
+================================================================================
+
+ROCKETSHIP is the RIGHT CHOICE for Leopold because:
+
+1. **Proven**: Battle-tested agentic framework
+2. **Focused**: Designed for reasoning-based trading
+3. **Extensible**: Tool framework handles 10+ Leopold-specific tools
+4. **Scalable**: Works from month 1 evals to month 4 RL training
+5. **Transparent**: Claude explains reasoning at each step
+6. **Regime-Aware**: Natural fit for Leopold's 4-regime model
+7. **Maintainable**: Open source, documented, community support
+8. **Time-Efficient**: Forks in hours, not months
+
+ROCKETSHIP ENABLES:
+- ✓ Fast implementation (4 months possible)
+- ✓ Iterative improvement (evals feedback loop)
+- ✓ Proof of alpha (backtesting)
+- ✓ RL optimization (trained model)
+- ✓ Professional product (live trading ready)
+- ✓ Strong interview narrative
+
+ROCKETSHIP AVOIDS:
+- ✗ Building custom agent loop (100+ hours)
+- ✗ Reinventing tool framework (error-prone)
+- ✗ Scaling issues (RocketShip handles them)
+- ✗ Maintenance burden (open source)
+
+**RocketShip is not just a technical choice. It's a schedule choice, a quality choice, a career choice.**
+
+By forking RocketShip, you're choosing to focus on domain logic (Leopold thesis, regime modeling, sentiment integration) rather than infrastructure. This is the right priority for a 4-month internship.
+
+================================================================================
+END OF DOCUMENT
+================================================================================

@@ -1,0 +1,420 @@
+TITLE: Raw Brainstorm Log – AI-Driven Hedge Fund System, Data Stack, Agentic Framework, and Tooling
+
+DATE: 2026
+
+---
+
+SECTION 1: INITIAL PROBLEM CONTEXT
+
+The user is designing an AI-driven hedge fund system focused on:
+
+- US growth equities
+- AI-driven structural tailwinds
+- Second-order and third-order effects (not obvious beneficiaries like NVDA or MSFT)
+- Medium-term time horizons (weeks to months)
+
+The system includes:
+
+- Universe selection
+- Feature extraction
+- Alpha modeling
+- Regime modeling
+- Scenario modeling (CPI, Fed, earnings)
+- Portfolio construction
+- Backtesting (point-in-time, no leakage)
+- Agentic orchestration (multi-agent workflow)
+
+The user has:
+
+- Access to LSEG data
+- Python capability
+- Plans to use Claude, ChatGPT, Cursor
+- Interest in MCP (Model Context Protocol) integrations
+- TradingView MCP integration available (81 tools)
+
+---
+
+SECTION 2: DATA AND INFRASTRUCTURE UNDERSTANDING
+
+The conversation established categories of data used by hedge funds:
+
+1. Market Data
+   - Tick data
+   - Order book
+   - OHLCV
+   - Options data
+
+2. Alternative Data
+   - Satellite imagery
+   - Credit card transactions
+   - Web scraping
+   - Social sentiment
+   - App usage
+   - Geolocation
+
+3. Fundamental Data
+   - Financial statements
+   - Analyst estimates
+   - Macro data
+
+4. Proprietary Data
+   - Trade logs
+   - Execution data
+   - Feature stores
+
+5. Compute Infrastructure
+   - CPU clusters
+   - GPU clusters
+   - FPGA (HFT)
+   - Cloud systems
+
+6. Data Engineering
+   - Data lakes
+   - ETL pipelines
+   - Streaming systems
+
+---
+
+SECTION 3: MINIMUM VS FULL STACK
+
+Minimum viable system includes:
+
+- LSEG structured data
+- Basic macro data
+- Earnings transcripts
+- News sentiment (basic)
+- Python-based backtesting
+- Light cloud usage
+
+Full institutional stack includes:
+
+- Bloomberg / Refinitiv / FactSet
+- Alternative datasets
+- Distributed compute
+- Real-time pipelines
+- Proprietary feature stores
+
+---
+
+SECTION 4: ALPHA STRATEGY DESIGN
+
+Core alpha framework:
+
+1. Signal Engine
+   - Momentum
+   - Earnings revisions
+   - AI exposure
+
+2. Regime Engine
+   - Volatility regimes
+   - Trend regimes
+   - Liquidity regimes
+
+3. Scenario Engine
+   - CPI reactions
+   - Earnings reactions
+   - Fed decisions
+
+---
+
+SECTION 5: AI-DRIVEN RESEARCH FRAMEWORK
+
+Referenced systems:
+
+1. Alpha-GPT
+   - LLM generates strategies
+   - Backtests automatically
+   - Iterates on results
+
+2. Increase Alpha
+   - Extracts signals from SEC filings
+   - Uses sentiment and language change
+
+3. 3AI
+   - ML models on LSEG data
+
+Combined architecture:
+
+- Data layer (structured + text)
+- Signal layer (momentum, sentiment, fundamentals)
+- Research layer (backtesting, Monte Carlo)
+- AI layer (LLM-driven iteration)
+- Portfolio layer (regime-based allocation)
+
+---
+
+SECTION 6: SYSTEM DECOMPOSITION
+
+System broken into granular tasks:
+
+A. Theme Identification
+   - Define AI exposure
+   - Define second/third-order effects
+
+B. Universe Construction
+   - Growth filters
+   - Liquidity filters
+
+C. Feature Extraction
+   - Structured metrics
+   - Text-derived signals
+
+D. Alpha Modeling
+   - Factor ranking
+   - Signal combination
+
+E. Regime Modeling
+   - Clustering (k-means)
+   - HMM (later stage)
+
+F. Scenario Modeling
+   - Event-based simulations
+
+G. Portfolio Construction
+   - Ranking
+   - Position sizing
+
+---
+
+SECTION 7: INPUT SPECIFICATION (FROM DOCUMENTS)
+
+Required data inputs:
+
+1. Security master
+   - symbol history
+   - identifiers
+   - listing/delisting dates
+
+2. Market data
+   - OHLCV
+   - corporate actions
+   - intraday (optional)
+
+3. Fundamentals
+   - income statement
+   - balance sheet
+   - cash flow
+
+4. Analyst estimates
+   - EPS forecasts
+   - revisions
+   - dispersion
+
+5. Text data
+   - 10-K, 10-Q
+   - earnings transcripts
+   - news
+
+6. Event data
+   - earnings
+   - CPI
+   - FOMC
+
+7. Alternative constraint data
+   - power markets
+   - supply chain indices
+   - interconnection queues
+
+---
+
+SECTION 8: FEATURE LAYER
+
+Derived features include:
+
+- Momentum (multi-horizon)
+- Volatility
+- Liquidity metrics
+- Growth rates
+- Margins
+- Capital allocation metrics
+- Earnings surprise
+- Revision acceleration
+- AI exposure score
+- Narrative change score
+- Constraint nowcast
+- Regime classification
+
+---
+
+SECTION 9: POINT-IN-TIME REQUIREMENTS
+
+Key constraints:
+
+- Use available_time, not event_time
+- No lookahead bias
+- Store all versions of data
+- Align macro events to release time
+- Handle corporate actions properly
+
+Failure modes:
+
+- survivorship bias
+- restatement leakage
+- incorrect time alignment
+- stale data
+
+---
+
+SECTION 10: AGENTIC FRAMEWORK
+
+Based on TradingAgents:
+
+Agents:
+
+1. Universe Agent
+   - filters stocks
+
+2. Feature Agent
+   - computes features
+
+3. Ranking Agent
+   - scores stocks
+
+4. Risk Agent
+   - applies constraints
+
+Flow:
+
+Universe → Features → Ranking → Risk → Portfolio
+
+---
+
+SECTION 11: MCP + TRADINGVIEW INTEGRATION
+
+TradingView MCP includes:
+
+- chart reading
+- indicator values
+- OHLCV retrieval
+- Pine script execution
+- replay mode
+- alerts
+- watchlist management
+- multi-pane control
+
+Architecture:
+
+Claude Code ↔ MCP Server ↔ TradingView Desktop
+
+Usage:
+
+- discretionary analysis
+- indicator extraction
+- Pine-based logic testing
+
+Limitations:
+
+- not a full historical data backbone
+- not survivorship-safe
+- not suited for institutional backtesting
+
+---
+
+SECTION 12: TOOLING DISCUSSION
+
+Tools considered:
+
+- Claude Code (agent-based coding)
+- Cursor (editor-based coding)
+- ChatGPT (research + prompts)
+
+Comparison:
+
+Claude Code:
+- high-level system execution
+- multi-file generation
+
+Cursor:
+- fast iteration
+- debugging
+- precise edits
+
+Conclusion:
+
+- Claude for architecture
+- Cursor for implementation
+
+---
+
+SECTION 13: MCP ECOSYSTEM
+
+Discussion of MCP usage:
+
+Potential MCP servers:
+
+- SEC ingestion
+- market data access
+- database access
+- feature computation
+- TradingView
+- backtesting engine
+- filesystem
+- GitHub
+- browser/fetch
+- alerting systems
+
+---
+
+SECTION 14: DATA SOURCE PROCUREMENT PROBLEM
+
+User goal:
+
+- identify exact tools, APIs, and datasets
+- compare:
+  - free vs premium vs institutional
+- evaluate:
+  - cost
+  - quality
+  - MCP compatibility
+
+Categories:
+
+- market data
+- fundamentals
+- analyst data
+- text data
+- macro data
+- NLP tools
+- storage and pipeline tools
+- backtesting frameworks
+- universe reconstruction
+
+---
+
+SECTION 15: LLM WIKI CONVERSION
+
+Goal:
+
+- convert chat into structured knowledge base
+
+Process:
+
+1. raw dump
+2. structured extraction
+3. split into modules
+4. store as markdown
+5. use for RAG
+
+---
+
+SECTION 16: FINAL STATE
+
+System being built:
+
+- AI-driven hedge fund research engine
+- modular architecture
+- agent-based orchestration
+- structured data + text fusion
+- LLM-assisted research loop
+- MCP-integrated tooling layer
+
+Key themes:
+
+- input correctness over model complexity
+- iteration speed
+- modular design
+- system-level thinking
+
+---
+
+END OF RAW INPUT

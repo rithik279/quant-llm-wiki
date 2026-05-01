@@ -1,0 +1,22 @@
+{
+  "name": "portfolio-agent",
+  "version": "1.0.0",
+  "description": "Daily portfolio agent for AGI infrastructure growth equities",
+  "main": "portfolio-agent-system.js",
+  "scripts": {
+    "daily": "node portfolio-agent-system.js daily",
+    "weekly": "node portfolio-agent-system.js weekly",
+    "schedule": "node scheduler.js",
+    "test": "node test-agent.js"
+  },
+  "keywords": ["portfolio", "agent", "ai", "growth", "infrastructure"],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.16.0",
+    "node-schedule": "^2.1.1",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {}
+}

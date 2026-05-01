@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4-Month Build Plan - Interactive Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1em;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #334155;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 1em;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: #cbd5e1;
+        }
+
+        .tab-btn.active {
+            color: #60a5fa;
+            border-bottom-color: #60a5fa;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .month-section {
+            background: rgba(30, 41, 59, 0.8);
+            border: 2px solid #475569;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .month-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #60a5fa;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .week-header {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #cbd5e1;
+            margin: 15px 0 10px 0;
+            padding-top: 10px;
+            border-top: 1px solid #475569;
+        }
+
+        .checklist {
+            list-style: none;
+            margin: 10px 0 15px 20px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            padding: 8px 0;
+        }
+
+        .checklist-box {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #475569;
+            border-radius: 3px;
+            margin-right: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .checklist-item input:checked ~ .checklist-box {
+            background: #60a5fa;
+            border-color: #60a5fa;
+        }
+
+        .checklist-item input:checked ~ .checklist-label {
+            color: #94a3b8;
+            text-decoration: line-through;
+        }
+
+        .checklist-item input {
+            display: none;
+        }
+
+        .checklist-label {
+            cursor: pointer;
+            flex: 1;
+            color: #cbd5e1;
+            font-size: 0.95em;
+        }
+
+        .mentorship-box {
+            background: rgba(96, 165, 250, 0.1);
+            border-left: 4px solid #60a5fa;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .mentorship-box strong {
+            color: #60a5fa;
+        }
+
+        .deliverable-box {
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 4px solid #22c55e;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .deliverable-box strong {
+            color: #86efac;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: rgba(96, 165, 250, 0.1);
+            border: 1px solid #475569;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #60a5fa;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .mentorship-schedule {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .meeting {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #475569;
+        }
+
+        .meeting:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .meeting-day {
+            font-weight: bold;
+            color: #60a5fa;
+            margin-bottom: 5px;
+        }
+
+        .meeting-details {
+            color: #cbd5e1;
+            font-size: 0.95em;
+            margin-left: 10px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #334155;
+            color: #64748b;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8em; }
+            .tabs { flex-wrap: wrap; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 4-Month Build Plan Tracker</h1>
+            <p class="subtitle">Leopold Infrastructure Bottleneck Detector with RL Optimization</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+            <p style="margin-top: 10px; color: #94a3b8; font-size: 0.9em;" id="progressText">0% Complete</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+            <button class="tab-btn" onclick="switchTab('month1')">Month 1</button>
+            <button class="tab-btn" onclick="switchTab('month2')">Month 2</button>
+            <button class="tab-btn" onclick="switchTab('month3')">Month 3</button>
+            <button class="tab-btn" onclick="switchTab('month4')">Month 4</button>
+            <button class="tab-btn" onclick="switchTab('mentorship')">Mentorship</button>
+        </div>
+
+        <!-- OVERVIEW -->
+        <div id="overview" class="tab-content active">
+            <div class="month-section">
+                <div class="month-title">📋 Your Setup (Top 0.1%)</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Time</div>
+                        <div class="stat-value">4 Months</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Hardware</div>
+                        <div class="stat-value">Blackwell 1000</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Framework</div>
+                        <div class="stat-value">RocketShip</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">RL Tool</div>
+                        <div class="stat-value">HUD.ai</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Mentors</div>
+                        <div class="stat-value">2 Experts</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Books</div>
+                        <div class="stat-value">Chan (2025)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="month-section">
+                <div class="month-title">🎯 What You're Building</div>
+                <p style="margin-bottom: 15px; line-height: 1.8;">
+                    <strong style="color: #60a5fa;">Leopold Infrastructure Bottleneck Detector</strong><br>
+                    Find less obvious bottlenecks in the AI boom (power, memory, storage, optical)<br>
+                    Validate with ML, optimize with RL, prove with regime modeling
+                </p>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Target Return</div>
+                        <div class="stat-value">14-18%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Max Drawdown</div>
+                        <div class="stat-value">-10%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Sharpe Ratio</div>
+                        <div class="stat-value">1.8+</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">RL Improvement</div>
+                        <div class="stat-value">+15-25%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="month-section">
+                <div class="month-title">📅 4-Month Roadmap</div>
+                <ul style="list-style: none; margin: 15px 0;">
+                    <li style="margin: 10px 0; padding: 10px; background: rgba(96, 165, 250, 0.1); border-radius: 4px;">
+                        <strong style="color: #60a5fa;">Month 1 (Weeks 1-4):</strong> Foundation + Tool Design
+                    </li>
+                    <li style="margin: 10px 0; padding: 10px; background: rgba(96, 165, 250, 0.1); border-radius: 4px;">
+                        <strong style="color: #60a5fa;">Month 2 (Weeks 5-8):</strong> Regime Modeling
+                    </li>
+                    <li style="margin: 10px 0; padding: 10px; background: rgba(96, 165, 250, 0.1); border-radius: 4px;">
+                        <strong style="color: #60a5fa;">Month 3 (Weeks 9-12):</strong> Backtesting + RL Setup
+                    </li>
+                    <li style="margin: 10px 0; padding: 10px; background: rgba(96, 165, 250, 0.1); border-radius: 4px;">
+                        <strong style="color: #60a5fa;">Month 4 (Weeks 13-16):</strong> RL Training + Deployment
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- MONTH 1 -->
+        <div id="month1" class="tab-content">
+            <div class="month-section">
+                <div class="month-title">📦 Month 1: Foundation + Tool Design (40-50 hours)</div>
+                
+                <div class="week-header">⚙️ Week 1: Setup Infrastructure (10 hours)</div>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m1w1c1">
+                        <div class="checklist-box"></div>
+                        <label for="m1w1c1" class="checklist-label">Fork & setup RocketShip locally</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m1w1c2">
+                        <div class="checklist-box"></div>
+                        <label for="m1w1c2" class="checklist-label">Configure HUD.ai account</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m1w1c3">
+                        <div class="checklist-box"></div>
+                        <label for="m1w1c3" class="checklist-label">Test Blackwell GPU with Mistral 7B</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m1w1c4">
+                        <div class="checklist-box"></div>
+                        <label for="m1w1c4" class="checklist-label">Study friend's trading traces</label>
+                    </li>
+                </ul>
+
+                <div class="week-header">🛠️ Week 2-3: Tool & Scenario Design (80-100 hours)</div>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m1w23c1">
+                        <div class="checklist-box"></div>
+                        <label for="m1w23c1" class="checklist-label">Design 8-10 tools (decision + data tools)</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m1w23c2">
+                        <div class="checklist-box"></div>
+                        <label for="m1w23c2" class="checklist-label">Design 3-4 core scenarios</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m1w23c3">
+                        <div class="checklist-box"></div>
+                        <label for="m1w23c3" class="checklist-label">Create 30-scenario initial taskset</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m1w23c4">
+                        <div class="checklist-box"></div>
+                        <label for="m1w23c4" class="checklist-label">Implement error handling & logging</label>
+                    </li>
+                </ul>
+
+                <div class="week-header">📊 Week 4: Baseline Setup (10-20 hours)</div>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m1w4c1">
+                        <div class="checklist-box"></div>
+                        <label for="m1w4c1" class="checklist-label">Run RocketShip baseline metrics</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m1w4c2">
+                        <div class="checklist-box"></div>
+                        <label for="m1w4c2" class="checklist-label">Test local Mistral against taskset</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m1w4c3">
+                        <div class="checklist-box"></div>
+                        <label for="m1w4c3" class="checklist-label">Document failure modes</label>
+                    </li>
+                </ul>
+
+                <div class="deliverable-box">
+                    <strong>✅ Deliverable:</strong> System runs without errors, generates daily signals, code logged and clean
+                </div>
+            </div>
+        </div>
+
+        <!-- MONTH 2 -->
+        <div id="month2" class="tab-content">
+            <div class="month-section">
+                <div class="month-title">📈 Month 2: Regime Modeling (50-60 hours)</div>
+                
+                <div class="week-header">🎯 Week 1: Regime Definition (15 hours)</div>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m2w1c1">
+                        <div class="checklist-box"></div>
+                        <label for="m2w1c1" class="checklist-label">Define 4 regimes (RISK_ON, TRANSITION, RISK_OFF, RECOVERY)</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m2w1c2">
+                        <div class="checklist-box"></div>
+                        <label for="m2w1c2" class="checklist-label">Set quantifiable thresholds (VIX, spreads, etc)</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m2w1c3">
+                        <div class="checklist-box"></div>
+                        <label for="m2w1c3" class="checklist-label">Document position sizing rules per regime</label>
+                    </li>
+                </ul>
+
+                <div class="week-header">🔍 Week 2-3: Regime Detection Model (35 hours)</div>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m2w23c1">
+                        <div class="checklist-box"></div>
+                        <label for="m2w23c1" class="checklist-label">Build real-time regime detector (VIX, spreads, correlations)</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m2w23c2">
+                        <div class="checklist-box"></div>
+                        <label for="m2w23c2" class="checklist-label">Validate against historical regimes</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m2w23c3">
+                        <div class="checklist-box"></div>
+                        <label for="m2w23c3" class="checklist-label">Train classifier on 2000-2024 data</label>
+                    </li>
+                </ul>
+
+                <div class="week-header">⚡ Week 4: Regime Overlay Strategy (10 hours)</div>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m2w4c1">
+                        <div class="checklist-box"></div>
+                        <label for="m2w4c1" class="checklist-label">Define position sizing by regime</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m2w4c2">
+                        <div class="checklist-box"></div>
+                        <label for="m2w4c2" class="checklist-label">Test overlay on historical data</label>
+                    </li>
+                </ul>
+
+                <div class="deliverable-box">
+                    <strong>✅ Deliverable:</strong> Real-time regime detection working, proof that overlay reduces max drawdown 50%
+                </div>
+            </div>
+        </div>
+
+        <!-- MONTH 3 -->
+        <div id="month3" class="tab-content">
+            <div class="month-section">
+                <div class="month-title">🧪 Month 3: Backtesting + RL Setup (60-70 hours)</div>
+                
+                <div class="week-header">📊 Week 1-2: Historical Regime Analysis (30 hours)</div>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m3w12c1">
+                        <div class="checklist-box"></div>
+                        <label for="m3w12c1" class="checklist-label">Backtest 2000-2024, mark regime periods</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m3w12c2">
+                        <div class="checklist-box"></div>
+                        <label for="m3w12c2" class="checklist-label">Calculate returns/Sharpe/drawdown per regime</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m3w12c3">
+                        <div class="checklist-box"></div>
+                        <label for="m3w12c3" class="checklist-label">Compare unhedged vs regime-aware results</label>
+                    </li>
+                </ul>
+
+                <div class="week-header">🎲 Week 2-3: Statistical Validation (25 hours)</div>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m3w23c1">
+                        <div class="checklist-box"></div>
+                        <label for="m3w23c1" class="checklist-label">Out-of-sample testing (2020-2024)</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m3w23c2">
+                        <div class="checklist-box"></div>
+                        <label for="m3w23c2" class="checklist-label">Monte Carlo significance testing</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m3w23c3">
+                        <div class="checklist-box"></div>
+                        <label for="m3w23c3" class="checklist-label">Stress testing across regimes</label>
+                    </li>
+                </ul>
+
+                <div class="week-header">🤖 Week 3-4: RL Setup (15 hours)</div>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m3w34c1">
+                        <div class="checklist-box"></div>
+                        <label for="m3w34c1" class="checklist-label">Design 100+ scenario taskset</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m3w34c2">
+                        <div class="checklist-box"></div>
+                        <label for="m3w34c2" class="checklist-label">Define reward function</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m3w34c3">
+                        <div class="checklist-box"></div>
+                        <label for="m3w34c3" class="checklist-label">Prepare taskset for HUD.ai training</label>
+                    </li>
+                </ul>
+
+                <div class="deliverable-box">
+                    <strong>✅ Deliverable:</strong> Statistical proof alpha is real (95%+ confidence), RL taskset ready
+                </div>
+            </div>
+        </div>
+
+        <!-- MONTH 4 -->
+        <div id="month4" class="tab-content">
+            <div class="month-section">
+                <div class="month-title">🚀 Month 4: RL Training + Deployment (50-60 hours)</div>
+                
+                <div class="week-header">🔧 Week 1-2: Regime-Aware RL Features (20 hours)</div>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m4w12c1">
+                        <div class="checklist-box"></div>
+                        <label for="m4w12c1" class="checklist-label">Add regime features to training (current regime, transition likelihood, etc)</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m4w12c2">
+                        <div class="checklist-box"></div>
+                        <label for="m4w12c2" class="checklist-label">Integrate regime-aware taskset (230 scenarios)</label>
+                    </li>
+                </ul>
+
+                <div class="week-header">⚡ Week 2-3: Train RL Agent (30 hours)</div>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m4w23c1">
+                        <div class="checklist-box"></div>
+                        <label for="m4w23c1" class="checklist-label">Train Mistral 7B via HUD.ai (30-60 min compute time)</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m4w23c2">
+                        <div class="checklist-box"></div>
+                        <label for="m4w23c2" class="checklist-label">Monitor training traces & convergence</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m4w23c3">
+                        <div class="checklist-box"></div>
+                        <label for="m4w23c3" class="checklist-label">Validate on held-out test set</label>
+                    </li>
+                </ul>
+
+                <div class="week-header">📋 Week 4: Final Validation + Deployment (10 hours)</div>
+                <ul class="checklist">
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m4w4c1">
+                        <div class="checklist-box"></div>
+                        <label for="m4w4c1" class="checklist-label">Paper trading (2 weeks live market signals)</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m4w4c2">
+                        <div class="checklist-box"></div>
+                        <label for="m4w4c2" class="checklist-label">GitHub repo complete with documentation</label>
+                    </li>
+                    <li class="checklist-item">
+                        <input type="checkbox" id="m4w4c3">
+                        <div class="checklist-box"></div>
+                        <label for="m4w4c3" class="checklist-label">Technical writeup + performance analysis</label>
+                    </li>
+                </ul>
+
+                <div class="deliverable-box">
+                    <strong>✅ Deliverable:</strong> Trained RL system live, paper trading proof, GitHub ready, can explain to anyone
+                </div>
+            </div>
+        </div>
+
+        <!-- MENTORSHIP -->
+        <div id="mentorship" class="tab-content">
+            <div class="month-section">
+                <div class="month-title">👥 Mentorship Schedule</div>
+                
+                <div class="mentorship-schedule">
+                    <div class="meeting">
+                        <div class="meeting-day">Monday (30 min)</div>
+                        <div class="meeting-details">
+                            Portfolio Manager (20-year veteran)<br>
+                            Topics: Thesis validation, market intuition, regime insights, deployment decisions
+                        </div>
+                    </div>
+
+                    <div class="meeting">
+                        <div class="meeting-day">Wednesday (30 min)</div>
+                        <div class="meeting-details">
+                            Queen's AI Engineer<br>
+                            Topics: Technical architecture, ML system design, HUD.ai integration, code review
+                        </div>
+                    </div>
+
+                    <div class="meeting">
+                        <div class="meeting-day">End of Month (1 hour)</div>
+                        <div class="meeting-details">
+                            Both mentors + you<br>
+                            Topics: Show working system, market + technical feedback, plan next month, course correct
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mentorship-box">
+                    <strong>📌 Key Principle:</strong> Use Portfolio Manager for market validation. Use AI Engineer for technical guidance. Combine for business decisions.
+                </div>
+            </div>
+
+            <div class="month-section">
+                <div class="month-title">📚 Daily Rhythm</div>
+                
+                <div class="mentorship-box">
+                    <strong>Morning (30 min):</strong> Read relevant Chan chapter, take notes in Claude Projects
+                </div>
+
+                <div class="mentorship-box">
+                    <strong>Implementation (3-4 hours):</strong> Code based on reading, hit problems, reference Chan for solutions
+                </div>
+
+                <div class="mentorship-box">
+                    <strong>Evening (30 min):</strong> Reflect on learning, update Obsidian, plan tomorrow's reading
+                </div>
+
+                <div class="mentorship-box">
+                    <strong>Update Systems (10 min):</strong> Add notes to Claude Projects, commit code to GitHub
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>🚀 Leopold Infrastructure Bottleneck Detector | 4-Month Build Plan</p>
+        <p style="margin-top: 10px; font-size: 0.9em;">Execute ruthlessly. Use mentors. Ship weekly. You've got this.</p>
+    </footer>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Remove active class from buttons
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to clicked button
+            event.target.classList.add('active');
+
+            updateProgress();
+        }
+
+        // Make checkboxes functional
+        document.querySelectorAll('.checklist-item input').forEach(checkbox => {
+            checkbox.addEventListener('change', updateProgress);
+        });
+
+        function updateProgress() {
+            const total = document.querySelectorAll('.checklist-item input').length;
+            const checked = document.querySelectorAll('.checklist-item input:checked').length;
+            const percentage = Math.round((checked / total) * 100);
+            
+            document.getElementById('progressFill').style.width = percentage + '%';
+            document.getElementById('progressText').textContent = percentage + '% Complete';
+        }
+
+        // Initialize progress
+        updateProgress();
+    </script>
+</body>
+</html>

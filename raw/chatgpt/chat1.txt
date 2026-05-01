@@ -1,0 +1,416 @@
+TITLE: Agent-Assisted Systematic US Growth Equities Framework
+
+---
+
+SECTION 1: CORE SYSTEM OVERVIEW
+
+This system is a systematic long-only US growth equities engine built on a deterministic pipeline with agent-assisted feature generation.
+
+The system consists of four primary layers:
+
+1) Universe Definition (Screener)
+2) Feature Generation (Agents)
+3) Ranking (Alpha Combination)
+4) Strategy Execution (Portfolio + Rules)
+
+Key Principle:
+Agents do not make decisions. Agents generate structured, testable, numeric signals.
+
+The system is fundamentally a multi-factor model where features are generated using agentic workflows.
+
+---
+
+SECTION 2: FULL SYSTEM PIPELINE
+
+Raw Data
+→ Feature Engineering
+→ Screener (Universe)
+→ Agent Feature Layer
+→ Feature Store
+→ Ranking Engine
+→ Selection (Top N)
+→ Strategy Rules
+→ Portfolio Construction
+→ Backtest / Live Execution
+
+Each layer must be deterministic, reproducible, and point-in-time correct.
+
+---
+
+SECTION 3: UNIVERSE LAYER (SCREENER)
+
+The screener defines the tradable universe each day.
+
+Typical filters include:
+
+- US-listed equities only
+- Market cap threshold (e.g., > $2B)
+- Liquidity threshold (e.g., dollar volume > $200M)
+- Trend alignment:
+    price > SMA200
+    SMA50 > SMA150 > SMA200
+    SMA20 > SMA50
+- Volatility filter (ADR > threshold)
+- Proximity to 52-week high (e.g., within 0–5%)
+- Revenue growth
+- EPS growth
+- Optional quality filters (ROE, PEG)
+- Optional beta filter (e.g., Beta > 1)
+
+Output:
+date, ticker
+
+This output must be reconstructed historically using point-in-time data.
+
+---
+
+SECTION 4: POINT-IN-TIME REQUIREMENTS
+
+All data must reflect what was known at time t.
+
+Critical requirements:
+
+- No survivorship bias (include delisted stocks if possible)
+- No look-ahead bias (fundamentals aligned to release dates)
+- Earnings aligned to actual known calendar
+- Corporate actions handled correctly (splits, dividends, symbol changes)
+
+Failure here invalidates the entire backtest.
+
+---
+
+SECTION 5: AGENT FEATURE GENERATION LAYER
+
+Agents convert raw and unstructured data into structured numeric features.
+
+Agents must:
+- output fixed schema
+- be deterministic
+- be reproducible
+- operate on point-in-time inputs
+
+Agents must NOT:
+- make discretionary decisions
+- override system logic
+- introduce randomness
+
+---
+
+SUBSECTION 5.1: FUNDAMENTAL AGENT
+
+Inputs:
+- financial statements (point-in-time)
+- earnings data
+- analyst revisions (if available)
+
+Outputs:
+- revenue_growth_score
+- margin_expansion_score
+- earnings_revision_score
+- quality_score (ROE, margins, stability)
+
+Purpose:
+Capture underlying business strength and growth quality.
+
+---
+
+SUBSECTION 5.2: TECHNICAL AGENT
+
+Inputs:
+- price data
+- volume data
+
+Outputs:
+- trend_score (SMA alignment)
+- momentum_score (3m / 6m / 12m returns)
+- breakout_score (distance to highs)
+- extension_score (overbought / stretched conditions)
+
+Purpose:
+Capture trend persistence and price behavior.
+
+---
+
+SUBSECTION 5.3: SENTIMENT / NLP AGENT
+
+Inputs:
+- earnings transcripts
+- filings
+- news
+
+Outputs:
+- concreteness_score (specific vs vague language)
+- sentiment_score (non-generic tone)
+- narrative_strength_score
+- AI_execution_score (if relevant)
+
+Purpose:
+Capture qualitative signals not present in structured data.
+
+---
+
+SUBSECTION 5.4: MACRO / REGIME AGENT (OPTIONAL)
+
+Inputs:
+- index data
+- volatility (VIX or realized)
+- liquidity metrics
+- macro calendar (FOMC, CPI, earnings season)
+
+Outputs:
+- regime_state (trend, volatility, liquidity)
+- regime_score (favorable vs unfavorable)
+
+Purpose:
+Determine when signals are reliable.
+
+---
+
+SECTION 6: FEATURE STORE
+
+All features must be stored as:
+
+date, ticker,
+fundamental_features,
+technical_features,
+sentiment_features,
+macro_features
+
+Requirements:
+- numeric
+- timestamped
+- reproducible
+- point-in-time correct
+
+---
+
+SECTION 7: RANKING ENGINE
+
+The ranking layer converts features into a single score.
+
+Example:
+
+Final Score =
+w1 * Fundamental Score
++ w2 * Technical Score
++ w3 * Sentiment Score
+
+Alternative approaches:
+- rank aggregation
+- machine learning models (later stage)
+
+Daily process:
+- rank all stocks in universe
+- assign score and rank percentile
+
+Output:
+date, ticker, score, rank
+
+---
+
+SECTION 8: SELECTION
+
+- Select top N stocks
+- Optional filters:
+    remove extreme extension
+    remove weak sentiment
+    enforce sector balance
+
+---
+
+SECTION 9: STRATEGY RULES
+
+ENTRY:
+- Buy top-ranked stocks
+- Execution:
+    next open OR
+    same close
+
+EXIT:
+- trailing stop (ATR or percentage)
+- max holding period
+- rank deterioration
+- optional regime filter
+
+---
+
+SECTION 10: PORTFOLIO CONSTRUCTION
+
+Constraints:
+- number of positions (N)
+- equal weight or score-weighted
+- max position size
+- max % of ADV traded
+- optional sector caps
+
+---
+
+SECTION 11: BACKTEST REQUIREMENTS
+
+Must include:
+
+- realistic execution (slippage, commissions)
+- walk-forward validation
+- regime-based testing
+- parameter sensitivity testing
+
+Metrics:
+- CAGR
+- Sharpe ratio
+- max drawdown
+- turnover
+- hit rate
+
+---
+
+SECTION 12: TRADING AGENTS ROLE
+
+Agents act as:
+
+- feature generators
+- data interpreters
+- explanation layer
+- risk validation layer
+
+Agents are NOT:
+- portfolio managers
+- trade decision makers
+- optimization engines
+
+They operate as a structured intelligence layer.
+
+---
+
+SECTION 13: ALPHA SIGNALS (CORE EDGE)
+
+These are feature frameworks to be implemented via agents.
+
+---
+
+ALPHA 1: INFRASTRUCTURE CONSTRAINT NOWCAST
+
+Concept:
+Measure AI infrastructure bottlenecks (power, chips, capacity).
+
+Signal:
+constraint_score derived from:
+- transcript language (lead times, backlog, capacity)
+- macro proxies (grid constraints, energy supply)
+- pricing power (margins, backlog growth)
+
+Edge:
+Supply constraints create early winners before market repricing.
+
+---
+
+ALPHA 2: MARGIN BEFORE REVENUE
+
+Concept:
+AI improves efficiency before revenue growth is visible.
+
+Signal:
+- margin expansion
+- productivity metrics (revenue per employee)
+- AI deployment confirmation via text
+
+Edge:
+Markets underreact to early cost improvements.
+
+---
+
+ALPHA 3: NARRATIVE VS NUMBERS
+
+Concept:
+Detect divergence between management story and actual performance.
+
+Signal:
+Narrative Score − Delivery Score
+
+Long:
+low narrative, high delivery
+
+Short:
+high narrative, low delivery
+
+Edge:
+Markets misprice credibility.
+
+---
+
+ALPHA 4: REGIME CONDITIONING
+
+Concept:
+Signals only work in certain environments.
+
+Signal:
+- volatility
+- trend
+- liquidity
+- macro attention
+
+Action:
+Enable or disable signals based on regime.
+
+Edge:
+Avoid trading in unfavorable environments.
+
+---
+
+ALPHA 5: ANALYST REVISION DIFFUSION WITH TONE GATING
+
+Concept:
+Analyst updates occur gradually and combine with management signaling.
+
+Signal:
+- estimate revisions
+- first derivative (change)
+- second derivative (acceleration)
+- dispersion (agreement)
+- tone gating (management language becomes concrete)
+
+Long:
+strong revisions + strong tone
+
+Short:
+weak revisions + weak tone
+
+Edge:
+Improved post-earnings drift capture.
+
+---
+
+SECTION 14: FULL SYSTEM INTEGRATION
+
+Step 1:
+Macro layer → constraint nowcast
+
+Step 2:
+Micro fundamentals → margin signal
+
+Step 3:
+Behavioral filter → narrative divergence
+
+Step 4:
+Confirmation → analyst revisions
+
+Step 5:
+Timing → regime conditioning
+
+Step 6:
+Execution → screener + ranking + portfolio
+
+---
+
+SECTION 15: CORE PRINCIPLES
+
+- Agents generate features, not decisions
+- Point-in-time correctness is mandatory
+- Signals must be testable and reproducible
+- Simplicity > complexity in early stages
+- Alpha comes from feature quality, not architecture
+- Avoid non-deterministic logic in backtests
+- Separate data, features, and decisions cleanly
+
+---
+
+END OF FILE

@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agilith Capital - Infrastructure Proposal</title>
+    <style>
+        @page {
+            size: letter;
+            margin: 0;
+        }
+        
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #ffffff;
+            color: #1e293b;
+            width: 8.5in;
+            height: 11in;
+            padding: 0.45in 0.55in;
+            margin: 0 auto;
+            font-size: 10px;
+            line-height: 1.4;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 12px;
+            border-bottom: 2.5px solid #1a365d;
+            margin-bottom: 14px;
+        }
+        
+        .header-left h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a365d;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+        
+        .header-left .subtitle {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 3px;
+        }
+        
+        .header-left .prepared-by {
+            font-size: 9.5px;
+            color: #94a3b8;
+            font-style: italic;
+        }
+        
+        .header-right {
+            text-align: right;
+        }
+        
+        .header-right .company {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a365d;
+            letter-spacing: 0.5px;
+        }
+        
+        .header-right .date {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+        
+        /* Section Headers */
+        .section-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: #2563eb;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        /* System Overview */
+        .overview {
+            background: linear-gradient(to right, #f8fafc, #f1f5f9);
+            border-left: 3px solid #2563eb;
+            border-radius: 0 6px 6px 0;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+        }
+        
+        .overview .section-title {
+            margin-bottom: 8px;
+        }
+        
+        .overview p {
+            font-size: 9.5px;
+            color: #475569;
+            margin-bottom: 4px;
+            line-height: 1.45;
+        }
+        
+        .overview p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .overview strong {
+            color: #334155;
+            font-weight: 600;
+        }
+        
+        /* Architecture */
+        .architecture {
+            margin-bottom: 14px;
+        }
+        
+        .arch-flow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .arch-box {
+            background: #ffffff;
+            border: 1.5px solid #1a365d;
+            border-radius: 6px;
+            padding: 10px 8px;
+            text-align: center;
+            width: 118px;
+        }
+        
+        .arch-box.output {
+            background: #1a365d;
+        }
+        
+        .arch-box h3 {
+            font-size: 10px;
+            font-weight: 700;
+            color: #1a365d;
+            margin-bottom: 4px;
+            letter-spacing: 0.3px;
+        }
+        
+        .arch-box.output h3 {
+            color: #ffffff;
+        }
+        
+        .arch-box p {
+            font-size: 8px;
+            color: #64748b;
+            line-height: 1.35;
+        }
+        
+        .arch-box.output p {
+            color: #cbd5e1;
+        }
+        
+        .arrow {
+            color: #2563eb;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        /* Tables */
+        .table-section {
+            margin-bottom: 12px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9px;
+        }
+        
+        thead tr {
+            background: #1a365d;
+        }
+        
+        thead tr.green {
+            background: #059669;
+        }
+        
+        th {
+            padding: 7px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 8.5px;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        
+        td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+            font-size: 9px;
+        }
+        
+        tbody tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        
+        .component {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .cost {
+            font-weight: 600;
+            color: #059669;
+        }
+        
+        .role {
+            color: #475569;
+        }
+        
+        /* Cost Summary */
+        .cost-summary {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        
+        .cost-box {
+            flex: 1;
+            padding: 12px 14px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .cost-box.primary {
+            background: #1a365d;
+        }
+        
+        .cost-box.secondary {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .cost-box.accent {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .cost-box .label {
+            font-size: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        
+        .cost-box.primary .label {
+            color: #94a3b8;
+        }
+        
+        .cost-box.secondary .label,
+        .cost-box.accent .label {
+            color: #64748b;
+        }
+        
+        .cost-box .amount {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .cost-box.primary .amount {
+            color: #ffffff;
+        }
+        
+        .cost-box.secondary .amount {
+            color: #1a365d;
+        }
+        
+        .cost-box.accent .amount {
+            color: #059669;
+        }
+        
+        .cost-box .desc {
+            font-size: 8px;
+            line-height: 1.3;
+        }
+        
+        .cost-box.primary .desc {
+            color: #94a3b8;
+        }
+        
+        .cost-box.secondary .desc,
+        .cost-box.accent .desc {
+            color: #64748b;
+        }
+        
+        /* Footer */
+        .footer {
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .principles {
+            font-size: 9px;
+            color: #64748b;
+        }
+        
+        .principles strong {
+            color: #475569;
+            font-weight: 600;
+        }
+        
+        .page-num {
+            font-size: 8px;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <h1>Quantitative Research Infrastructure</h1>
+            <div class="subtitle">Multi-Factor  •  Agent-Driven  •  Fast Iteration</div>
+            <div class="prepared-by">Prepared by Rithik Singh | Rotman Commerce, Finance, Economics & Statistics</div>
+        </div>
+        <div class="header-right">
+            <div class="company">AGILITH CAPITAL</div>
+            <div class="date">MVP Proposal | April 2026</div>
+        </div>
+    </div>
+    
+    <!-- System Overview -->
+    <div class="overview">
+        <div class="section-title">System Overview</div>
+        <p><strong>Purpose:</strong> An agent-based quantitative system for US growth equities, combining momentum signals with fundamental analysis.</p>
+        <p><strong>Core Thesis:</strong> Analyst revision momentum + margin-based signals + regime detection = systematic alpha generation.</p>
+        <p><strong>Design Principle:</strong> Start lean with free/low-cost data, validate signals, scale only after demonstrating edge.</p>
+    </div>
+    
+    <!-- Architecture -->
+    <div class="architecture">
+        <div class="section-title">Architecture</div>
+        <div class="arch-flow">
+            <div class="arch-box">
+                <h3>DATA</h3>
+                <p>Price • Fundamentals<br>Filings • Estimates</p>
+            </div>
+            <div class="arrow">→</div>
+            <div class="arch-box">
+                <h3>AGENTS</h3>
+                <p>Revision Agent<br>Constraint Agent<br>Regime Agent</p>
+            </div>
+            <div class="arrow">→</div>
+            <div class="arch-box">
+                <h3>SIGNALS</h3>
+                <p>Momentum<br>Margin-based<br>Sentiment</p>
+            </div>
+            <div class="arrow">→</div>
+            <div class="arch-box output">
+                <h3>OUTPUT</h3>
+                <p>Alpha Signals<br>Risk Filters</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Data Stack -->
+    <div class="table-section">
+        <div class="section-title">Data Stack</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 16%;">Component</th>
+                    <th style="width: 24%;">Source</th>
+                    <th style="width: 11%;">Cost</th>
+                    <th style="width: 49%;">Alpha Enablement</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="component">Market Data</td>
+                    <td>Alpha Vantage + yfinance</td>
+                    <td class="cost">$0–50/mo</td>
+                    <td class="role">Price pipelines, rapid backtesting, agent integration</td>
+                </tr>
+                <tr>
+                    <td class="component">Core Data Layer</td>
+                    <td>Financial Modeling Prep</td>
+                    <td class="cost">$49/mo</td>
+                    <td class="role">Fundamentals, estimates, revisions — multiple alpha signals</td>
+                </tr>
+                <tr>
+                    <td class="component">Raw Filings</td>
+                    <td>SEC EDGAR</td>
+                    <td class="cost">$0</td>
+                    <td class="role">Point-in-time accuracy, NLP source for constraint detection</td>
+                </tr>
+                <tr>
+                    <td class="component">Macro Data</td>
+                    <td>FRED API</td>
+                    <td class="cost">$0</td>
+                    <td class="role">Regime classification, timing signals</td>
+                </tr>
+                <tr>
+                    <td class="component">Screener</td>
+                    <td>Quant Investing</td>
+                    <td class="cost">~$45/mo</td>
+                    <td class="role">Survivorship-free universe construction</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- AI & Compute -->
+    <div class="table-section">
+        <div class="section-title">AI & Compute</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 16%;">Component</th>
+                    <th style="width: 24%;">Tool</th>
+                    <th style="width: 11%;">Cost</th>
+                    <th style="width: 49%;">Role</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="component">LLM Platform</td>
+                    <td>Claude Max</td>
+                    <td class="cost">$100/mo</td>
+                    <td class="role">Research, coding, agent development, workflow orchestration</td>
+                </tr>
+                <tr>
+                    <td class="component">Charting</td>
+                    <td>TradingView Pro</td>
+                    <td class="cost">$50/mo</td>
+                    <td class="role">Real-time validation, MCP integration</td>
+                </tr>
+                <tr>
+                    <td class="component">Development</td>
+                    <td>VS Code + GitHub</td>
+                    <td class="cost">$0</td>
+                    <td class="role">Pipelines, version control, reproducibility</td>
+                </tr>
+                <tr>
+                    <td class="component">Local Compute</td>
+                    <td>Laptop (16GB RAM, fast CPU)</td>
+                    <td class="cost">One-time</td>
+                    <td class="role">Primary dev environment, backtesting, simulations</td>
+                </tr>
+                <tr>
+                    <td class="component">Cloud Compute</td>
+                    <td>Runpod / AWS</td>
+                    <td class="cost">Usage</td>
+                    <td class="role">Scaling when needed (batch processing, heavy sims)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Alternative Data -->
+    <div class="table-section">
+        <div class="section-title">Alternative Data (Experimental)</div>
+        <table>
+            <thead>
+                <tr class="green">
+                    <th style="width: 32%;">Source</th>
+                    <th style="width: 13%;">Cost</th>
+                    <th style="width: 55%;">Signal Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="component">Prediction Markets (Predmktdata)</td>
+                    <td class="cost">~$49/mo</td>
+                    <td class="role">Macro expectations, event probabilities, 2nd/3rd order effects</td>
+                </tr>
+                <tr>
+                    <td class="component">Insider Activity (13Radar)</td>
+                    <td class="cost">$0–12/mo</td>
+                    <td class="role">C-suite sentiment, alignment signals</td>
+                </tr>
+                <tr>
+                    <td class="component">Strategy Research (Quantpedia)</td>
+                    <td class="cost">~$33/mo</td>
+                    <td class="role">Accelerated alpha idea generation, validated strategies</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Cost Summary -->
+    <div class="cost-summary">
+        <div class="cost-box primary">
+            <div class="label">MVP Monthly</div>
+            <div class="amount">$244–294</div>
+            <div class="desc">Core data + AI platform + charting</div>
+        </div>
+        <div class="cost-box secondary">
+            <div class="label">Experimental</div>
+            <div class="amount">+$82–94/mo</div>
+            <div class="desc">Alt data, research layer</div>
+        </div>
+        <div class="cost-box accent">
+            <div class="label">One-Time</div>
+            <div class="amount">Laptop</div>
+            <div class="desc">Development hardware, burst compute as needed</div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+        <div class="principles">
+            <strong>Key Principles:</strong> MVP is lean  •  Scale after validation  •  Fast iteration
+            <span style="margin-left: 20px; color: #94a3b8; font-size: 8px;">Note: All prices quoted in USD</span>
+        </div>
+        <div class="page-num">Page 1 of 1</div>
+    </div>
+</body>
+</html>
