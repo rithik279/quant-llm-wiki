@@ -71,9 +71,23 @@ Before building strategies, build reusable modules:
 1. **Module 1**: Filing + transcript ingestion (SEC filings, earnings calls, company-quarter DB)
 2. **Module 2**: Text feature engine (keyword counts, sentiment, classifiers)
 3. **Module 3**: Structured feature engine (margins, SG&A, capex, backlog)
-4. **Module 4**: Event-study harness (earnings windows, 20/40/60 day returns)
-5. **Module 5**: False positive control (walk-forward, holdout, negative-result log)
+4. **Module 4**: Event-study harness (earnings windows, 20/40/60 day returns) → See [[Chan-Chapter1-Backtesting]] Ch1 for performance measurement + Monte Carlo
+5. **Module 5**: False positive control (walk-forward, holdout, negative-result log) → See [[Chan-Chapter1-Backtesting]] for data-snooping prevention
+
+## Chan Book Connections
+
+| Alpha Idea | Required Chan Methods |
+|------------|----------------------|
+| Infrastructure Constraint | [[Chan-Chapter1-Backtesting]] (Monte Carlo), [[QTB-Chapter7-SpecialTopics]] (regime switching) |
+| Margin Before Revenue | [[Chan-Chapter2-MeanReversion]] (half-life, stationarity), [[Chan-Chapter6-Momentum]] (forced sales) |
+| Transformer Delay | [[QTB-Chapter7-SpecialTopics]] (regime switching), [[Regime-modeling]] |
+| AI Engagement Surprise | [[Chan-Chapter6-Momentum]] (cross-sectional momentum test) |
+| Liquid Cooling | [[Chan-Chapter2-MeanReversion]] (stationarity tests) |
 
 ## See Also
 - [[Agilith-Internship-Overview]]
-- [[Agilith-Learning-System]]
+- [[Agilith-Learning-System]] — Phase 4 uses Chan books heavily
+- [[Chan-Agilith-Integration]] — Full cross-reference of all Chan concepts → Agilith goals
+- [[Chan-Chapter1-Backtesting]] — Backtest pitfalls for all alpha ideas
+- [[Chan-Chapter2-MeanReversion]] — Statistical tests for alpha validation
+- [[Chan-Chapter6-Momentum]] — Momentum drivers (forced sales = Margin alpha foundation)

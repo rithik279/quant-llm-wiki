@@ -32,6 +32,11 @@ AI demand hits physical bottlenecks → buy shovel sellers.
 
 **Leopold connection**: Directly maps to [[Bottleneck-analysis]] — 5-bottleneck rotation creates systematic alpha opportunities. BE = power, CRWV = compute, MU = memory, SNDK = storage, LITE = optical.
 
+**GenAI integration** (from [[Chan-Chapter4-8-Generative-Models]]):
+- VAE for bottleneck signal anomaly detection: high reconstruction error → supply/demand imbalance
+- Flow models for regime-conditioned return distributions (RISK_ON vs RISK_OFF bottleneck behavior)
+- [[Chan-Chapter10-Efficient-Inference]]: Knowledge distillation for compute-constrained local inference
+
 **Long**: bottleneck beneficiaries with confirmed orders/pricing power.
 **Short**: overhyped names where transition is not confirmed.
 
@@ -44,6 +49,11 @@ AI cuts costs first (support, coding, sales), profits improve before revenue.
 
 **Key features**: SG&A/revenue trend, revenue per employee, R&D/revenue.
 
+**GenAI integration** (from [[Chan-Chapter4-8-Generative-Models]]):
+- Flow models for margin expansion half-life estimation: P(margin_expansion | bottleneck_state)
+- [[Chan-Chapter1-3-NoCode-ML]]: ChatGPT for SG&A trend analysis, revenue per employee screening
+- [[Chan-RiskManagement]]: Kelly-based sizing calibrated to margin signal confidence
+
 ### Layer 3: Behavioral → Narrative vs Numbers Divergence
 "Loud storytellers vs quiet executors."
 
@@ -54,6 +64,12 @@ AI cuts costs first (support, coding, sales), profits improve before revenue.
 **Long**: low narrative / high delivery (quiet executors).
 **Short**: high narrative / low delivery (story sellers).
 
+**GenAI integration** (from [[Chan-Chapter9-LLM-Sentiment]]):
+- Whisper + FinBERT pipeline for earnings call sentiment analysis
+- [[Chan-Chapter4-8-Generative-Models]]: RAG retrieval for narrative tracking across time
+- VAE for anomaly detection: narrative quality scores with high reconstruction error → hype signals
+- [[Chan-Agilith-Integration]]: "Forced sales = main driver of stock momentum" → narrative forces buying
+
 ### Layer 4: Confirmation → Analyst Revision Diffusion + Tone Gating
 "Is the market catching on?"
 
@@ -63,6 +79,11 @@ AI cuts costs first (support, coding, sales), profits improve before revenue.
 
 **This is Tier 1 if you have data.** If you have LSEG access, this becomes one of your best signals — historically validated.
 
+**GenAI integration** (from [[Chan-Chapter1-3-NoCode-ML]]):
+- CAI (Corrective AI) metalabeling: ML predicts PoP of own revision decisions
+- [[Chan-Chapter1-3-NoCode-ML]]: CPO (Conditional Portfolio Optimization) by regime for revision-weighted allocation
+- [[Chan-Agilith-Integration]]: HRP for revision-signal portfolio allocation across bottlenecks
+
 ### Layer 5: Timing → Regime-Conditioned Sentiment
 "When should I act?"
 
@@ -71,6 +92,12 @@ AI cuts costs first (support, coding, sales), profits improve before revenue.
 **This is a multiplier, not standalone alpha.** Improves every other signal. Build early, not as main strategy.
 
 **Regime tags**: VIX, trend, liquidity, macro windows (CPI, FOMC).
+
+**GenAI integration** (from [[Chan-Chapter4-8-Generative-Models]]):
+- Flow models for regime-conditioned return distributions: P(r_t | RISK_ON) vs P(r_t | RISK_OFF)
+- GMM for regime probability (observable indicators, not hidden states)
+- [[Chan-Chapter10-Efficient-Inference]]: Quantization for local inference under compute constraints
+- [[Chan-Agilith-Integration]]: Regime switching QTB Ch7 → Markov HMM vs turning points (use GMM)
 
 ## System Architecture
 
@@ -117,3 +144,10 @@ Screener → Agents → Ranking → Strategy → Portfolio
 - [[Bottleneck-analysis]] — Leopold thesis, 5 bottlenecks with tickers
 - [[Leopold-thesis]] — Core trading thesis
 - [[Regime-modeling]] — RISK_ON/OFF framework
+- [[Chan-Chapter4-8-Generative-Models]] — VAE, Flow, GAN for anomaly detection + synthetic data
+- [[Chan-Chapter9-LLM-Sentiment]] — Whisper + FinBERT pipeline for earnings sentiment
+- [[Chan-Chapter10-Efficient-Inference]] — Distillation, quantization for local inference
+- [[Chan-Chapter1-3-NoCode-ML]] — HRP, CAI, CPO for portfolio optimization
+- [[Chan-Agilith-Integration]] — Full Chan → Leopold/Agilith cross-reference with contradictions
+- [[RocketShip-Framework]] — 10 tools with GenAI model applications
+- [[RL-Training-Setup]] — Synthetic scenario generation pipeline

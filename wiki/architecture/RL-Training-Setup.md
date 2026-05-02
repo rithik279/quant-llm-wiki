@@ -1,10 +1,11 @@
 ---
 date_created: 2026-05-01
-date_updated: 2026-05-01
-source_count: 1
-related_pages: [4-Month-Build-Plan, Agilith-System-Architecture, Regime-modeling]
+date_updated: 2026-05-02
+source_count: 2
+source_files: [4-Month-Build-Plan, raw/books/GenerativeAIForTradingChan.pdf]
+related_pages: [4-Month-Build-Plan, Regime-modeling, Agilith-System-Architecture, RocketShip-Framework, Chan-Chapter4-8-Generative-Models, Chan-Agilith-Integration]
 status: active
-tags: [architecture, rl, training, hud-ai, scenarios]
+tags: [architecture, rl, training, hud-ai, scenarios, GenAI, VAE, GAN, WGAN, synthetic-data]
 ---
 
 # RL Training Setup
@@ -180,8 +181,105 @@ trainer = RL Trainer(
 agent = trainer.train(state_space, action_space, reward_fn)
 ```
 
+---
+
+## Synthetic Scenario Generation (GenAI)
+
+From [[Chan-Chapter4-8-Generative-Models]] Ch4-8:
+
+### Why Synthetic Data?
+
+- RL agents need 100K+ scenarios
+- Real market data limited, especially for rare regimes
+- [[Leopold-thesis]]: bottleneck rotations produce asymmetric, fat-tail events
+- Need diverse state space coverage for robust training
+
+### Model Selection
+
+| Model | Application | Finance Use |
+|-------|-------------|-------------|
+| **VAE** | Anomaly detection, representation learning | Bottleneck signal compression, synthetic scenario generation |
+| **Flow** | Exact density estimation | Regime-conditioned return distributions P(r_t \| RISK_ON) |
+| **WGAN** | Implicit generative modeling | Synthetic market scenario generation for stress testing |
+
+### Synthetic Data Pipeline
+
+```
+Real bottleneck data (5+ years)
+    ↓
+Train VAE: learn bottleneck latent space
+Train WGAN: learn regime-specific return distributions
+    ↓
+Generate 100K+ synthetic scenarios
+    ↓
+RL Training → RL agent
+    ↓
+Validate against holdout (2020-2024)
+```
+
+### Scenario Distribution
+
+From [[Chan-Agilith-Integration]]:
+
+| Regime | Weight | Count |
+|--------|--------|-------|
+| RISK_ON | 70% | 70K+ |
+| TRANSITION | 20% | 20K+ |
+| RISK_OFF | 5% | 5K+ |
+| RECOVERY | 5% | 5K+ |
+
+### Bottleneck → Regime Mapping
+
+- Power (BE) constraint → RISK_ON
+- Compute (CRWV) supply catching up → TRANSITION
+- Memory (MU) normalization → RECOVERY
+- RISK_OFF → Black swan (regulatory block, tech disruption)
+
+### HMM vs GMM Contradiction
+
+From [[Chan-Chapter4-8-Generative-Models]]:
+
+- Ch3: "HMM seductive but fictional" → Hidden states not directly useful
+- Ch6: Two Sigma uses GMM for regime detection → Works with observable indicators
+
+**Resolution:** Use GMM with observable indicators for [[Regime-modeling]], not pure HMM hidden states. GMM posterior → regime probability.
+
+### RL Training Integration
+
+From [[RocketShip-Framework]]:
+
+```
+post_trade_reflection → identify_failure_patterns
+         ↑                    ↓
+    CAI metalabeling    WGAN synthetic scenarios
+         ↑                    ↓
+    RL agent ← ← ← ← ← ← ← ← ← ←
+```
+
+### Key Formulas
+
+From [[Chan-Agilith-Integration]]:
+
+**Half-life for bottleneck plays:**
+```
+Half-life = -log(2) / λ
+```
+If margin expansion half-life = 30 days, hold period = 30 days for Alpha 2 (Margin Before Revenue)
+
+**Kelly fraction (Half-Kelly for fat tails):**
+```
+f* = m / s^2  (Kelly fraction)
+g = r + S^2/2  (max growth rate)
+```
+Use Half-Kelly (50% reduction) due to fat tails: regulatory block, tech disruption.
+
+---
+
 ## Related
 
 - [[4-Month-Build-Plan]] — Month 3 covers RL training
-- [[Regime-modeling]] — Regime framework RL conditions on
+- [[Regime-modeling]] — Regime framework RL conditions on (GMM, not HMM)
 - [[Agilith-System-Architecture]] — System RL agent integrates with
+- [[RocketShip-Framework]] — 10 tools with generative model connections
+- [[Chan-Chapter4-8-Generative-Models]] — VAE, Flow, WGAN for synthetic data
+- [[Chan-Agilith-Integration]] — Half-life, Kelly formula, regime mapping

@@ -127,4 +127,4 @@ Proposal's "Infrastructure Constraint Nowcast" (Alpha Layer 1) IS Leopold thesis
 - [[RocketShip-Framework]] — Proposal is MVP, RocketShip is extension
 - [[Agent-Tools]] — Needs tool taxonomy consolidation
 - [[Alpha-Math]] — Cost justification aligns
-- [[_meta/contradictions]] — Full contradiction log
+- [[contradictions]] — Full contradiction log

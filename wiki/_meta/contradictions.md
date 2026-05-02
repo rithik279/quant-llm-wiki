@@ -30,6 +30,14 @@ tags: [meta, contradictions, conflicts]
 - **Pages affected:** [[Leopold-thesis]], [[Agilith-Alpha-Stack-System]], [[Agilith-OnePager-Ingest]]
 - **Status:** Pending — core thesis unnamed in proposal itself
 
+## Contradiction 4: HMM vs GMM for Regime Detection
+- **Old claim (Ch3):** "HMM seductive but fictional" for regime detection. Hidden states not directly useful.
+- **New claim (Ch6):** Two Sigma uses GMM for regime detection. GMM posterior → regime probability.
+- **Source:** [[Chan-Chapter1-3-NoCode-ML]] vs [[Chan-Chapter4-8-Generative-Models]]
+- **Resolution:** Use **GMM with observable indicators** for regime detection, not pure HMM hidden states.
+- **Pages affected:** [[Regime-modeling]], [[Agilith-Alpha-Stack-System]] Layer 5, [[RL-Training-Setup]]
+- **Status:** Resolved — [[Chan-Agilith-Integration]] documents resolution
+
 ---
 
 When contradictions are found, document them here with:

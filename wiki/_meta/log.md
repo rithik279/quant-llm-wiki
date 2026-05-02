@@ -1,6 +1,6 @@
 ---
 date_created: 2026-04-30
-date_updated: 2026-05-01
+date_updated: 2026-05-02
 source_count: 1
 related_pages: [index]
 status: active
@@ -10,6 +10,206 @@ tags: [meta, log, changelog, audit]
 # Wiki Changelog
 
 All ingests in reverse-chronological order (most recent first).
+
+---
+
+## [2026-05-02] ingest | Ernest Chan "Generative AI for Trading and Asset Management"
+
+**Source:**
+- `raw/books/GenerativeAIForTradingChan.pdf` — 563 pages, ~636K extracted chars
+
+**Key NEW content:**
+
+*Part I (No-code GenAI, Ch 1-3):*
+- ChatGPT for quant tasks: Sharpe ratio, efficient frontier, Matlab→Python translation
+- HRP (Hierarchical Risk Parity): López de Prado 2020. Cluster by correlation → Kelly allocation
+- PCA: statistical factors from returns alone (unsupervised)
+- cMDA: cluster-based feature selection (fundamentals vs technical clusters)
+- HMM: "seductive but fictional" for regime detection. Chan found it fails for SPY
+- CAI (Corrective AI) / Metalabeling: ML as PoP predictor on top of human expert system
+- CPO (Conditional Portfolio Optimization): predict portfolio performance → pick best allocation
+- Key warning: Predicting returns = worst ML use case (arbitrage → alpha decay)
+
+*Part II (Deep Generative Models, Ch 4-8):*
+- Generative vs discriminative: P(x) vs P(y|x)
+- Taxonomy: Autoregressive → VAE → Flow → GAN → Diffusion
+- VAE: encoder-decoder, reparameterization trick, KL divergence
+- TimeVAE for time series generation
+- GMM for market regime detection
+- WGAN for time series
+
+*Part III (Applications, Ch 9-10):*
+- Ch9 (LLM Sentiment): Fed press conference → Whisper → FinBERT → 14.14% Pearson with SPY forward returns
+- Whisper: 680K hours multilingual, 30-sec chunks, timestamp reliability degrades with audio length
+- FinBERT: bidirectional BERT fine-tuned on financial text
+- Look-ahead bias prevention: FFmpeg audio segmentation + 15-second embargo period
+- Ch10 (Efficient Inference): Scaling laws (Kaplan et al. 2020), emergent abilities (Wei et al. 2022)
+- Knowledge distillation: small student ← large teacher via soft targets + temperature scaling
+- Quantization: FP32 → INT8 → INT4. LoRA for parameter-efficient fine-tuning
+- eBay case study: eBERT too large → compressed for CPU inference
+
+*Leopold Connections:*
+- Distillation/quantization → compute (CRWV) + memory (MU) bottlenecks = direct solutions
+- Whisper + FinBERT pipeline → [[Agilith-Alpha-Stack-System]] Layer 3 (Behavioral/Narrative)
+- Fed speech sentiment → regime signal (RISK_ON/OFF transitions)
+- CPO → Layer 5 (Timing) conditional allocation
+- CAI → RL agent PoP prediction (post-trade reflection)
+- HMM warning → regime indicators must be observable, not hidden states
+- eBay case → local inference on Blackwell GPU = feasible
+
+**Pages created:** 5
+- [[Chan-GanAI-Full-Summary]] — Full book summary (563 pages → structured notes)
+- [[Chan-Chapter9-LLM-Sentiment]] — Whisper + FinBERT pipeline, look-ahead bias prevention
+- [[Chan-Chapter10-Efficient-Inference]] — Scaling laws, distillation, quantization, LoRA
+- [[Chan-Chapter1-3-NoCode-ML]] — No-code GenAI (Ch1-2), ML tour (Ch3): HRP, PCA, CAI, CPO
+- [[Chan-Chapter4-8-Generative-Models]] — Deep generative models (Ch4-8): VAE, Flow, GAN, anomaly detection, synthetic data
+
+**Cross-reference work:**
+- [[Chan-Agilith-Integration]] — Expanded from 9 to 19 row quick reference table (Ch1-10 + QTB)
+- [[Agilith-Alpha-Stack-System]] — GenAI integration added to all 5 layers
+- [[RocketShip-Framework]] — GenAI model connections (VAE, Flow, WGAN) + HMM/GMM contradiction
+- [[RL-Training-Setup]] — Synthetic scenario generation pipeline (VAE/GAN)
+- [[Regime-modeling]] — GMM recommendation (resolve HMM contradiction)
+
+**Contradictions logged:**
+- HMM vs GMM: Ch3 "seductive but fictional" vs Ch6 Two Sigma GMM → Resolution: use GMM with observable indicators
+
+**Status:** Complete
+
+---
+
+## [2026-05-02] ingest | Ernest Chan "Algorithmic Trading: Winning Strategies and Their Rationale"
+
+**Source:**
+- `raw/books/AlgorithmicTradingChan.pdf` — 23 pages, ~32K extracted chars
+
+**Key NEW content:**
+
+*Chapter 1 (Backtesting + Automated Execution):*
+- Look-ahead bias — same code for backtest + live prevents it
+- Data-snooping bias — linear > nonlinear (fewer free params)
+- Regime shifts — backtest can pass but live fail when regime changes
+- Monte Carlo for tail risk
+- Statistical significance: more trades = higher confidence
+
+*Chapter 2 (Mean Reversion):*
+- ADF test for stationarity (H0: unit root)
+- Hurst exponent (H<0.5 = mean-reverting, H>0.5 = trending)
+- Variance ratio test (<1 = MR, >1 = momentum)
+- Half-life — time for half deviation to revert
+- CADF + Johansen for cointegration (pairs trading)
+- Time series vs cross-sectional MR
+
+*Chapter 6 (Interday Momentum):*
+- 4 drivers: roll returns, forced sales/purchases, news/sentiment, order flow/HFT
+- "Forced asset sales is main driver of stock/ETF momentum"
+- Time series vs cross-sectional momentum
+- t-statistic for momentum significance
+
+*Chapter 8 (Risk Management):*
+- Kelly formula: `f* = (bP - q) / b`
+- Volatility-based position sizing (ATR)
+- Sharpe > 1.4, Max DD < 20%, Calmar > 1.5
+- Regime-based risk adjustment
+- Black swan: stop losses, position limits, diversification
+
+*Leopold Connections:*
+- Mean reversion half-life → [[Agilith-Alpha-Stack-System]] Layer 5 (Timing)
+- Momentum drivers → same stack Layers 2-3 (margin, narrative)
+- Regime-based risk → [[Regime-modeling]] RISK_ON/OFF/TRANSITION/RECOVERY
+- Data-snooping → RL training danger in [[RL-Training-Setup]]
+- Simple/linear models → foundation for [[Agent-Framework-Taxonomy]] design
+
+**Pages created:** 5
+- [[Chan-Agilith-Integration]] — Full cross-reference: every Chan concept → Agilith internship goal
+- [[Chan-Chapter1-Backtesting]] — Updated with Agilith connections (backtest pitfalls → 5 alpha ideas)
+- [[Chan-Chapter2-MeanReversion]] — Updated with Agilith (half-life → timing layer, stationarity → alpha validation)
+- [[Chan-Chapter6-Momentum]] — Updated with Agilith (forced sales → Margin alpha, regime dependency)
+- [[Chan-RiskManagement]] — Updated with Agilith (Kelly → RL reward, regime leverage)
+
+**Status:** Complete
+
+---
+
+## [2026-05-02] ingest | Ernest Chan "Quantitative Trading: How to Build Your Own Algorithmic Trading Business"
+
+**Sources:**
+- `raw/books/Quantitative Trading_ How to Build Your Own Algorithmic Trading Business-Wiley.pdf` — 204 pages
+- Key chapters extracted: Ch1 (intro + strategy selection), Ch6 (risk management), Ch7 (special topics)
+
+**Key NEW content:**
+
+*Ch1-3 (Getting Started):*
+- Strategy selection framework (working hours, skills, capital, goal)
+- Survivorship bias: particularly dangerous for MR strategies
+- Data-snooping, look-ahead bias (same as Algorithmic Trading)
+- Platform comparison: Excel → MATLAB → TradeStation → custom C++
+
+*Ch6 (Risk Management):*
+- Detailed Kelly derivation: `F* = C^(-1) * M` (multi-strat), `f* = m/s^2` (single)
+- Geometric mean always < arithmetic mean → risk hurts long-term growth
+- Half-Kelly for safety, rebalance daily, 6-month lookback
+- Psych pitfalls: endowment effect, loss aversion, representativeness bias, despair/greed
+- Chan personal loss: $1M on $100M position added greedily after 6-month good performance
+
+*Ch7 (Special Topics):*
+- MR vs momentum: both can work, depends on regime + horizon
+- Regime switching: Markov (HMM) constant prob vs turning points (data mining)
+- Stationarity + cointegration: ADF, Hurst, CADF, Johansen (see Ch2 for detail)
+- Factor models: market, size, value, momentum, quality
+- Exit strategies: time-based, profit target, trailing stop, MR signal
+- Leverage vs beta: lower beta + moderate leverage often better
+
+*Cross-Book Synthesis:*
+- QTB = entry-level version, Algorithmic = advanced
+- Same core principles across both books
+- QTB Ch3 ≈ Algorithmic Ch1 (backtesting), QTB Ch6 ≈ Algorithmic Ch8 (risk)
+
+**Pages created:** 4
+- [[QTB-Backtesting-Start]] — Strategy selection, backtesting pitfalls, platforms
+- [[QTB-Chapter7-SpecialTopics]] — MR vs momentum, regime switching, cointegration, factor models
+- [[QTB-RiskManagement]] — Kelly formula derivation, psych pitfalls, practical application
+- [[QTB-Full-Summary]] — Full book summary with all 8 chapters, cross-book synthesis
+
+**Status:** Complete
+
+**Key synthesis:** [[Chan-Agilith-Integration]] created — full cross-reference linking every Chan concept to Agilith internship goals. Updates to Ch1, Ch2, Ch6, Ch8 with specific Agilith connections.
+
+---
+
+## [2026-05-02] ingest | Ernest Chan "Machine Trading: Deploying Computer Algorithms to Conquer the Markets"
+
+**Source:**
+- `raw/books/Machine Trading_ Deploying Computer Algorithms to Conquer The Markets (Ernest Chan 2017).pdf` — 267 pages
+
+**Key NEW content:**
+
+*Ch2 Factor Models:*
+- Sector-relative scoring: w_i = (r_i - mean) / sum(|r_i - mean|)
+- Options-derived factors (IV, put/call, vol skew)
+- Computer hardware example: 48% return, Sharpe 0.9
+
+*Ch3 Time Series:*
+- VAR(p) for correlated time series (e.g., AAPL, EMC, HPQ, NTAP, SNDK)
+- VEC model for error correction
+- State space models (Kalman filter)
+
+*Ch4 AI/ML:*
+- Overfitting prevention: cross-validation, regularization, feature selection
+- Random forests, neural networks, SVM
+- ML for regime detection
+
+*Leopold Connections:*
+- Factor models → bottleneck beneficiary/victim scoring
+- VAR/VEC → bottleneck rotation detection
+- ML → bottleneck phase classification (Power/Compute/Memory/Storage/Optical)
+
+**Pages created:** 3
+- [[Machine-Trading-Ch2-FactorModels]] — Factor construction, options factors
+- [[Machine-Trading-Ch4-AI-ML]] — Overfitting prevention, ML methods
+- [[Machine-Trading-Leopold-Integration]] — Full thesis integration
+
+**Status:** Complete
 
 ---
 

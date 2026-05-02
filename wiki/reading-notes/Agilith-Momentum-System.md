@@ -176,3 +176,7 @@ Evaluation is scenario-based, not just PnL.
 - [[Agilith-Alpha-Stack-System]] — 5-layer alpha pipeline
 - [[Regime-modeling]] — RISK_ON/CHOP/RISK_OFF framework
 - [[Bottleneck-analysis]] — Bottleneck tracking thesis
+- [[Chan-Chapter6-Momentum]] — 4 drivers, forced sales = Margin alpha foundation
+- [[Chan-Chapter2-MeanReversion]] — Hurst exponent for regime classification
+- [[Chan-Agilith-Integration]] — Full cross-reference of Chan concepts → Agilith goals
+- [[QTB-Chapter7-SpecialTopics]] — HMM for regime detection

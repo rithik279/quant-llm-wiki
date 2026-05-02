@@ -1,0 +1,5 @@
+# Large source files - extracted text is in wiki, originals not needed in git
+raw/books/
+raw/pdf/
+raw/chatgpt/
+raw/claude/

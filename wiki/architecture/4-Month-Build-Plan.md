@@ -166,7 +166,7 @@ Full implementation timeline for the Agilith Trading System. Foundation → Regi
 
 - **HUD.ai:** RL training (avoids 180+ hours custom infrastructure work)
 - **Friend's agent traces:** Study before designing own tools
-- **Chan books:** "Generative AI for Trading" + "Hands-On AI"
+- **Chan books:** "Generative AI for Trading" + "Hands-On AI" → See [[Chan-Agilith-Integration]] for full mapping
 - **Blackwell 1000 GPU:** Local training capable (Mistral 7B, Qwen, 13B)
 
 ## Related
@@ -174,3 +174,7 @@ Full implementation timeline for the Agilith Trading System. Foundation → Regi
 - [[Agilith-System-Architecture]] — Architecture this plan implements
 - [[RL-Training-Setup]] — RL training details
 - [[Regime-modeling]] — Regime framework this plan builds
+- [[Chan-Chapter1-Backtesting]] — Month 1 data quality checks
+- [[Chan-Chapter2-MeanReversion]] — Month 2 stationarity tests
+- [[Chan-RiskManagement]] — Month 3 backtest risk + Month 4 Kelly sizing
+- [[Chan-Agilith-Integration]] — Full cross-reference of all Chan concepts → 4-Month Plan

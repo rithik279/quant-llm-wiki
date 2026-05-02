@@ -31,13 +31,13 @@ tags: [agilith-capital, learning-system, research-loop, curriculum]
 
 ## Phase Structure
 
-| Phase | Weeks | Focus |
-|-------|-------|-------|
-| Phase 1 | 1-3 | Statistics Foundation |
-| Phase 2 | 4-6 | Regression and Factor Modeling |
-| Phase 3 | 7-9 | Time Series Modeling |
-| Phase 4 | 10-12 | Strategy Construction (Chan books heavily) |
-| Phase 5 | 13-16 | Regime Modeling |
+| Phase | Weeks | Focus | Chan Chapter |
+|-------|-------|-------|--------------|
+| Phase 1 | 1-3 | Statistics Foundation | [[Chan-Chapter1-Backtesting]] (Sharpe, drawdown) |
+| Phase 2 | 4-6 | Regression and Factor Modeling | [[QTB-Chapter7-SpecialTopics]] (factor models), [[Chan-Chapter1-Backtesting]] (data-snooping) |
+| Phase 3 | 7-9 | Time Series Modeling | [[Chan-Chapter2-MeanReversion]] (ADF, Hurst, cointegration) |
+| Phase 4 | 10-12 | Strategy Construction (Chan books heavily) | [[Chan-Chapter2-MeanReversion]], [[Chan-Chapter6-Momentum]], [[Chan-RiskManagement]], [[QTB-Full-Summary]] |
+| Phase 5 | 13-16 | Regime Modeling | [[Chan-Chapter1-Backtesting]] (regime shifts), [[QTB-Chapter7-SpecialTopics]] (regime switching) |
 
 ## Daily Learning Structure (3 hours)
 
@@ -53,11 +53,13 @@ tags: [agilith-capital, learning-system, research-loop, curriculum]
 ## Expected Outputs
 
 5-10 research memos:
-- Momentum Predictability in US Equities
-- Mean Reversion in Large Cap Stocks
-- Factor Interaction Between Value and Momentum
-- Volatility Regimes and Strategy Performance
-- Dynamic Factor Allocation
+- Momentum Predictability in US Equities → [[Chan-Chapter6-Momentum]] (t-statistic for momentum)
+- Mean Reversion in Large Cap Stocks → [[Chan-Chapter2-MeanReversion]] (ADF, half-life)
+- Factor Interaction Between Value and Momentum → [[QTB-Chapter7-SpecialTopics]] (factor models)
+- Volatility Regimes and Strategy Performance → [[QTB-Chapter7-SpecialTopics]] (regime switching)
+- Dynamic Factor Allocation → [[Chan-RiskManagement]] (Kelly), [[Regime-modeling]]
 
 ## See Also
 - [[Agilith-Internship-Overview]]
+- [[Chan-Agilith-Integration]] — Full cross-reference of all Chan concepts → Agilith
+- [[Chan-Chapter1-Backtesting]] through [[Chan-RiskManagement]] — Individual chapters

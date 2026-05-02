@@ -64,6 +64,22 @@ tags: [meta, index, wiki-root]
 - [[LEAP-Options]] — Week 15 options overlay, structure, parameters, conviction trigger
 - [[Failure-Patterns]] — Post-trade reflection, pattern identification, learning loop
 
+## Chan Trading Books
+- [[Chan-Agilith-Integration]] — **START HERE.** Full cross-ref: every Chan concept → Agilith/Leopold thesis
+- [[Chan-Chapter1-Backtesting]] — Look-ahead bias, data-snooping, regime shifts
+- [[Chan-Chapter2-MeanReversion]] — ADF/Hurst, half-life, cointegration
+- [[Chan-Chapter6-Momentum]] — 4 drivers, forced sales = Margin alpha
+- [[Chan-RiskManagement]] — Kelly formula, position sizing
+- [[Chan-GanAI-Full-Summary]] — 563-page book, GenAI in finance, NLP pipeline, compression
+- [[Chan-Chapter9-LLM-Sentiment]] — Whisper + FinBERT, look-ahead bias prevention, Fed sentiment
+- [[Chan-Chapter10-Efficient-Inference]] — Scaling laws, distillation, quantization, LoRA
+- [[Chan-Chapter1-3-NoCode-ML]] — No-code GenAI (Ch1-2), ML tour (Ch3): HRP, PCA, CAI, CPO
+- [[Chan-Chapter4-8-Generative-Models]] — Deep generative models (Ch4-8): VAE, Flow, GAN, synthetic data
+- [[QTB-Full-Summary]] — 204-page book, all 8 chapters
+- [[Machine-Trading-Leopold-Integration]] — 267-page book, factor models, VAR, AI/ML
+- [[Machine-Trading-Ch2-FactorModels]] — Factor construction, sector relative
+- [[Machine-Trading-Ch4-AI-ML]] — Overfitting prevention, ML for regime detection
+
 ## Decisions (Audit Trail)
 - [[RocketShip-Decision]] — Why fork vs build, 5 reasons, alternatives considered
 - [[Domain-Wiki-System]] — LLM Wiki pattern, three-layer separation, master prompt approach
@@ -93,6 +109,13 @@ tags: [meta, index, wiki-root]
 - [[Failure-Patterns]] closes the loop between [[System-Architecture]] outputs and [[4-Month-Build-Plan]] Month 3 RL training
 - [[Alpha-Math]] justifies resource allocation for [[Agilith-Research-Plan]] experiments
 - [[Domain-Wiki-System]] is the meta-layer organizing all of the above
+
+## Chan Book Connections
+- [[Chan-Chapter2-MeanReversion]] ADF/Hurst tests → [[Regime-modeling]] (stationarity detection)
+- [[Chan-Chapter1-Backtesting]] pitfalls → [[RL-Training-Setup]] (avoid overfitting RL agent)
+- [[Chan-RiskManagement]] Kelly formula → [[Agilith-Alpha-Stack-System]] Layer 5 (position sizing)
+- [[Chan-Chapter6-Momentum]] 4 drivers → [[Agilith-Momentum-System]] (forced sales = margin signal)
+- [[Chan-Chapter2-MeanReversion]] half-life → [[Agilith-Alpha-Stack-System]] timing layer
 
 ## Master Reference
 - [[SYSTEM]] — **Start here.** Complete system overview, one doc to understand everything

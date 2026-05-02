@@ -1,10 +1,11 @@
 ---
 date_created: 2026-05-01
-date_updated: 2026-05-01
+date_updated: 2026-05-02
 source_count: 2
-related_pages: [Agilith-System-Architecture, 4-Month-Build-Plan, RocketShip-Decision, Failure-Patterns]
+source_files: [raw/books/GenerativeAIForTradingChan.pdf, RocketShip GitHub]
+related_pages: [Agilith-System-Architecture, 4-Month-Build-Plan, RocketShip-Decision, Failure-Patterns, Chan-Chapter4-8-Generative-Models, Chan-Agilith-Integration, RL-Training-Setup, Regime-modeling]
 status: active
-tags: [architecture, multi-agent, debate, rocketship, framework]
+tags: [architecture, multi-agent, debate, rocketship, framework, GenAI, generative-models, VAE, GAN, WGAN]
 ---
 
 # RocketShip Framework
@@ -450,6 +451,45 @@ When building the wiki, RocketShip appears in:
 
 ---
 
+## GenAI Model Connections
+
+From [[Chan-Chapter4-8-Generative-Models]]:
+
+| RocketShip Tool | GenAI Application | Chan Reference |
+|----------------|-------------------|----------------|
+| **fetch_thesis_alignment** | RAG retrieval (Ch4): semantic search for Leopold thesis alignment | Ch4 RAG pattern |
+| **compute_bottleneck_severity** | VAE anomaly detection: high reconstruction error → supply/demand imbalance | Ch6 VAE |
+| **estimate_market_timing** | Flow density estimation: P(r_t \| regime) for timing confidence | Ch7 Flow models |
+| **post_trade_reflection** | CAI metalabeling: ML predicts PoP of own decisions | Ch3 CAI |
+| **identify_failure_patterns** | WGAN synthetic failure scenarios: generate diverse failure modes for RL training | Ch8 WGAN |
+| **adjust_factor_weights** | CPO regime adaptation: conditional portfolio optimization by regime | Ch3 CPO |
+
+### Synthetic Data Pipeline
+
+```
+Real bottleneck data → Train VAE/GAN → Generate synthetic scenarios
+    ↓
+RL Training (100K+ scenarios) → RL agent
+    ↓
+post_trade_reflection → identify_failure_patterns
+```
+
+### Bottleneck → Regime Mapping
+
+From [[Chan-Agilith-Integration]]:
+- Power (BE) constraint → RISK_ON
+- Compute (CRWV) supply catching up → TRANSITION
+- Memory (MU) normalization → RECOVERY
+
+### HMM vs GMM Contradiction (from [[Chan-Chapter4-8-Generative-Models]])
+
+Ch3: "HMM seductive but fictional" → Hidden states not directly useful.
+Ch6: Two Sigma uses GMM for regime detection → Works with observable indicators.
+
+**Resolution:** Use GMM with observable indicators for [[Regime-modeling]], not pure HMM hidden states.
+
+---
+
 ## Key Metrics
 
 | Month | Win Rate / Return | Max Drawdown | Sharpe |
@@ -466,3 +506,8 @@ When building the wiki, RocketShip appears in:
 - [[4-Month-Build-Plan]] — Month-by-month implementation
 - [[Agilith-System-Architecture]] — Existing single-agent architecture this extends
 - [[Failure-Patterns]] — The post_trade_reflection and identify_failure_patterns tools
+- [[Chan-Chapter4-8-Generative-Models]] — Deep generative models (VAE, Flow, GAN) for scenario generation
+- [[Chan-Agilith-Integration]] — Full Chan → Leopold/Agilith cross-reference
+- [[Chan-Chapter1-3-NoCode-ML]] — HRP, CAI, CPO applications
+- [[RL-Training-Setup]] — Synthetic scenario generation with generative models
+- [[Regime-modeling]] — GMM-based regime detection (resolve HMM contradiction)
