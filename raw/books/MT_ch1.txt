@@ -1,0 +1,698 @@
+(cid:2)
+TrimSize:6inx9in Chan ffirs.tex V2-12/11/2016 12:44A.M. Pagei
+M T
+ACHINE RADING
+(cid:2) (cid:2)
+(cid:2)
+
+(cid:2)
+TrimSize:6inx9in Chan ffirs.tex V2-12/11/2016 12:44A.M. Pageii
+Founded in 1807, John Wiley & Sons is the oldest independent pub-
+lishing company in the United States. With offices in North America,
+Europe,Australia,andAsia,Wileyisgloballycommittedtodeveloping
+and marketing print and electronic products and services for our
+customers’professionalandpersonalknowledgeandunderstanding.
+The Wiley Trading series features books by traders who have sur-
+vivedthemarket’sever-changingtemperamentandhaveprospered—
+(cid:2) (cid:2)
+some by reinventing systems, others by getting back to basics.
+Whether a novice trader, professional, or somewhere in between,
+these books will provide the advice and strategies needed to prosper
+todayandwellintothefuture.
+Formoreonthisseries,visitourwebsiteatwww.WileyTrading.com.
+(cid:2)
+
+(cid:2)
+TrimSize:6inx9in Chan ffirs.tex V2-12/11/2016 12:44A.M. Pageiii
+M
+ACHINE
+T
+RADING
+Deploying Computer Algorithms to Conquer
+the Markets
+(cid:2) (cid:2)
+Ernest P. Chan
+(cid:2)
+
+(cid:2)
+TrimSize:6inx9in Chan ffirs.tex V2-12/11/2016 12:44A.M. Pageiv
+Copyright©2017byErnestP.Chan.Allrightsreserved.
+PublishedbyJohnWiley&Sons,Inc.,Hoboken,NewJersey.
+PublishedsimultaneouslyinCanada.
+Nopartofthispublicationmaybereproduced,storedinaretrievalsystem,ortransmittedinany
+formorbyanymeans,electronic,mechanical,photocopying,recording,scanning,orotherwise,
+exceptaspermittedunderSection107or108ofthe1976UnitedStatesCopyrightAct,without
+eitherthepriorwrittenpermissionofthePublisher,orauthorizationthroughpaymentofthe
+appropriateper-copyfeetotheCopyrightClearanceCenter,Inc.,222RosewoodDrive,Danvers,
+MA01923,(978)750-8400,fax(978)646-8600,orontheWebatwww.copyright.com.Requests
+tothePublisherforpermissionshouldbeaddressedtothePermissionsDepartment,JohnWiley&
+Sons,Inc.,111RiverStreet,Hoboken,NJ07030,(201)748-6011,fax(201)748-6008,oronline
+athttp://www.wiley.com/go/permissions.
+LimitofLiability/DisclaimerofWarranty:Whilethepublisherandauthorhaveusedtheirbest
+effortsinpreparingthisbook,theymakenorepresentationsorwarrantieswithrespecttothe
+accuracyorcompletenessofthecontentsofthisbookandspecificallydisclaimanyimplied
+warrantiesofmerchantabilityorfitnessforaparticularpurpose.Nowarrantymaybecreatedor
+extendedbysalesrepresentativesorwrittensalesmaterials.Theadviceandstrategiescontained
+hereinmaynotbesuitableforyoursituation.Youshouldconsultwithaprofessionalwhere
+appropriate.Neitherthepublishernorauthorshallbeliableforanylossofprofitoranyother
+commercialdamages,includingbutnotlimitedtospecial,incidental,consequential,orother
+(cid:2) (cid:2)
+damages.
+Forgeneralinformationonourotherproductsandservicesorfortechnicalsupport,pleasecontact
+ourCustomerCareDepartmentwithintheUnitedStatesat(800)762-2974,outsidetheUnited
+Statesat(317)572-3993,orfax(317)572-4002.
+Wileypublishesinavarietyofprintandelectronicformatsandbyprint-on-demand.Somematerial
+includedwithstandardprintversionsofthisbookmaynotbeincludedine-booksorin
+print-on-demand.IfthisbookreferstomediasuchasaCDorDVDthatisnotincludedinthe
+versionyoupurchased,youmaydownloadthismaterialathttp://booksupport.wiley.com.For
+moreinformationaboutWileyproducts,visitwww.wiley.com.
+LibraryofCongressCataloging-in-PublicationDataisavailable:
+ISBN978-1-119-21960-6(Hardcover)
+ISBN978-1-119-21967-5(ePDF)
+ISBN978-1-119-21965-1(ePub)
+CoverDesign:Wiley
+CoverImages:Wave©kdrkara90/Shutterstock;Abstractbackground©Marina
+Koven/Shutterstock;FractalRealms©agsandrew/Shutterstock
+PrintedintheUnitedStatesofAmerica
+10 9 8 7 6 5 4 3 2 1
+(cid:2)
+
+(cid:2)
+TrimSize:6inx9in Chan ffirs.tex V2-12/11/2016 12:44A.M. Pagev
+To my mom, Ching, my spouse, Ben, and to the memory
+of my beloved father, Hung Yip.
+(cid:2) (cid:2)
+(cid:2)
+
+(cid:2)
+TrimSize:6inx9in Chan ffirs.tex V2-12/11/2016 12:44A.M. Pagevi
+(cid:2) (cid:2)
+(cid:2)
+
+(cid:2)
+TrimSize:6inx9in Chan ftoc.tex V1-12/11/2016 12:44A.M. Pagevii
+CONTENTS
+Preface ix
+CHAPTER1 TheBasicsofAlgorithmicTrading 1
+vii
+(cid:2) CHAPTER2 FactorModels 27 (cid:2)
+CHAPTER3 Time-SeriesAnalysis 59
+CHAPTER4 ArtificialIntelligenceTechniques 83
+CHAPTER5 OptionsStrategies 119
+CHAPTER6 IntradayTradingandMarket
+Microstructure 159
+CHAPTER7 Bitcoins 201
+CHAPTER8 AlgorithmicTradingIsGoodforBody
+andSoul 215
+Bibliography 227
+AbouttheAuthor 235
+Index 237
+(cid:2)
+
+(cid:2)
+TrimSize:6inx9in Chan ftoc.tex V1-12/11/2016 12:44A.M. Pageviii
+(cid:2) (cid:2)
+(cid:2)
+
+(cid:2)
+TrimSize:6inx9in Chan fpref.tex V2-12/11/2016 12:44A.M. Pageix
+PREFACE
+Thebestwaytolearnsomethingreallywellistoteachittosomeoneelse
+(BarghandSchul,1980).SoIconfessthatonemajormotivationformy
+writingthisbook,thethirdandthemostadvancedtodateinaseries,isto
+forcemyselftostudyinmoredepththefollowingtopics:
+ix
+(cid:2) (cid:2)
+■ The latest backtesting and trading platforms and the best and most
+cost-effectivevendorsforallmannersofdata(Chapter1);
+■ Howtopickthebestbrokerforalgorithmicexecutionsandwhatprecau-
+tionsweshouldtake(Chapter1);
+■ Thesimplestwaytooptimizeallocationstodifferentassetsandstrategies
+(Chapter1);
+■ Factormodelsinalltheirglory,includingthosederivedfromtheoptions
+market,andwhytheycanbeusefultoshort-termtraders(Chapter2);
+■ Timeseriestechniques:ARIMA,VAR,andstatespacemodels(withhid-
+denvariables)asappliedtopracticaltrading(Chapter3);
+■ Artificialintelligence/machinelearningtechniques:particularlymethods
+thatwillreduceoverfitting(Chapter4);
+■ Options and volatility trading strategies, including those that involve
+portfoliosofoptions(Chapter5);
+(cid:2)
+
+TrimSize:6inx9in Chan fpref.tex V2-12/11/2016 12:44A.M. Pagex
+ECAFERP
+(cid:2)
+■ Intraday and higher frequency trading: market microstructure, order
+types and routing optimization, dark pools, adverse selection, order
+flow,andhowtobacktestintradaystrategieswithtickdata(Chapter6);
+■ Bitcoins: bringing some of the techniques we covered to this new asset
+class(Chapter7);
+■ Howtokeepupwiththelatestknowledge(Chapter8);
+■ Transitioning from a proprietary trader to an investment advisor
+(Chapter8).
+I don’t know if these topics will excite you or bring you profits, but my
+study of them has certainly improved my own money management skills.
+Besides,sharingknowledgeandideasisfunandultimatelyconducivetocre-
+ativityandprofits.
+You will find most of the materials quite accessible to anyone who has
+some experience in a quantitative field, be it computer science, engineer-
+ing,orphysics.Notmuchpriorknowledgeoftradingandfinanceisassumed
+(except for the chapter on options, where we do assume basic familiar-
+ity).However,ifyouarecompletelynewtotrading,youmayfindmymore
+basictreatmentsinQuantitativeTrading(Chan,2009)andAlgorithmicTrading
+x
+(cid:2) (cid:2)
+(Chan,2013)easiertounderstand.Thisbookcanbetreatedasacontinua-
+tionofmyfirsttwobooks,withcoverageontopicsthatIhavenotdiscussed
+before,butitcanalsobereadindependently.
+Although many prototype trading strategies have been included as
+examples,oneshoulddefinitelynottreatthemasshrink-wrappedproducts
+ready to deploy in live trading. As I have emphasized in my previous
+books, nobody should trade someone else’s strategies without a thorough,
+independentbacktest,removingalllikelysourcesofbiasesanddataerrors,
+and adding various variations for improvement. Most, if not all, the
+strategies I describe contain hidden biases in one way or another, waiting
+foryoutounearthandeliminate.
+I use MATLAB for all of my research in trading. I find it extremely
+user-friendly, with constantly improving and new features, and with an
+increasingnumberofspecializedtoolboxesthatIcandrawon.Forexample,
+without the Statistics and Machine Learning Toolbox, it would take much
+longer to explore using AI/ML techniques for trading. (See why Google
+scientistandmachinelearningexpertKevinMurphyprefersMATLABtoR
+forAI/MLresearchinMurphy,2015.)Inthepast,readershavecomplained
+aboutthehighpriceofaMATLABlicense.Butnow,itcostsonly$150fora
+(cid:2)
+
+TrimSize:6inx9in Chan fpref.tex V2-12/11/2016 12:44A.M. Pagexi
+PREFACE
+(cid:2)
+‘‘Home’’license,witheachadditionaltoolboxcostingonly$45.Noserious
+traders should compromise their productivity because of this small cost.
+IamalsofamiliarwithR,whichisacloserelativetoMATLAB.Butfrankly,
+itisnomatchforMATLABintermsofperformanceanduser-friendliness.
+AdetailedcomparisonoftheselanguagescanbefoundinChapters1and6.
+Ifyoudon’talreadyknowMATLAB,itisveryeasytorequestaone-month
+trial license from mathworks.com and use its many free online tutorials
+to learn the language. One great advantage of MATLAB over R or other
+open-source languages is that there is excellent customer support: If you
+haveaquestion,justemailorcallthestaffatMathworks.(Often,someone
+withaPhDwillansweryourquestions.)
+Ihavetaughtmanyofthesetopicstobothretailandinstitutionaltraders
+atmybiannualworkshopsinLondon,aswellasonline(www.epchan.com).
+Inordertofacilitatelecturerswhowouldliketousethisasatextbookfora
+specialtopicscourseonAlgorithmicTrading,Ihaveincludedmanyexercises
+at the end of most chapters. Some of these exercises should be treated as
+suggestionsforopen-endedprojects;therearenoready-madeanswers.
+Readers will also find all of the software and some data used in the
+examples on epchan.com/book3. The userid and password are embedded
+in Box 1.1. But unlike my previous books, some of the data involved in
+xi
+(cid:2) (cid:2)
+the example strategies are under strict licensing restrictions and therefore
+are unavailable for free download from my website. Readers are invited
+to purchase or rent them from their original sources, all of which are
+describedinChapter1.
+I have benefited from tips, ideas, and help from many people in putting
+thecontenttogether.Anincompletelistwouldinclude:
+■ StephenAikin,arenownedauthor(Aikin,2012)andlecturer,whohelped
+me understand implied quotes due to calendar spreads in the futures
+markets(Chapter6).
+■ DavidDonandJosephSignorelliofLimeBrokerage,whocorrectedsome
+ofmymisunderstandingofthemarketmicrostructure(Chapter6).
+■ Jonathan Shore, infinitely knowledgeable about bitcoins, who helped
+compile some order book data in that market and shared that with me
+(Chapter7).
+■ Dr. Roger Hunter, CTO at our firm, QTS Capital Management, who
+reviewed my manuscript and who never failed to find software bugs in
+mycodes.
+(cid:2)
+
+TrimSize:6inx9in Chan fpref.tex V2-12/11/2016 12:44A.M. Pagexii
+ECAFERP
+(cid:2)
+■ The team at Interactive Brokers (especially Joanne, Ragini, Mike, Greg,
+Ian,andRalph)whoseinfinitepatiencewithmyquestionsaboutallissues
+relatedtotradingaremuchappreciated.
+I would like to thank Professor Thomas Miller of Northwestern Uni-
+versity for hiring me to teach the Risk Analytics course at the Master of
+Science in Predictive Analytics program. In the same vein, I would also
+like to thank Matthew Clements and Jim Biss at Global Markets Training
+for organizing the London workshops for me over the years. Quite a few
+nuggets of knowledge in this book come out of materials or discussions
+fromthesecoursesandworkshops.
+Tradingandresearchhavebeenmadealotmoreinterestingandenjoyable
+becauseIwasabletoworkcloselywithourteamatQTS,whocontributed
+toresearch,ideas,andgeneralknowledge,someofwhichfindtheirwayinto
+thisbook.Amongthem,Roger,ofcourse,withoutwhomtherewouldn’tbe
+QTS,butalsoYang,Marcin,Sam,andlastbutnotleast,Ray.
+Of course, none of my books would come into existence without the
+supportofWiley,especiallymylong-timeeditorBillFalloon,development
+editorJulieKerr,productioneditorCarolineMaria,andcopyeditorCheryl
+Ferguson(fromwhomnomissing‘‘end’’toa‘‘for’’-loopcanescape).Itwas
+xii trulyagreatpleasuretoworkwiththem,andtheirenthusiasmandprofes-
+(cid:2) (cid:2)
+sionalismaregreatlyappreciated.
+(cid:2)
+
+(cid:2)
+TrimSize:6inx9in Chan flast.tex V2-12/11/2016 12:44A.M. Pagexiii
+M T
+ACHINE RADING
+(cid:2) (cid:2)
+(cid:2)
+
+(cid:2)
+TrimSize:6inx9in Chan flast.tex V2-12/11/2016 12:44A.M. Pagexiv
+(cid:2) (cid:2)
+(cid:2)
+
+(cid:2)
+TrimSize:6inx9in Chan c01.tex V2-12/11/2016 12:44A.M. Page1
+CHAPTER 1
+The Basics
+of Algorithmic
+Trading
+Analgorithmictradingstrategyfeedsmarketdata(historicalorlive)into
+1
+(cid:2) (cid:2)
+acomputer(backtestorautomatedexecution)program.Theprogram
+thensubmitsorderstothebrokerthroughanAPI,andreceivesorderstatus
+notifications back from the broker. The flowchart in Figure 1.1 illustrates
+thisprocess.
+NoticethatIdeliberatelyusethesameboxtoindicatethecomputerpro-
+gramthatgeneratesbacktestresultsandliveorders:Thisisthebestwayto
+ensurewearetradingtheexactsamemodelthatwehavebacktested.
+Inthischapter,Iwilldiscussthelatestservices,products,andtheirven-
+dorsapplicabletoeachoftheblocksinFigure1.1.Inaddition,Iwilldescribe
+myfavorite performance metrics,the waytodetermine the optimallever-
+age, and the simplest asset allocation method. Though I have touched on
+many(butnotall)oftheseissuesinmypreviousbooks,Ihaveupdatedthem
+herebasedonthestateoftheart.TheFinTechindustryhasnotbeenstand-
+ingstill,norhasmyunderstandingofissuesrangingfrombrokers’safetyto
+subtletiesofportfoliooptimization.
+(cid:2)
+
+TrimSize:6inx9in Chan c01.tex V2-12/11/2016 12:44A.M. Page2
+GNIDART
+ENIHCAM
+(cid:2)
+Live market
+Historical market data
+data
+Computer
+program
+Order Order status
+Backtest results Broker API
+Order Order status
+Broker’s server
+(cid:2) 2 FIGURE1.1 Algorithmictradingataglance (cid:2)
+■ Historical Market Data
+Fordailyhistoricaldatainstocksandfutures,IhavebeenusingCSI
+(csidata.com) for a long time. CSI has a very flexible, and robust, desk-
+top application. The beauty of this application is that we can set a time
+in the evening when the data are automatically updated through an Inter-
+net connection with CSI’s server. Also, the data can be stored in various
+convenient formats such as .txt, .csv, or .xlsx. We can ask it to automati-
+callyadjusthistoricalstock(andETF)pricesforsplitsanddividends.Fora
+littleextra,CSIcanalsoprovidedelistedstocks’historicaldata,sothatyou
+can have a survivorship-bias-free data set.1 (By the way, CSI data powers
+Yahoo!Finance’shistoricalstockdata.)Forfutures,wecanchoosedifferent
+rollover methods to create continuous contracts. Or not, since the origi-
+nal contract prices are also available, and many professional traders prefer
+to backtest futures using original contract prices instead of back-adjusted
+continuouscontractprices.Thisisbecausethelatterdependsonaparticu-
+larrollmethod,andmayhavelook-aheadbiasembedded(seeChan,2013,
+(cid:2)
+
+TrimSize:6inx9in Chan c01.tex V2-12/11/2016 12:44A.M. Page3
+THE
+BASICS
+OF
+ALGORITHMIC
+TRADING
+(cid:2)
+foradetailedexplorationofthisissue).Finally,CSIhasexcellentcustomer
+supportthroughemailandphone.
+An alternative to CSI is Quandl.com, which is a consolidator of many
+kindsofdatafrommanydifferentvendors.ItalsoprovidesanAPIindifferent
+languages(includingMATLAB,whichIuseinthisbook,orPython,which
+many other traders use) that we can use for data selection and download.
+Some of Quandl’s data are free (daily data for stocks is one example), and
+othersrequirepayment.Ihavepurchased,forexample,fundamentalstock
+data from them (see Chapter 2, Factor Models), and they are much more
+economicalthanestablishedvendorssuchasCompustat.
+Serious traders or academic finance researchers may prefer stock, ETF,
+and mutual fund data from CRSP (www.crsp.com). Their historical data
+arecarefullycompiledtobesurvivorship-bias-free,anddividendsandsplits
+are provided separately so you can decide how to utilize them in a back-
+test.Butmostimportantly,theyprovidethebestbidandoffer(BBO)prices
+at the close. These are important because, as is explained in Box 6.2 in
+Chapter6,using theusual consolidated closing prices fromCSI orQuandl
+caninflatebacktestperformancesforcertainstrategies.Asimilarissuearises
+fromusingtheconsolidatedopeningprices.Thebestopenandcloseprices
+tousearetheauctionpricesfromtheprimaryexchange.(SeealsoBox6.2
+3
+(cid:2) (cid:2)
+foranexplanationofhowwecanextractsuchauctionpricesfromtickdata.)
+ThesecondbestopenandclosepricestousearetheBBOpricesthatcanbe
+usedtocomputethemidpricesattheopenandclose.UnfortunatelyCRSP
+doesnotprovidetheBBOpricesattheopen,soonemustuseintradaydata
+for that purpose. For academic researchers, CRSP data can be obtained at
+a lower cost through WRDS (wrds-web.wharton.upenn.edu), which is a
+consolidatorofmanyhighqualityhistoricaldatabasesforscholarlyresearch.
+Of course, those serious traders who can afford to buy data from CRSP
+mayalsobeabletoaffordaBloombergterminalsubscription.Oneadvantage
+ofaBloombergterminalisthatwecandownloadthe‘‘primaryexchange’’
+closepriceforUSstocks.Ofcourse,aBloombergsubscriptionalsoincludes
+accesstomanyhistoricalandlivedataspanningawidevarietyofinstruments
+and,importantly, breakingnews onevery stock.Ihavefound Bloomberg’s
+news service to be superior to many other vendors’. Often, we will see a
+stockmovessuddenly,andarenotabletofindthereasonanywhereelsebut
+onBloomberg’snewsfeed.Theydocapturethemostobscurenewsonthe
+most obscure stocks in the shortest time frame, which is important when
+youhaveanevent-drivenstrategy.Bloomberg’shistoricalUSstockdataare
+alsosurvivorship-bias-free.(TobefairtoThomsonReuter’sEikonplatform,
+(cid:2)
+
+TrimSize:6inx9in Chan c01.tex V2-12/11/2016 12:44A.M. Page4
+GNIDART
+ENIHCAM
+(cid:2)
+whichisakeencompetitortoBloomberg’s,Ihavenottesteditsnewsfeed.
+So it is possible that it provides just as wide and timely coverage as well.
+There is one feature on Eikon that impressed me in a demo: I was able to
+seethegeographicallocationsofindividualoiltankersandwheretheywere
+headed. Apparently, this is useful to oil traders to predict short-term oil
+inventory,supply,anddemand.)
+For futures traders, daily data does not present much of a problem.
+CSIsandthefreedataonQuandlareasgoodasany.
+Daily options data can be obtained from ORATS.com as well as
+ivolatility.com. Both offerings are survivorship-bias-free. The institutional
+trader or academic researcher may also purchase from Option Metrics,
+which is often part of the WRDS package (see above). One nice feature
+of all these databases: They do not include just option closing prices, but
+also the bid-ask quote at the close as well. This is important because some
+options, especially ones that are out-of-the-money or have long tenor,
+may be traded infrequently. So the last trade price of the day may be very
+different from the bid-ask quotes at the close, and is not indicative of the
+pricewecanactuallytradeatorneartheclose.Thesedatabasesalsoinclude
+auxiliarybutimportantinformationsuchastheGreeksandimpliedvolatil-
+ities.Furthermore,theymayincludeanimpliedvolatilitysurface.Thisuses
+4
+(cid:2) (cid:2)
+implied volatilities computed on actual options and interpolates them to
+yieldimpliedvolatilitiesforstrikesandtenorsthatdidnotactuallyexist.
+Options historical data tend to be more expensive than stock or futures
+data, due to their voluminous nature. However, it can be cheaper to rent
+intraday option prices from QuantGo.com than to buy daily option prices
+from other vendors. We will talk more about QuantGo when we discuss
+intraday data in general. It would be a trivial programming exercise to
+extract the end-of-day quotes from the intraday data, by looking for the
+quoteswithtimestampsatorjustbeforethedailyclosingtime.
+Beyond daily price data, there are, of course, fundamental financial
+data for companies. I already mentioned that Quandl carries such data.
+InstitutionaltraderswouldmostlikelylooktoCompustatforsuchdata.For
+corporate earnings estimates by analysts, Thomson Reuters’ IBES database
+is the standard. Both Compustat and IBES are available from WRDS.
+Meanwhile, crowd-sourced earnings estimates are available from Estimize.
+There is some research that suggests Estimize’s contributors can more
+accurately forecast actual earnings than traditional sell-side analysts (Wang
+et al., 2014). An example strategy using Estimize’s data is discussed
+in Deltix (2014). Short interest data are available from Compustat and
+(cid:2)
+
+TrimSize:6inx9in Chan c01.tex V2-12/11/2016 12:44A.M. Page5
+THE
+BASICS
+OF
+ALGORITHMIC
+TRADING
+(cid:2)
+SunGard’s Astec database. SunGard’s data have a lot more details culled
+fromstocklendersandprimebrokersaroundtheStreetthanasimpleshort
+interestnumber. Inaddition, theirdataareavailableonanintradaybasisas
+alivefeed,thoughthehistoricaldatadonothavehistoricaltimestamps.
+News data is another type of data that is becoming fashionable. Many
+vendors sell elementized news feeds (i.e., news that is machine-readable,
+which makes it easier to capture keywords, categories, and the like),
+including Bloomberg, Dow Jones, and Thomson Reuters. If it is too much
+trouble for your strategy to generate trading signals from raw news data,
+you can also buy news sentiment data from Ravenpack, Thomson Reuters
+News Analytics, MarketPsych, or Accern. (AcquireMedia’s NewsEdge
+database is similar, but they provide only impact scores. This is a kind of
+unsigned sentiment score that doesn’t tell you which way the stock will
+move, only that it will move, which may be suitable for options traders.)
+However, there is one problem for sentiment data: Different vendors have
+differentwaystocomputesentimentscoresfromtherawnews.Soatrading
+modeldependstosomeextentonwhichvendors’sentimentscoresaremost
+predictive.
+WewillleavethetopicofbuyingorrentingintradaydatatoChapter6on
+IntradayTrading,becausethefeaturesassociatedwithintradaydataareinti-
+5
+(cid:2) (cid:2)
+matelytiedtothemarketmicrostructure.Here,wewilljustnotethatsomeof
+thehistoricalintradaydatavendorsincludetickdata.com,nanex.net,CQG,
+QuantGo.com,kibot,andofcourse,thevariousexchangesthemselves.
+Finding, buying, or renting data is both expensive and time-consuming,
+thoughconsolidatorslikeQuandlandQuantGohavemadeitmuchlessso.
+Anotherwaytoavoiddealingwithacquiringdatadirectlyistoadoptatrading
+platform that comes integrated with data (though you may have to pay for
+the data separately). A good example is Quantopian.com, which provides
+free US stock trades data with one-minute bars, together with many other
+forms of fundamental and news data at lower frequency. (I have been told
+thatfuturesdatawillbeavailablesoon.)Wewilltalkmoreaboutplatforms
+liketheseinthesection‘‘BacktestingandTradingPlatforms.’’
+■ Live Market Data
+Most if not all brokerages provide live market data to their clients, and if
+you are trading a daily strategy (i.e., you trade only at the market open or
+close), such data are usually more than sufficient. However, if you engage
+(cid:2)
+
+TrimSize:6inx9in Chan c01.tex V2-12/11/2016 12:44A.M. Page6
+GNIDART
+ENIHCAM
+(cid:2)
+in intraday trading, then the quality of data becomes a bigger issue. As we
+willdiscussmorethoroughlyinChapter6,lowlatencymarketdatacanbe
+quite expensive to obtain. Vendors that provide data suitable for intraday
+trading that can tolerate a latency of more than 25 ms (ms = millisecond)
+include eSignal, IQFeed, CQG, Interactive Data, Bloomberg, and many
+others.Butvendorsthatprovidedatafeedwithlatencyofbelow10msare
+far fewer: They include S&P Capital IQ (formerly QuantHouse), SR Labs,
+andThomsonReuters.Ofcourse,youcanalsosubscribetothedirectfeeds
+from the exchange, but that is strictly for high frequency traders who find
+the high expense justified by the high return. (That is true unless you are
+after currency data, where most FX exchanges will give their customer a
+freedirectfeed.)
+As with historical market data, many trading platforms also include live
+marketdatafeeds.Thesewillbediscussedinthefollowingsection.
+■ Backtesting and Trading Platforms
+Traditionally,wewouldbacktestourtradingstrategyononeplatform(e.g.,
+R)andoncesuccessful,writeadifferentprogramtoautomateexecutionof
+6
+(cid:2) (cid:2)
+the strategy that utilizes a broker’s API. However, this proves to be quite
+bug-prone: there is no way to ensure that the backtest and the live trad-
+ing program encapsulate exactly the same trading logic. Fortunately, most
+backtest platforms nowadays have extended their ability to execute live as
+well;hence,wewillcombinethediscussionsonbacktestingandtradingplat-
+formshere.
+As I mentioned in the Preface, MATLAB has been my favorite backtest-
+ing platform. It has a very comprehensive and user-friendly interface for
+developing and debugging programs, and it has a wide array of toolboxes
+that cover almost every arcane mathematical or computational technique
+you will likely encounter in trading strategy development. One of these
+toolboxes, the Trading Toolbox, enables a MATLAB program to connect
+to a number of brokerages’ APIs to receive market data, submit orders,
+and receive order status notifications. If you prefer not to buy the Trading
+Toolbox,thereareatleastthreeadaptorsdevelopedbythird-partyvendors
+thatenableyoutodothesame:exchangeapi.com’squant2ib,undocument-
+edmatlab.com’s IB-Matlab, and Jev Kuznetsov’s free MATLAB-to-IB API
+available at MATLAB’s File Exchange. I have discussed these options in
+some depth in Chan (2013). Finally, MATLAB is fast. (See Chapter 6 for
+(cid:2)
+
+TrimSize:6inx9in Chan c01.tex V2-12/11/2016 12:44A.M. Page7
+THE
+BASICS
+OF
+ALGORITHMIC
+TRADING
+(cid:2)
+a comparison of performance speed among MATLAB, R, and Python.)
+The only drawback for this platform is that it isn’t free, but the ‘‘Home’’
+licensecostsonly$150,witheachadditionaltoolboxcostinganextra$45.
+If you plan to buy MATLAB’s Toolboxes, here are the three I recommend
+(in decreasing order of importance): Statistics and Machine Learning,
+Econometrics,andFinancialInstruments(foroptionstraders).
+Forthosewhopreferfree,open-sourceplatforms,therearealwaysRand
+Python.
+R is very similar to MATLAB: It is an array-processing language, and it
+has a large variety of specialized ‘‘packages’’ (the analogue of MATLAB’s
+toolboxes),manyofthemperhapsmoresophisticatedthanMATLAB’sdue
+to the large number of academic researchers who use R. There is a GUI
+developmentplatformcalledRStudio,butIfinditsuserinterfacetobequite
+crude compared to that of MATLAB, and hence debugging productivity is
+lower. R is also the slowest among the three languages, and the slowness
+is all the more problematic because, unlike MATLAB or Python, it cannot
+be compiled into C or C++ code for speeding up. (You can, however, use
+the Rcpp package to access compiled C++ code from within R.) As for
+automatingexecutions,youcanconnectanRprogramtoInteractiveBrokers
+throughapackagecalled‘‘IBroker.’’
+7
+(cid:2) (cid:2)
+Pythonisalanguageintheascendant,thoughIknowofquantswhoused
+it for backtesting back in 1998. Aside from being a standalone language of
+choiceformanyquantitativetraders,platformssuchasQuantopianalsouse
+itastheirstrategyspecificationlanguage.NativePythonisnotanarraypro-
+cessing language (though one can use SciPy packages which do have this
+feature).Whilearrayprocessingisconvenientforbacktestingalargenum-
+berofinstrumentssimultaneously(e.g.,portfolioofstocks),itisnotuseful
+for writing an automated execution program. Hence, if we were to insist
+onusingthesameprogramforbothbacktestingandliveexecution,wecan
+disregard this feature altogether. One major advantage of Python is that its
+codescanbedevelopedanddebuggedusingMicrosoft’sVisualStudio,thus
+piggybackingonthefullpowerofthiswell-polisheddevelopmentenviron-
+ment.Anotherintegrateddevelopmentenvironment2(IDE)forPythonthat
+receivedgoodreviewsisPyCharm.Python’spandaslibraryisadataanalysis
+packagesimilartoR,andtherpy2packageprovidesaninterfacetoaccessall
+Rpackages.Pythonisn’tasfastasMATLAB,thoughitisfasterthanR,and
+can be compiled into C or C++.3 You can connect a Python trading pro-
+gram to Interactive Brokers for executions via IBPy or a number of other
+packages.
+(cid:2)
+
+TrimSize:6inx9in Chan c01.tex V2-12/11/2016 12:44A.M. Page8
+GNIDART
+ENIHCAM
+(cid:2)
+TABLE1.1 RankingofThreeProgrammingLanguagesforQuantTrading
+(Rankedfrom1to3where1=bestrankingand3=poorest
+ranking.)
+Feature MATLAB R Python
+Easeofuse 1 2 2
+IDEpolish 1 3 1
+Speed 1 3 2
+Toolboxes 2 1 1
+CompilationtoC/C++ 1 N/A 1
+Connectivitytobrokers 1 2 2
+Customersupport 1 N/A N/A
+Price 2 1 1
+In Table 1.1, I provide my personal, arguably subjective, ranking of the
+various features and aspects of the three scripting languages most widely
+usedintradingstrategydevelopment.
+You may be wondering why I have left out some of the most common
+programminglanguagessuchasC/C++,Java,orC#.Thefactis,themost
+productive way to develop trading strategies is to quickly build prototype
+8
+(cid:2) (cid:2)
+programstotestalotofthem,andtoquicklydiscardthemiftheyfailtolive
+uptotheirpromises.Scriptinglanguages(alsocalledREPL4 languages)like
+MATLAB, R, or Python allow us to shorten this research cycle. However,
+productivityinresearchisnotthesameasproductivityinbuildinganauto-
+matedtradingsystem.Thelatterusuallyinvolvestheusualbellsandwhistles
+of software development such as object-oriented design, exception han-
+dling,versioncontrol,memoryandspeedoptimization,andsoforth.Such
+bellsandwhistlesareactuallyquitecumbersometoimplementinascript-
+inglanguage,and,furthermore,itisquiteeasytointroducebugswithouta
+robustandextensiblesoftwarearchitecture.Typically,onceobject-oriented
+designisimposedonascriptinglanguage,itwillruntooslowlytobeuseful
+asanexecutionsystem.
+To benefit from the best of both worlds, in our firm we do our initial
+research mostly in MATLAB or Python (though I often ask our research
+associatestotesttheirstrategiesonQuantopianfirst,justtomakesuretheir
+codesdonothavelook-aheadbias).Afterwesettleonastrategy,ourCTO,
+Roger,willthenindependentlybuildasysteminC#thatcanbothbacktest
+(cid:2)
+
+TrimSize:6inx9in Chan c01.tex V2-12/11/2016 12:44A.M. Page9
+THE
+BASICS
+OF
+ALGORITHMIC
+TRADING
+(cid:2)
+andexecutelivethesamestrategy,asawaytoconfirmthecorrectnessofthe
+initialbacktest.Onceitisconfirmed,afigurativeturnofthekeywillallow
+us to trade live, with much lower latency than if we were to execute using
+a scripting language. In building the execution system, we can often reuse
+existingclassesthatwehavewrittenforotherstrategies.Thisway,wehave
+compressedtheresearchlifecyclewithoutsacrificingsoftwarecorrectness,
+componentreuse,orexecutionefficiency.
+There are now many backtesting and automated execution platforms
+available that purport to make it easier to develop and deploy automated
+tradingstrategiesbothquicklyandrobustly,justlikewhatIdescribedinthe
+last paragraph, but without using two different languages. I have written
+extensivelyaboutthisinChan(2013),sohereIwillrestrictmyselftothose
+platformsthatfitthefollowingcriteria:
+1. It has integrated historical and live market data, or provides adaptors
+forpopulardatavendors.
+2. It allows maximum flexibility in strategy design by relying on generic
+programminglanguagessuchasPythonorJava.
+3. ItallowsconnectiontopopularbrokerAPIs.
+4. ItallowsbacktestingandlivetradinginUSequities,amongotherinstru-
+ments. 9
+(cid:2) (cid:2)
+TheplatformsthatsatisfythesecriteriaareQuantopian,QuantConnect,
+Ninjatrader, Marketcetera, AlgoTrader, OpenQuant, Deltix, and Quant-
+House.(Thisis,ofcourse,notanexhaustivelist.)Someoftheseplatforms,
+suchasQuantopian,arefree,whileothers,suchasQuantHouse,haveaprice
+tagsuitableforinstitutionaltraders.
+If you are trading a high frequency strategy, it is possible that many of
+theseplatformswillnotbeadequate:eitherbecausetheymaybetooslow,
+or because they are missing level 2 quotes. But there are platforms such
+as Lime Brokerage’s Strategy Studio that are designed specifically for such
+demandingtasks.MoreaboutthiswillbediscussedinChapter6.
+Thoughtheseplatformshavecertainlymadeiteasiertobacktestandauto-
+mate trading strategies, they usually come with some constraints on the
+exact type of strategies, data, or instruments that we are allowed to test.
+Not surprisingly, the more expensive a platform is, the more flexible it is.
+But if absolute flexibility coupled with low development cost is required,
+youwillprobablyhavetodowhatwedoinourfirm.
+(cid:2)
+
+TrimSize:6inx9in Chan c01.tex V2-12/11/2016 12:44A.M. Page10
+GNIDART
+ENIHCAM
+(cid:2)
+■ Brokers
+In this day and age, practically every broker will offer customers an API
+wheretheycansubscribetomarketdata,submitorders,andreceiveorder
+status notifications: See the last two blocks on the right of Figure 1.1. Of
+course, the ease of use and comprehensiveness of their APIs differ widely.
+Ifyouwouldrathernotdealdirectlywiththevagariesandlow-leveldetails
+ofeachbroker’sAPI,youcanuseoneoftheautomatedexecutionplatforms
+thatIdescribedintheprevioussection.
+Meanwhile, commissions are generally so low that it also isn’t a crucial
+factor in deciding who to trade with. Brokers have other ways to make
+money from you besides commissions. One popular way, for some
+stockbrokers,is‘‘paymentfororderflow.’’Essentially,whenyousendyour
+ordertothisbroker,itwillforwardyourordertoaparticularmarketmaker
+or a specific exchange for a rebate (e.g., a penny per share), and let them
+executethisorder.Brokerswhodothismustinformtheircustomersofthis
+practicewhentheyopentheiraccounts.Ifyouprefernottoletyourbroker
+earnthisrebate,andinsteadwanttopocketityourself,youcanusebrokers
+with Direct Market Access (e.g., Interactive Brokers or Lime Brokerage).
+ForsomeFXbrokers,apopularwaytoearnmoneyistowidenthebid-offer
+10
+(cid:2) (cid:2)
+spread on a currency pair. This way, they earn the difference between the
+spread they offer you and the spread they have to pay in the interbank
+market where they execute your trade. This can make it hard to compare
+costs among different FX brokers, since this extra spread may change over
+time, but of course this is precisely the reason why some brokers adopt
+thepractice.Ifyouprefertransparency,youcanrestrictyoursearchtoFX
+brokersthatonlychargecommissions,notspread.
+Ifyouareafuturesorcurrencytrader,thereisonemoreitemaboutyour
+broker that you have to worry about: financial stability. For US securities
+(i.e.,stockstrading)accounts,manytradersknowthattheircash5isinsured
+up to $250,000 by the Securities Investor Protection Corporation (SIPC).
+Manybrokersalsoprovideadditionalinsurancethroughaprivateinsurance
+company such as Lloyd’s of London. However, none of this is applicable
+to commodities futures trading accounts—hence the furor in wake of the
+MF Global and PFGBest bankruptcies (MarketWatch, 2012). It would be
+pointless to advise you to ascertain the financial strength of a commodi-
+ties broker before opening an account: If the National Futures Association
+(NFA)couldn’tdetectthatsomeoftheselargebrokers(calledFuturesCom-
+mission Merchants, or FCM) are not meeting capital requirement or are
+(cid:2)

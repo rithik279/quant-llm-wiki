@@ -1,0 +1,1500 @@
+TrimSize:6inx9in Chan c03.tex V2-12/11/2016 12:44A.M. Page67
+TIME-SERIES
+ANALYSIS
+(cid:2)
+Y asindependentvariables.Hence,amodelforY ismoreflexibleandgives
+betterresults.IfwewanttohaveamodelforΔY thathasbothΔYsandYs
+as independent variables, we have to use a VEC(p) model, to be discussed
+attheendofthenextsectiononVAR(p).
+■ VAR(p)
+The simple autoregressive model AR(p) in equation 3.2 can be easily gen-
+eralized to m multivariate time series. This generalized model is called a
+vectorautoregressivemodel,orVAR(p).Allweneedtodoistointerpretthe
+autoregressive coefficients ϕ as m×m matrices, and allow the noises ε(t),
+which are m-vectors to have nonzero cross-sectional correlations but zero
+serialcorrelations.Thismeansthatε(t)isnotcorrelatedwithε(s),forany
+i j
+t ≠ s, but ε(t) could be correlated with ε(t). Since the autogressive coef-
+i j
+ficient matrices relate the current price of every time series to the lagged
+prices of all time series, VAR model is particularly suitable for modeling
+financial instruments that have correlated returns, such as a portfolio of
+stockswithinthesameindustrygroup.Wewillfocusonthecomputerhard-
+ware group within the S&P 500 Index on January 3, 2007, which consists
+of the tickers AAPL, EMC, HPQ, NTAP, and SNDK. To eliminate spuri- 67
+(cid:2) (cid:2)
+ousmean-reversioneffectsduetobid-askbounce,wewillusemidpricesat
+marketcloseprovidedbytheCenterforResearchofSecurityPrices(CRSP)
+fromJanuary3,2007,toDecember31,2013.
+AsinthesectiononAR(p),wefirstneedtodeterminetheoptimallagp.
+Wewillusethefirstsixyearsofdataastrainingsetforthisdetermination.
+Thereareonlyminordifferencesinthecodesrequired:4
+for p=1:length(P)
+model=vgxset('n', size(mid, 2), 'nAR', p, 'Constant', true);
+% with additive offset
+[model,EstStdErrors,logL,W] = vgxvarx(model,mid(trainset, :));
+[NumParam,∼] = vgxcount(model);
+LOGL(p) = logL;
+P(p) = NumParam;
+end
+Itisgratifyingthatwefindp = 1minimizesBIC(simplermodelsareusu-
+ally better), and this is a typical result for most industry groups. Once this
+is decided, the other parameters of the model can be determined by the
+functionvgxvarx,whichistheequivalentoftheestimatefunctionforARIMA
+(cid:2)
+
+TrimSize:6inx9in Chan c03.tex V2-12/11/2016 12:44A.M. Page68
+GNIDART
+ENIHCAM
+(cid:2)
+models. Using the same training set, the constant offsets, autoregressive
+coefficients, and the covariance of the noise terms are noted in Table 3.3.
+(Inthistable,incontrasttoTable3.1or3.2,thesubscriptsrefertothestocks
+insteadofnumberoftimelags.)
+Tomakepredictionsusingthismodelontheout-of-sampledatain2013,
+usethevgxpredfunction,whichissimilartotheforecastfunctionforARIMA.
+pMin=1;
+yF=NaN(size(mid));
+for t=testset(1):size(mid, 1)
+FY = vgxpred(model,1, [], mid(t-pMin+1:t, :));
+yF(t, :)=FY;
+end
+In keeping with the linearity of the VAR models, we can construct
+a linear trading model as well. Furthermore, we can choose to make it
+TABLE3.3 ConstantOffsets,AutoregressiveCoefficients,andCovariance
+ofaVAR(1)ModelAppliedtoComputerHardwareStocks
+ConstantOffsets Value StandardError
+68 𝜇 . .
+(cid:2) 388363 115299 (cid:2)
+1
+𝜇 . .
+0669367 00970334
+2
+𝜇 . .
+175474 0227636 3
+𝜇 . .
+1701 0249767
+4
+𝜇 . .
+18752 0282581
+5
+𝛟 AAPL EMC HPQ NTAP SNDK
+i,j
+AAPL 0 . 991815 0 . 0735881 −0 . 105676 0 . 0359698 −0 . 00619303
+EMC −7 . 15594e-05 0 . 970934 −0 . 0103416 0 . 00524778 0 . 00354032
+HPQ −0 . 00158962 −0 . 024093 0 . 965626 0 . 00898799 0 . 00190162
+NTAP −0 . 000771673 −0 . 0409408 −0 . 0284176 1 . 00662 0 . 00308001
+SNDK −0 . 000526824 −0 . 0579403 −0 . 0309631 0 . 01704 0 . 998657
+⟨𝜺𝜺⟩
+AAPL EMC HPQ NTAP SNDK
+i j
+.
+AAPL 362559
+. .
+EMC 167571 0256786
+. . .
+HPQ 337592 0449846 141323
+. . . .
+NTAP 378265 0513747 120474 170138
+. . . . .
+SNDK 439542 0522437 126443 141357 217779
+(cid:2)
+
+TrimSize:6inx9in Chan c03.tex V2-12/11/2016 12:44A.M. Page69
+TIME-SERIES
+ANALYSIS
+(cid:2)
+⟨ ⟩
+sector-neutral.Wecomputethemeanpredictedreturn r ofallthestocks
+in the industry group every day, and set the target dollar allocation of a
+stocktobeproportionaltothedifferencebetweenitspredictedreturnand
+theindustrygroupmean,
+∑
+w = (r −⟨ r ⟩)∕ | r −⟨ r ⟩| . (3.4)
+i i j
+j
+We have made sure that the initial gross market value of the portfolio is
+always $1. You may notice that this formula looks similar to equation 4.1
+inChan(2013),butitisdifferent.Intheformulainmypreviousbook,the
+returns used are the previous day’s returns, and more importantly, we set
+the proportionality constant to −1 since we assumed mean reversion. The
+MATLAB code fragment5 for computing the position (equivalently, dollar
+allocation)ofeachstockis
+retF=(yF-mid)./mid;
+sectorRetF=mean(retF, 2);
+pos=zeros(size(retF));
+pos=(retF-repmat(sectorRetF, [1 size(retF, 2)]))./repmat
+(smartsum(abs(retF-repmat(sectorRetF, [1 size(retF, 2)])), 2),
+69
+(cid:2) [1, size(retF, 2)]); (cid:2)
+This trading model yields an annualized return of 48 percent, with a
+Sharperatioof0.9.SeeFigure3.3foritsequitycurve.
+WeoftenwanttopredictchangesinpriceΔY insteadofpriceY itself.So
+itisabitawkwardtousetheVARmodels,andtheresultingARcoefficients
+do not make too much intuitive sense. Fortunately, VAR(p) can be trans-
+formed to a model with ΔY as the dependent variable, and various lagged
+ΔY’sandY’sastheindependentvariables.ThisiscalledtheVEC(q)(vector
+errorcorrection)model,andiswrittenas
+ΔY(t) = M +CY(t−1)+A ΔY(t−1)+···+A ΔY(t−k)+ε(t).
+1 k
+(3.5)
+Them×mmatrixCinequation3.5iscalledtheerrorcorrectionmatrix.
+TotransformthecoefficientsofVAR(p)toVEC(q),firstnotethatq = p−1,
+and we can use the functionvartovec. Applying this to the VAR model built
+aboveforcomputerhardwarestocks:
+[model_vec, C]=vartovec(model);
+(cid:2)
+
+TrimSize:6inx9in Chan c03.tex V2-12/11/2016 12:44A.M. Page70
+GNIDART
+ENIHCAM
+(cid:2)
+0.7
+0.6
+0.5
+0.4
+0.3
+0.2
+0.1
+0
+Jan 2013 Apr 2013 Jul 2013 Oct 2013 Jan 2014
+Date
+70
+(cid:2) (cid:2)
+(cid:2)
+snruteR
+evitalumuC
+VAR(1) model on computer hardware SPX stocks
+FIGURE3.3 VAR(1)tradingstrategyappliedtocomputerhardwarestocks
+wegetTable3.4,whichdisplaysthevaluesofC:
+TABLE3.4 ErrorCorrectionMatrixofaVEC(0)ModelApplied
+toComputerHardwareStocks
+C AAPL EMC HPQ NTAP SNDK
+i,j
+AAPL −0 . 0082 0 . 0736 −0 . 1057 0 . 0360 −0 . 0062
+EMC −0 . 0001 −0 . 0291 −0 . 0103 0 . 0052 0 . 0035
+HPQ −0 . 0016 −0 . 0241 −0 . 0344 0 . 0090 0 . 0019
+NTAP −0 . 0008 −0 . 0409 −0 . 0284 0 . 0066 0 . 0031
+SNDK −0 . 0005 −0 . 0579 −0 . 0310 0 . 0170 −0 . 0013
+ThevaluesofCgiveusamoreintuitiveunderstandingoftherelationships
+betweenthemovementsofthedifferentstocks.Youmaynoticethatexcept
+forNTAP,alldiagonalelementshavenegativevalues.Thismeansthatallbut
+NTAPareseriallymeanreverting,albeitsomeveryweakly.
+Equation 3.5 is the same as equation 2.7 in Chan (2013), where it was
+discussed in connection with the Johansen test for cointegration. Indeed,
+if the portfolio of computer hardware stocks were cointegrating, C would
+give rise to a significantly negative eigenvalue in the Johansen test. But we
+donotneedacointegratingportfoliotouseVEC(q)forprediction.Someof
+thestockscouldbetrendingwhileothersaremeanreverting,aswesawin
+Table3.4.
+
+TrimSize:6inx9in Chan c03.tex V2-12/11/2016 12:44A.M. Page71
+TIME-SERIES
+ANALYSIS
+(cid:2)
+By the way, if you want to try VAR models on the entire SPX universe
+insteadofjustthecomputerhardwarestocks,makesureyourcomputerhas
+an unusually large memory! Also, as mentioned before, these models may
+behavebetterifweuselogpricesinsteadofprices.(Inanycase,alogprice
+representation will allow a better connection to the continuous version of
+VARandVEC.SeeCartea,Jaimungal,andPenalva,2015,p.285.)
+■ State Space Models
+The AR, ARMA, VAR, and VEC models we have considered so far all use
+observable variables (prices of various lags) to predict their future values.
+However,econometricianshavealsoconcoctedaclassofmodelswithhidden
+variables,calledstates,whichcandeterminethevaluesofobservedvariables
+(though subject to observation noise). These models are called state space
+models (SSM), a linear example of which is the Kalman filter, discussed in
+Chapter3ofChan(2013)andusedinChapter5inthisbook.Thoughthere
+canbenonlinearstatespacemodels,wewilldiscussonlythelinearversion
+inthissection.
+A state space model starts with a linear relationship that specifies the
+(cid:2) time-evolutionofthehiddenstatevariable,usuallydenotedbyx: 71 (cid:2)
+x(t) = A(t) ∗ x(t−1)+B(t) ∗ u(t) (3.6)
+where x is an m-dimensional vector, A(t) and B(t) are possibly time-
+dependent but observable matrices (Ais m×m,whileB is m×k), andu(t)
+is k-dimensional Gaussian white noise with zero mean, unit variances, and
+zero serial and cross correlations. Equation 3.6 is often called the state
+transition equation. The observable variables (also called measurements) are
+relatedtothehiddenvariablesbyanotherlinearequation
+y(t) = C(t) ∗ x(t)+D(t) ∗ ε(t) (3.7)
+where y is an n-vector, C(t) and D(t) are possibly time-dependent but
+observablematrices(Cisn×m,whileDisn×h),andε(t)ish-dimensional
+Gaussian white noise, also with zero mean, unit variances, and zero serial
+andcrosscorrelations.Equation3.7isoftencalledthemeasurementequation.
+Whatarethesehiddenvariables,andwhydowewanttohypothesizetheir
+existence? An example of a hidden variable is the familiar moving average.
+Thoughweusuallycomputeamovingaverageofpricesusingafixednumber
+(cid:2)
+
+TrimSize:6inx9in Chan c03.tex V2-12/11/2016 12:44A.M. Page72
+GNIDART
+ENIHCAM
+(cid:2)
+oflaggedpricesandthusmakingitapparentlyanobservablevariable,wecan
+argue that this fixed number of lags is an artificial construction. Also, why
+notuseexponentialmovingaverageinsteadofmovingaverage?Thefactthat
+noonecanagreeonastandard,uniquemovingaveragevariablesuggeststhat
+it may be treated as a hidden variable. We can give some structure to this
+hiddenvariablexbyrequiringthatitevolvesinaparticularlysimpleway:
+x(t) = x(t−1)+B ∗ u(t) (3.8)
+WehaveassumedA(t)istheidentitymatrix,whichisofcourseinvariant
+intime,andBisanunknownbutalsotime-invariantmatrixthatdetermines
+thecovarianceoftheestimationerrorsforthemovingaveragex.(Remember
+thatuitselfhasacovariancematrixthatistheidentitymatrix.)Thoughwe
+hadsaidthatBissupposedtobeobservable,itcanbetreatedasanunknown
+parameter(s) to be estimated by applying maximum likelihood estimation
+ontrainingdata.(Inotherwords,Bis‘‘observable’’onlytotheextentthat
+itsvaluesarenotupdatedateachtimestepduringKalmanfilterupdates.)
+Given the moving average (plural if the time series is multivariate) of a
+time series, a trader may hypothesize that the prices are trending, and thus
+the best guess for the observed price at timetis just the estimated moving
+(cid:2) 72 averageattimetaswell: (cid:2)
+y(t) = x(t)+D ∗ ε(t) (3.9)
+where D is another unknown and time-invariant matrix to be estimated
+byMLE.
+Let’sseethis‘‘movingaverage’’modelofequations3.8and3.9inaction
+byapplyingittothesamecomputerhardwarestocks’priceserieswestudied
+inthesectiononVAR(p).Wewillassumethatthereareasmanyhiddenstate
+variables(fiveintotal)astherearestocksinthecomputerhardwareindustry
+group.Thisiswhatatypicalmovingaveragemodelassumesaswell—each
+price series has its own independent moving average. Furthermore, we
+assume also that the state noise of one moving average is uncorrelated
+with any other but each may have a different variance. Hence, B is a 5×5
+diagonal matrix with unknown parameters. (Unknown parameters are
+denoted as NaN as an input to the MATLAB estimate function.) Similarly,
+wewillassumethemeasurementnoiseofonestock’spriceisuncorrelated
+with another, but each may also have a different variance. Hence, D is also
+(cid:2)
+
+TrimSize:6inx9in Chan c03.tex V2-12/11/2016 12:44A.M. Page73
+TIME-SERIES
+ANALYSIS
+(cid:2)
+a 5×5 diagonal matrix with unkown parameters. We could have relaxed
+this zero-correlation constraint for the state and measurement noises, but
+this will mean many more variables to estimate, vastly increasing the time
+ittakesforoptimizationandthedangerofoverfitting.
+The code fragment for using the estimate function6 to generate an esti-
+mate of the unknown variances of the state and measurement noises (the
+parametersinBandD)areasfollows:
+A=eye(size(y, 2)); % State transition matrix
+B=diag(NaN(size(y, 2), 1))
+C=eye(size(y, 2)); % Time-invariant measurement matrix
+D=diag(NaN(size(y, 2), 1))
+model=ssm(A, B, C, D);
+param0=randn(2*size(B, 1)̂2, 1); % 50 unknown parameters per bar.
+model=estimate(model, y(trainset, :), param0);
+whichgeneratesthevaluesshowninTable3.5.
+In this case, the signs of the diagonal elements of the B and D matrices
+areimmaterial,giventhatthenoisesu(t)andε(t)aredistributedsymmetri-
+callyaroundazeromeanwithnocross-correlations.Onemayalsoconsider
+(cid:2) applyingSSMonlogpricesinstead,sothattheGaussiannoiseassumptionis 73 (cid:2)
+morereasonable.
+TABLE3.5 EstimatedValuesforBandDMatrices(Off-DiagonalElements
+Are0)
+B
+i,j
+u𝟏 u𝟐 u𝟑 u𝟒 u𝟓
+x𝟏 −3.74
+x𝟐 0.34
+x𝟑 −0.73
+x𝟒 −0.67
+x𝟓 −1.00
+D
+i,j
+x𝟏 x𝟐 x𝟑 x𝟒 x𝟓
+AAPL −0.0000454
+EMC −0.08
+HPQ 0.22
+NTAP 0.19
+SNDK −0.15
+(cid:2)
+
+TrimSize:6inx9in Chan c03.tex V2-12/11/2016 12:44A.M. Page74
+GNIDART
+ENIHCAM
+(cid:2)
+Once the state transition and measurement equations are fixed, we can
+usethefilterfunctiontogeneratepredictionsofboththestateandobserva-
+tionvalues.
+[x, logL, output]=filter(model, y);
+The x(t) variable in the output of the filter function is the filtered price
+(moving average) at time t given observed prices up to time t. This model
+generatesfilteredpricesthatresembletheobservedpricesveryclosely,usu-
+allywithlessthan0.1percentdifference.Givenequations(3.8)and(3.9),
+this also means that our prediction for next day’s prices will also closely
+resemble today’s prices. These predicted prices at t given observed prices
+canbeextractedfromoutput(t).ForecastedObs:
+for t=1:length(output)
+yF(t, :)=output(t).ForecastedObs';
+end
+whereweassignthepredictedpricefortimettoyF(t−1),usingthesame
+conventionaswedidpreviously.Fromthesepredictedprices,wecancalcu-
+latethepredictedreturns
+(cid:2) 74 retF=(yF-y)./y; (cid:2)
+Note that retF(t) is the predicted return from t−1 to t, given the
+observed price y at time t−1. These predicted returns can be used in the
+same way as we did in the VAR model to create a sector-neutral trading
+strategy. We display in Figure 3.4 the cumulative returns of the model on
+thetrainset,andFigure3.5displaysthecumulativereturnsonthetestset.
+Thedegreeofoverfittingissurprising,giventhatwemerelyusethetraining
+datatoestimatethevariancesofthestateandmeasurementnoises.
+Finding the moving average is not the only waythe Kalman filter can be
+usedtopredictprices.Ifweassumetrendingbehavior,wecanalsouseitto
+findtheslopeoftherecenttrendinprices,leadingtoapredictionofthenext
+priceassumingtheslopepersists.Thisisleftasanexerciseforthereader.
+Using the Kalman filter to make predictions on observations is not the
+only way to apply it to trading. Estimates of the hidden state itself may be
+useful—afterall,itissupposedtobeamovingaverage.Findingestimatesofa
+hiddenvariableinthepresenceofnoiseistheoriginalmeaningoffilteringand
+isawell-knownconceptinsignalprocessing.BesidestheKalmanfilter,other
+well-known filters in finance and economics include the Hodrick-Prescott
+filterandthewaveletfilter.
+(cid:2)
+
+TrimSize:6inx9in Chan c03.tex V2-12/11/2016 12:44A.M. Page75
+TIME-SERIES
+ANALYSIS
+(cid:2)
+2.5
+2
+1.5
+1
+0.5
+0
+2007 2008 2009 2010
+Date
+75
+(cid:2) (cid:2)
+(cid:2)
+snruteR
+evitalumuC
+Trainset: Kalman filter model on
+computer hardware SPX stocks
+FIGURE3.4 Kalmanfiltertradingstrategyappliedtocomputerhardwarestocks
+(in-sample)
+0.25
+0.2
+0.15
+0.1
+0.05
+0
+–0.05
+–0.1
+–0.15
+2011 2012 2013 2014
+Date
+snruteR
+evitalumuC
+Test set: Kalman filter model on
+computer hardware SPX stocks
+FIGURE3.5 Kalmanfiltertradingstrategyappliedtocomputerhardwarestocks
+(out-of-sample)
+
+TrimSize:6inx9in Chan c03.tex V2-12/11/2016 12:44A.M. Page76
+GNIDART
+ENIHCAM
+(cid:2)
+Another application of Kalman filtering has been discussed in Chan
+(2013), where it was used to find the best estimates of the hedge ratio
+betweentwocointegratedpriceseries.Theexamplegiventhereistheprice
+series of the ETFs EWA (a T ×1 vector) and EWC (also a T ×1 vector),
+whicharesupposedtoberelatedas
+[ ]
+hedgeratio
+[EWC] = [EWA , 1] ∗ +noise
+offset
+But instead of treating the two price series as measurements, we
+treat EWC as the measurements y, and EWA augmented with 1s as the
+time-varyingmatrixC(t)inequation3.7.(The1sarenecessarytoallowfor
+the constant offset in the linear regression relationship between EWA and
+EWC.) We treat the hedge ratio and the constant offset between them as
+thehiddenstatex.Hence,wehave
+x(t) = x(t−1)+B ∗ u(t) (3.10)
+y(t) = C(t) ∗ x(t)+D ∗ ε(t) (3.11)
+where x is a 2×1 time-varying vector [hedgeratio , offset]′, y is a scalar
+[EWC(t)],andC(t)isatime-varying1×2matrix[EWA(t), 1].TheMATLAB
+76
+(cid:2) (cid:2)
+codefragmentsforthesespecificationsare
+load('inputData_ETF', 'tday', 'syms', 'cl');
+idxA=find(strcmp('EWA', syms));
+idxC=find(strcmp('EWC', syms));
+y=cl(:, idxC);
+C=[cl(:, idxA) ones(size(cl, 1), 1)];
+A=eye(2);
+B=NaN(2);
+C=mat2cell(C, ones(size(cl, 1), 1));
+D=NaN;
+where the NaNs indicate unknown parameters. As before, these unknown
+parameters are estimated by applying the estimate function7 on the trainset
+fromApril26,2006,toApril9,2012:
+trainset=1:1250;
+model=ssm(A, B, C(trainset, :), D);
+and the B matrix is displayed in Table 3.6, and the scalar D is estimated as
+−0.08. Unlike Table 3.5, we do not impose the constraint that the state
+noisehaszerocross-correlations.
+(cid:2)
+
+TrimSize:6inx9in Chan c03.tex V2-12/11/2016 12:44A.M. Page77
+TIME-SERIES
+ANALYSIS
+(cid:2)
+TABLE3.6 EstimatedValuesforB
+B
+i,j
+u𝟏 u𝟐
+x −0 . 01 0 . 02
+1
+x 0 . 41 −0 . 32
+2
+Note that these noise terms are markedly different than the ones
+we assumed in Box 3.1 of Chan (2013). There, we assumed that the
+state innovation noises 𝜔 (t) for the hedge ratio and 𝜔 (t) for the offset
+1 2
+are uncorrelated, and each has a variance equal to about 0.0001. But
+here, we have estimated that 𝜔 (t) = −0 . 01 ∗ u (t)+0 . 02 ∗ u (t) and
+1 1 2
+𝜔 (t) = 0 . 41 ∗ u (t)−0 . 32 ∗ u (t), and given that u (t) and u (t) are
+2 1 2 1 2
+𝜔
+assumedtobeuncorrelated,the ’shaveacovariancematrix
+[ ]
+0 . 00055 −0 . 011
+.
+−0 . 011 0 . 27
+Similarly, instead of arbitrarily setting the variance of the measurement
+noise 𝜀(t) to 0.001, we have now estimated that it is D2 = 0 . 0059. Using
+these estimates and applying the function filter to the data generates esti-
+77
+(cid:2) mates of the slope (Figure 3.6) and offset (Figure 3.7) that initially look (cid:2)
+quitedifferentfromFigures3.5and3.6inChan(2013),buteventuallyset-
+tleintosimilarvalues.Wecannowapplythesametradingstrategythatwe
+1.6
+1.4
+1.2
+1
+0.8
+0.6
+0.4
+0.2
+2006 2007 2008 2009 2010 2011 2012
+Date
+(cid:2)
+)1
+,t(x=epolS
+FIGURE3.6 KalmanfilterestimateoftheslopebetweenEWCandEWA
+
+TrimSize:6inx9in Chan c03.tex V2-12/11/2016 12:44A.M. Page78
+GNIDART
+ENIHCAM
+(cid:2)
+25
+20
+15
+10
+5
+0
+2006 2007 2008 2009 2010 2011 2012
+Date
+78
+(cid:2) (cid:2)
+(cid:2)
+)2
+,t(x=tesffO
+FIGURE3.7 KalmanfilterestimateoftheoffsetbetweenEWCandEWA
+describedinmyprevioustreatment:buyEWC(y)ifwefindthattheobserved
+value of y is smaller than the forecasted value by more than the forecasted
+standarddeviationoftheobservations,whilesimultaneouslyshortingEWA,
+andviceversa.
+yF=NaN(size(y));
+ymse=NaN(size(y));
+for t=1:length(output)
+yF(t, :)=output(t).ForecastedObs';
+ymse(t, :)=output(t).ForecastedObsCov';
+end
+e=y-yF; % forecast error
+longsEntry=e < -sqrt(ymse); % a long position means
+we should buy EWC
+longsExit=e > -sqrt(ymse);
+shortsEntry=e > sqrt(ymse);
+shortsExit=e < sqrt(ymse);
+The determination of the actual positions of EWC and EWA are the
+same as in Chan (2013), and the MATLAB codes can be downloaded as
+SSM_beta_EWA_EWC.m. The cumulative returns of this strategy on the
+trainset and the test set are depicted in Figures 3.8 and 3.9, respectively.
+
+TrimSize:6inx9in Chan c03.tex V2-12/11/2016 12:44A.M. Page79
+TIME-SERIES
+ANALYSIS
+(cid:2)
+0.6
+0.5
+0.4
+0.3
+0.2
+0.1
+0
+–0.1
+2006 2007 2008 2009 2010 2011
+Date
+79
+(cid:2) (cid:2)
+(cid:2)
+snruteR
+evitalumuC
+Trainset: Cumulative returns
+of Kalman filter strategy on EWC–EWA
+FIGURE3.8 KalmanfiltertradingstrategyappliedtoEWC–EWA(in-sample)
+0.01
+0.005
+0
+–0.005
+–0.01
+–0.015
+–0.02
+–0.025
+–0.03
+–0.035
+–0.04
+Apr 2011 Jul 2011 Oct 2011 Jan 2012 Apr 2012
+Date
+snruteR
+evitalumuC
+Test set: Cumulative returns
+of Kalman filter strategy on EWC–EWA
+FIGURE3.9 KalmanfiltertradingstrategyappliedtoEWC–EWA(out-of-sample)
+
+TrimSize:6inx9in Chan c03.tex V2-12/11/2016 12:44A.M. Page80
+GNIDART
+ENIHCAM
+(cid:2)
+Wecanseethattheequitycurvehasstartedtoflattenevenduringthelatter
+partofthetrainset.Thiscouldhavebeenaresultofregimechange,where
+EWAandEWChavefallenoutofcointegration,ormorelikely,aresultof
+overfittingthenoisecovariancematrixB.
+■ Summary
+Time-series analysis is the first technique one should try when confronted
+with a brand-new financial instrument or market, and we have not yet
+developed any intuition about it. We have surveyed some of the most
+popular linear models of time series that have found their way into many
+quantitativetraders’strategies.Despitetheirlinearity,thereareoftenmany
+parametersthatneedtobeestimated,andsooverfittingisaconstantdanger.
+Thisisespeciallytrueforstatespacemodels,wherethereisanextrahidden
+variable with its own dynamics that need to be estimated. A successful
+application of these methods to strategy building will involve imposing
+judicious constraints to reduce the number of unknown parameters.
+ApopularconstraintinthecaseoftheARMAorVARmodelswouldbeto
+(cid:2) 80 limitthenumberoflagsto1,andinthecaseoftheSSM,theassumptionof (cid:2)
+zerocrosscorrelationsforthenoises.Beyondimposingconstraints,training
+themodelsonalargeamountofdataistheultimatecure,pointingtotheir
+promiseinintradaytrading.
+■ Exercises
+3.1. Show that ifY(t) in the AR(1) process in equation 3.1 is weakly sta-
+tionary,then |ϕ| < 1.Hint:ConsiderthevarianceofY(t).
+3.2. InthesectiononAR(p),wedescribedabacktestonAUD.USDusing
+anAR(1)thatachievedaCAGRof158percentusingmidprices.The
+same.matdatasetalsocontainsbidandaskquotesseparately.Backtest
+the same strategy assuming we use market orders only. What is the
+resultingCAGR?
+3.3. Using MATLAB’s arima and estimate functions, verify that using
+ARIMA(p, 0, q) to model log returns of AUD.USD gives the same
+autoregressive coefficients as using ARIMA(p, 1, q) to model log
+prices. Show also that the best estimates for p and q are 1 and 9,
+respectively.
+(cid:2)
+
+TrimSize:6inx9in Chan c03.tex V2-12/11/2016 12:44A.M. Page81
+TIME-SERIES
+ANALYSIS
+(cid:2)
+3.4. ApplytheVARmodeltoEWAandEWC,andgeneratedailybuy/sell
+trading signals when the predicted daily return is positive/negative.
+Assumingwealwaystrade$1perETF,whatistheCAGRandSharpe
+ratio?AretheretimeswhenthetradingsignalsforbothETFshavethe
+samesign?
+3.5. Comparing the moving average generated by equations (3.8)
+and (3.9) with an N-day exponential moving average (e.g., see
+en.wikipedia.org/wiki/Moving_average),whatistheNthatbestfits
+our estimated state variable? What constraint(s) would you need to
+apply to the B or D matrices in equations 3.8 and 3.9 in order to
+enforcealargerN?
+3.6. IfyouassumethatBisdiagonalinequation3.9,areyouabletoback-
+testtheKalmanfiltertradingstrategyforEWCvs.EWAwithaCAGR
+of 26.2 percent and a Sharpe ratio of 2.4 using data from April 26,
+2006,toApril9,2012?(ThesearetheresultsweobtainedinChan,
+2013.)
+3.7. Apply VAR and VEC on computer hardware stocks as shown in
+the section on VAR(p) using log prices instead of prices. Do the
+out-of-samplereturnsandSharperatioimprove?
+3.8. InsteadofusingtheKalmanfiltertofindthemovingaverageofprices,
+81
+(cid:2) use it to find the slope of the recent price trend. Assuming that this (cid:2)
+slope persists into the future, backtest a trending strategy on, for
+example,thecomputerhardwarestocks.
+■ Endnotes
+1. A time series is strictly stationary if all aspects of its behavior are
+unchanged by shifts in time (Ruppert and Matteson, 2015). A weakly
+stationary time series only requires that the mean and variance are
+unchanged. If this is a multivariate time series, the covariance also
+needstobeunchanged.
+2. ThiscompleteprogramcanbedownloadedasbuildAR1.m.
+3. ThecompletecodecanbedownloadedasbuildARp_AUDUSD.m.
+4. ThecompletecodecanbedownloadedasbuildVAR_findP_stocks.m.
+5. The complete code can be downloaded as buildVAR1_sectorNeutral_
+computerHardware.m.
+6. The complete code can be downloaded as SSM_MA_computer
+Hardware_diag.m.
+7. ThecompletecodecanbedownloadedasSSM_beta_EWA_EWC.m.
+(cid:2)
+
+(cid:2)
+TrimSize:6inx9in Chan c03.tex V2-12/11/2016 12:44A.M. Page82
+(cid:2) (cid:2)
+(cid:2)
+
+(cid:2)
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page83
+CHAPTER 4
+Artificial
+Intelligence
+Techniques
+M
+ost of the trading strategies in this book are developed based on 83
+(cid:2) (cid:2)
+the process a theoretical physicist would use. Where a theoretical
+physicist develops a hypothesis, designs an experiment to test that hypoth-
+esis, and confirms the hypothesis based on the test results, we quantitative
+traders develop a hunch about a possible inefficiency in the market (e.g.,
+retail investors’ herd-like behavior leading to stock momentum), devise a
+strategy to exploit that inefficiency, and use data to confirm whether that
+strategy actually works. The use of artificial intelligence (AI) or machine
+learning techniques is closer to the approach experimental physicists
+might take in their work: we don’t have a preconceived theory of what
+the most important factors affecting the market are, and therefore, we
+need to explore as many factors and trading rules as possible with the
+help of efficient algorithms. Finance practitioners often derisively refer
+to this methodology as data mining. There is some justification of their
+derision: financial data are not only quite limited (unless we use tick
+data), they are also not very stationary in the statistical sense. That is, the
+probability distribution of returns does not stay constant forever. If we
+just turn our machine learning algorithms loose on these data, it is very
+easy to come up with trading rules that worked extremely well in certain
+(cid:2)
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page84
+GNIDART
+ENIHCAM
+(cid:2)
+past periods, but fail terribly going forward. Of course, even handcrafted
+trading models built with human intelligence can do that, too. But we can
+sometimes understand why it is that the model doesn’t work anymore and
+takeremedialactions.Nosuchluckwithmachine-learnedrules.
+Despite our cautiousness toward AI techniques, keep in mind that this
+is a rapidly advancing field, where practitioners are developing techniques
+specifically designed to avoid the overfitting bias we alluded to. One may
+remember that neural networks were dismissed as quite impractical just a
+few years ago, but a breakthrough made in 2006 (Allen, 2015) revitalized
+the field, and neural net experts are now much sought-after in organiza-
+tionssuchasGoogleandFacebook.Morepertinenttotrading,Iremember
+aseniormanageratthelegendaryquantfundRenaissanceTechnologiesonce
+remarkedtothepressthatoneoftheirmostprofitabletradingstrategieswas
+also one that had no rational financial justification at all. That is also why
+it endured without being arbitraged away by other traders. These are the
+kindoftradingrulesthatAItechniquescandelivertous.Anothersituation
+whereAItechniqueswillbeusefuliswhensomeonegivesyouasetofindi-
+cators,whetherfundamentalortechnical,thatyoudon’thaveanyideahow
+to use and have no intuition about. Turning AI techniques loose on such
+indicators would be the easiest way to proceed. The results may even aid
+84
+(cid:2) (cid:2)
+ingaininghumanunderstandingoftheindicators.Solet’snotpresumethat
+our own minds and intuition have a monopoly on trading ideas and let AI
+surpriseus!
+The machine learning techniques we describe in this chapter are fairly
+basicandwell-known.That’swhytheyhavebeenencapsulatedincommer-
+cial software packages and are easily accessible to traders who do not wish
+toreinventthewheelortobecomeafull-timeAIresearcher.Thesoftware
+packagesthatIusetodemonstratethesetechniquesareMATLAB’sStatistics
+andMachineLearningToolboxandtheNeuralNetworkToolbox,andinone
+instance, the Bayes Net Toolbox written by Dr. Kevin Murphy at Google.
+However,Rprogrammerscaneasilyfindsimilarpackages(Hothorn,2014).
+Thoughitmayseemthatwewillbecoveringahodgepodgeofunrelated
+models, they can be categorized in several ways. Stepwise regression,
+regression tree, classification tree, support vector machine, and hidden
+Markov models can be considered linear models, or at least piecewise
+linear models, whereas a neural network is an explicitly nonlinear model.
+Stepwise regression, regression tree, and neural network typically try to
+predict response variables that are continuous, whereas classification tree
+(cid:2)
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page85
+ARTIFICIAL
+INTELLIGENCE
+TECHNIQUES
+(cid:2)
+and support vector machine try to predict responses that are discrete.
+(Hidden Markov models can work on either continuous or discrete data,
+but our example in this chapter is discrete.) All but the hidden Markov
+model use ‘‘supervised training’’ where we try to assign observable classes
+to data, whereas the hidden Markov model uses ‘‘unsupervised training’’
+wherewetrytoassignunobservedclassestothedata.
+Allofthesemodelscanbeimprovedbyanumberofcommontechniques.
+Thefirsttechniqueiscalledcrossvalidation,wherewetrainalotofmodels
+onsubsetsofonetrainingdataset,andpickonlytheonethatperformsbest
+out-of-sample.Thesecondtechniqueiscalledbagging.Here,weartificially
+create many training sets by resampling with replacement our original
+training set, and we train a model on each of these replicated training
+sets and average their predictions. The third technique is called random
+subspace, where instead of randomly sampling the training data as in bag-
+ging, we sample the predictors for each model that we create. The fourth
+technique, called random forest, is a hybrid between bagging and random
+subspace, and is especially designed for regression and classification trees.
+Allfourtechniquesaredesignedwiththeaimofreducingoverfittingonthe
+trainingset.Thereisafifthtechniquethatwewilldiscuss,boosting,which
+is designed to force the learning algorithm to focus on its past prediction
+85
+(cid:2) errorsandimproveonthem. (cid:2)
+To illustrate these models and techniques, we focus mostly on one sim-
+ple example: the prediction of the ETF SPY’s next-day return based on its
+past returns with various lookback. This allows us to compare the efficacy
+and nuances of different models and techniques without the distraction of
+understanding a new data set for each new technique. This doesn’t mean
+that SPY is the most favorable instrument for AI methods, of course. You
+areencouragedtotrythemoutonyourownfavoritemarket.Infact,most
+of these techniques work better if we have more predictors, and we can
+readilyfindmorefundamental variablesthan(uncorrelated) technicalvari-
+ablesaspredictors.Hence,weincludeoneimportantexampleattheendto
+illustratetheapplicationofoneofthesetechniquestoidentifyingpredictive
+fundamentalstockfactorsforreturnsprediction.
+Since this is a book on practical trading, and not on the theoretical
+foundation of finance, much less the theoretical foundation of machine
+learning, we will not dwell on the intricate details of the algorithms
+presentedhere.TradingstrategiesbasedonAIhaveearnedawell-deserved
+reputationofbeing‘‘black-box.’’1 Evenifoneweretounderstandfullythe
+mathematical justification of every AI learning algorithm, we would be no
+(cid:2)
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page86
+GNIDART
+ENIHCAM
+(cid:2)
+closer tointuiting whythealgorithmgenerates acertain tradingsignalata
+certainmoment.
+■ Stepwise Regression
+One key utility of AI is that an algorithm can automatically select the
+most important independent variables (predictors) for the prediction of a
+dependent(response)variablebasedonamodelthatspecifiesthefunctional
+relationship between them. For example, if we want to predict the future
+one-dayreturnofSPY,onepredictormightbethepreviousone-dayreturn,
+another might be its stochastic oscillator (for a technical analyst), the
+third one might be its P/E ratio (for a fundamental analyst), and so on.
+We don’t usually know which predictor is important, so we should just
+throw everything but the kitchen sink at the AI algorithm, and hope for
+the best. The AI algorithm will perform what is called feature selection.
+The model that relates the predictor to the response variables need not be
+complicated.Infact,wewillbeginwithoneofthesimplestmodels—linear
+regression—to illustrate the AI paradigm. The result of marrying feature
+selectiontolinearregressionisstepwiseregression.
+86
+(cid:2) Let’slookattheexamplepredictingSPYreturns.Insteadofusingamix- (cid:2)
+tureoftechnicalandfundamentalpredictors,let’sjustusepreviousreturns
+with various lookbacks (1-day, 2-day, 5-day, and 20-day) as predictors.
+Inausualmultipleregression,wewouldfitthefutureone-dayreturntoall
+the predictors simultaneously and find the regression coefficients of all the
+predictors (plus the y-intercept.) This can be accomplished using the fitlm
+functioninMATLAB:
+model_train=fitlm([ret1(trainset) ret2(trainset) ret5(trainset)
+ret20(trainset)], retFut1(trainset), 'linear')
+The ret1, ret2,…, ret20 are T ×1 arrays with previous returns of
+various lookback, and retFut1 is a T ×1 array with the future one-day
+return. By default, fitlm assumes there is a constant term, so we do not
+need to include a column of 1s in the predictors. The parameter ‘‘linear’’
+indicates we don’t want products of independent variables as predictors.
+Weshouldnotusetheentiredatasetforfittingthisregressionmodel—we
+shall leave the second half of the data as the test set. Here trainset is an
+indexarraydenotingtheindicesofthefirsthalfofthedata.Thisseparation
+between training and test sets is of course a procedure that we always
+follow in building any trading model, but especially important in building
+(cid:2)
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page87
+ARTIFICIAL
+INTELLIGENCE
+TECHNIQUES
+(cid:2)
+machine-learningmodelsduetotheirpropensityforoverfitting.Toseehow
+this model does on the training set as a sanity check, we apply the predict
+functiontomodelandthetrainingdata:
+retPred1=predict(model, [ret1(trainset) ret2(trainset)
+ret5(trainset) ret20(trainset)]);
+retPred1 is similar to retFut1, but contains the predicted future one-day
+returns instead of the actual future one-day returns contained in retFut1.
+If we build a simple trading strategy by buying $1 of SPY when retPred1 is
+positive,andshorting$1whenitisnegative,holdingjustoneday:
+positions(retPred1 > 0)=1;
+positions(retPred1 < 0)=-1;
+we find that the CAGR is 34.3 percent, with a Sharpe ratio of 1.4. So this
+model fits the training data from December 22, 2004, to September 15,
+2009, quite well—so far, so good. We can repeat the same procedure on
+thetestdatafromSeptember16,2009,toJune2,2014.Running
+retPred1=predict(model, [ret1(testset) ret2(testset) ret5(testset)
+ret20(testset)]);
+87
+(cid:2) and applying the same simple trading strategy on the test set now yields (cid:2)
+a CAGR of 0.4 percent, with a Sharpe ratio of 0.1. This model2 does no
+better than random on the test set. This establishes an easy benchmark for
+stepwiseregressiontobeat.
+Stepwise regression differs from multiple regression in that it starts with
+justone‘‘best’’predictorbasedonsomecommongoodnessoffitcriterion
+suchasthesumofsquarederror(thedefaultforMATLAB’sstepwiselmfunc-
+tion),Akaikeinformationcriterion(AIC),orBayesianinformationcriterion
+(BIC). Then the algorithm will try to add other predictors one at a time
+untilthegoodnessoffitdoesnotimprove.Thenitgoesinreverseandtries
+toremovepredictorsoneatatime,againstoppingwhenthegoodnessoffit
+does not improve. In practice, to switch from using multiple regression to
+stepwise regression in MATLAB is as simple as switching the name of the
+functionfromlmfittostepwiselm.
+model=stepwiselm([ret1(trainset) ret2(trainset) ret5(trainset)
+ret20(trainset)], retFut1(trainset), 'Upper', 'linear')
+Theinputparametername/valuepair‘‘Upper’’withitsvalue‘‘linear’’indi-
+cates that we only want linear functions of the independent variables as
+predictors,notproductsofthem.
+(cid:2)
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page88
+GNIDART
+ENIHCAM
+(cid:2)
+The algorithm picks just one predictor: ret2.3 This one predictor causes
+the in-sample CAGR to go from 34.3 percent to 43.5 percent, and the
+Sharpe ratio from 1.4 to 1.6. This is unusually encouraging, because a
+simplermodelwithfewerpredictorsusuallyproducesworseresultsthana
+complicated model in-sample. But more importantly, stepwise regression
+causes the out-of-sample CAGR to go from 0.4 percent to 10.6 percent,
+and the Sharpe ratio from 0.1 to 0.7, indicating the model is close to
+achieving statistical significance (the threshold for that is a Sharpe ratio
+of 1). The equity curve shown in Figure 4.1 suggests that most of the
+performance comes during the earlier period from 2009 to 2011, but that
+isn’t the fault of the algorithm. To improve on this, we can always retrain
+theprogramateverystepbyaddingthelatestdatapointtothetrainingset.
+Also, the model makes a prediction of returns, but we have only used the
+sign of the return as a trading signal. One wayto use the magnitude of the
+predictedreturnistobuyorsellonlywhenthemagnitudeexceedsacertain
+threshold.Anotherwayistobuyorselladollaramountthatisproportional
+tothereturnmagnitude.Wewillleaveallthesevariationsasexercises.
+One last detail we should notice: the regression coefficient of ret2 is
+negative, meaning that this model predicts that future one-day return will
+88
+(cid:2) (cid:2)
+0.7
+0.6
+0.5
+0.4
+0.3
+0.2
+0.1
+0
+–0.1
+2010 2011 2012 2013 2014
+Date
+(cid:2)
+snruteR
+evitalumuC
+Stepwise regression on SPY
+FIGURE4.1 Out-of-sampleperformanceofstepwiseregressiononSPY
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page89
+ARTIFICIAL
+INTELLIGENCE
+TECHNIQUES
+(cid:2)
+revertfromthepasttwo-dayreturn.JustbecauseamodelisgeneratedbyAI
+doesn’t mean that we should not use it to improve our own understanding
+ofthemarket!
+■ Regression Tree
+Using a regression tree (and its sibling classification tree for discrete
+dependentvariablessuchas,‘‘Willitbeanupordowndaytomorrow?’’)is
+anotherwayonecanselectimportantpredictors.However,unlikestepwise
+regression, where all the selected predictors are applied to all data jointly
+justasinamultipleregression,regressiontreestakeahierarchicalapproach.
+Infact,theregressiontreealgorithmhaslittletodowithlinearregression.
+Once the algorithmpicks the ‘‘best’’predictor based on some criterion, it
+willsplitthedataintotwosubsetsbyapplyinganinequalityconditiononthis
+<
+predictor (such as ‘‘previous two-day return 1.5%’’). The original data
+formtheparentnode,andeachsubsetisachildnode.Thealgorithmwillthen
+beiterativelyappliedtoeachchildnode,untilastoppingconditionismet.
+The criterion that is used to pick the best predictor at each node is usually
+basedonminimizingthevarianceoftheresponsevariableineachchildnode
+(Breiman et al., 1984). Minimizing the variance of the response variable
+89
+(cid:2) (cid:2)
+in a node is another way of saying we want to minimize the mean squared
+error (MSE) of the predicted response compared to the true response,
+because the predicted response for a node is none other than the average
+of the response variables. The stopping condition is met when any of the
+followingoccur:
+1. Thereisnoreductionofvariancescomparedtothevarianceofthepar-
+entnode;or
+2. There are too few observations in the parent node (MinParentSize is an
+inputparameter);or
+3. Splitting the parent node using any predictor would have resulted in
+a child node with too few observations (MinLeafSize is another input
+parameter);or
+4. The maximum number of nodes have been reached (MaxNumSplits, a
+thirdinputparameter,limitsthetotalnumberofsplits).
+Notethatduetotheiterativenatureofthisalgorithm,thesamepredictor
+can be reused at each child node for an unlimited number of times. Each
+‘‘leaf’’ of a tree (a child node without children itself) can be summarized
+as a set of inequalities on the predictors (e.g., ‘‘previous two-day return
+< 1.5%’’ and ‘‘previous one-day return < −1.4%’’). We can therefore
+(cid:2)
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page90
+GNIDART
+ENIHCAM
+(cid:2)
+pickthoseleaves(equivalently,thesetofinequalities)thathavetheaverage
+response (e.g., high average future one-day return) we desire. When we
+haveanewdatapointfromthetestsetthatsatisfiesalltheinequalitiesthat
+leadtoaleafwithhighaveragefuturereturn,wewillpredictthatthisdata
+pointwillgenerateahighfuturereturn,too.
+Wecantryourhandsattheregressiontreealgorithmonthesamesetof
+data,predictors,andresponsevariable(futureone-dayreturnofSPY)aswe
+usedinthestepwiseregressionexample.TheprogramrTree.mispractically
+the same as stepwiseLR.m: we just need to replace the function stepwiselm
+withfitrtree.
+model=fitrtree([ret1(trainset) ret2(trainset) ret5(trainset)
+ret20(trainset)], retFut1(trainset), 'MinLeafSize', 100);
+WechoosetosetMinLeafSizeto100,butyouarefreetoexperimentwith
+other values and see what is optimal on the trainset. Generally speaking
+though,wedon’twanttohavealeafsizethatistoosmallinordertoavoid
+overfitting.Toseewhatthetreelookslike,includingtheinequalitiesineach
+childnode,applythefunctionviewtothemodel:
+view(model, 'mode', 'graph'); % see the tree visually
+90
+(cid:2) (cid:2)
+whichproducesFigure4.2.
+We can examine the numbers below the leaf nodes: they indicate the
+expectedvalueoftheresponsevariableunderthesequenceofinequalities.
+x2 < 0.015314 x2 >= 0.015314
+x1 < –0.00244162 x1 >= –0.00244162
+–0.004527
+x1 < –0.0139236 x1 >= –0.0139236 x1 < 0.0058693 x1 >= 0.0058693
+x1 < –0.00710366 x1 >= –0.00710366 x1 < 0.00293904 x1 >= 0.00293904
+0.0047136 0.0011609
+x1 < 0.00117137 x1 >= 0.00117137
+–0.00051729 0.0034726 –0.0026088
+x3 < 0.00615832 x3 >= 0.00615832
+0.00027221
+–0.0021653 0.0003837
+FIGURE4.2 RegressiontreeonSPY
+(cid:2)
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page91
+ARTIFICIAL
+INTELLIGENCE
+TECHNIQUES
+(cid:2)
+For example, if we want a leaf node with the highest expected value
+<
+(0.0047136 for the left-most node), we see that the sequence is x2
+0.015314,x1
+<−0.00244162,x1 <−0.0139236,whichwecanparaphrase
+asret2
+<
+1.53%andret1
+<−1.39%.Thiscanbeusedasaready-madetrad-
+ingruleforbuyingSPY.Similarly,wecanlookforaleafnodewiththemost
+negative expected value (−0.004527 for the right-most node). The single
+inequality that leads to that can be paraphrased as ret2
+>=1.53%.
+This
+can be used as a trading rule for shorting SPY. Both trading rules are
+mean-reverting,justasthetradingmodelproducedbystepwiseregression.
+If we buy SPY at the close and hold it one day according to the long rule,
+and short SPY and hold it one day according to the short rule, we obtain a
+CAGR of 28.8 percent with a Sharpe ratio of 1.5 on the training set, and
+aCAGRof3.9percentwithaSharpratioof0.5onthetestset.Thisisn’tas
+good as the stepwise regression result, and the equity curve in Figure 4.3
+also shows that these mean reversion models worked only during the first
+halfofthetestset.
+One may wonder why we limit ourselves to the two extreme leaves
+(extreme in terms of expected response), and do not generate a trading
+rule based on the expected response of every single leaf? If we try that
+91
+(cid:2) (cid:2)
+0.35
+0.3
+0.25
+0.2
+0.15
+0.1
+0.05
+0
+–0.05
+2010 2011 2012 2013 2014
+Date
+(cid:2)
+snruteR
+evitalumuC
+Regression tree on SPY
+FIGURE4.3 Tradingmodelbasedonregressiontree
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page92
+GNIDART
+ENIHCAM
+(cid:2)
+(all we need to do is to use the predict function we have used before in
+stepwiseLR.m.), we will find that the in-sample CAGR will be boosted to
+73 percent, but the out-of-sample CAGR will drop to −7.2 percent—a
+clear symptom of overfitting. But there is a way to have your cake and eat
+it,too.Inthenextthreesections,wewillexploresomegeneraltechniques
+forreducingoverfittingsothatwecaninfactuseallleavesforprediction.
+■ Cross Validation
+Crossvalidationisatechniqueforreducingoverfittingbytestingforout-of-
+sample performance as part of model building. To do this, we randomly
+divide the training set into K roughly equal subsets. Model i will be built
+on the union of all subsets except the ith. We then test for the predictive
+accuracy of model ion the out-of-sample ith part. (See Figure 4.4.) This is
+calledthecross-validationaccuracy.Finally,wewillpickthemodelthathas
+thehighestcross-validationaccuracy.
+We can try this on the regression tree model we built in the previous
+section that uses every leaf for generating trading signals. We simply need
+toaddthename/valuepairs‘‘CrossVal’’and‘‘On,’’‘‘KFold’’and5,when
+(cid:2) 92 usingfitrtreeformodelbuilding.ThiswouldgenerateK = 5treesstoredin (cid:2)
+model_cvbelow:
+model_cv=fitrtree([ret1(trainset) ret2(trainset) ret5(trainset)
+ret20(trainset)], retFut1(trainset), 'MinLeafSize', 100,
+'CrossVal', 'On', 'KFold', 5);
+Original trainset
+1 2 ... i ... K
+Actual trainset for model i Test set for model i
+FIGURE4.4 Leavingoutasubsetoftrainingsetforcross-validationtest
+(cid:2)
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page93
+ARTIFICIAL
+INTELLIGENCE
+TECHNIQUES
+(cid:2)
+To find the cross-validation accuracy (or its inverse, the loss or mean
+squared error of the predicted responses compared to the true responses)
+ofeachtree,weapplythekfoldLossfunctiontothesetreesandpickthetree
+withtheminimumloss:
+L= kfoldLoss(model_cv,'mode','individual'); % Find the loss
+(mean squared error) of the predicted responses in a fold
+when compared against predictions made with a tree trained
+on the out-of-fold data.
+[∼, minLidx]=min(L); % pick the tree with the minimum loss,
+i.e. with least overfitting error.
+bestTree=model_cv.Trained{minLidx};
+Running the predict function on the test set using bestTree as the model
+generatesaCAGRof0.6percentwithaSharperatioof0.11,whichisdef-
+initely better than the previous result without using cross validation, but
+not as good as if we just pick the two extreme leaves. (If you run this pro-
+gramwithadifferentrandomseed,youwillgetadifferenttreeanddifferent
+CAGR. This is because the cross-validation algorithm picks the subsets of
+trainingdataforeachtreerandomly.)ThecodeforthisispartofrTree.m.
+SomereadersmaywonderwhywepickK = 5insteadof10,whichisthe
+(cid:2) MATLAB default for the number of subsets used for cross validation. The 93 (cid:2)
+reasonisthatwhileourtrainingsetfromDecember22,2004,toSeptember
+15, 2009, may be a reasonable size for trading research, it is considered
+quitesmallbymachinelearningstandards.Ifwedividethistrainingsetinto
+10subsets,theout-of-samplesubsetwillbesosmallthatthecross-validation
+accuracyissubjecttolargestatisticalerrors,andsothe‘‘best’’treeproduced
+won’t necessarily be any good when applied to the test set. On the other
+hand,ifwesetKtobetoosmall,say2,thenwedon’thaveenoughtrained
+modelstochoosethebestonefrom.
+■ Bagging
+In cross validation, we introduced the idea thatitis often useful to present
+somewhat different training data sets to the learning algorithm so that
+it does not overfit to the statistical fluctuations in one single training set
+that won’t be repeated in the test set. Bagging is another variation on this
+theme. Instead of randomly dividing the original training set of sizeN into
+subsets as we did in cross validation, we randomly sample N observations
+from the original training set with replacement to form a replica (a bag) of
+(cid:2)
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page94
+GNIDART
+ENIHCAM
+(cid:2)
+the original training set. Since we are sampling with replacement, some
+observations from the original training set will be repeated multiple times
+in the replica and other observations will be omitted (these will be called
+out-of-bagobservations).WerepeatthisprocessKtimes,sothatweforman
+ensembleofKsuchreplicas,eachwiththeoriginaltrainingsetsizeN.Since
+this process essentially increases the training sample size, it is also called
+bootstrapping.Likecrossvalidation,wewilltrainamodel(regressiontree
+in our example) on each replica, and test its predictive accuracy on the
+corresponding out-of-bag (and, therefore, out-of-sample) observations.
+(See Figure 4.5.) But unlike cross validation, we do not just pick the tree
+with the most accurate out-of-bag prediction. We average the predicted
+responsefromallthetreesbuiltfromallthereplicas.
+Toapplybaggingtotheregressiontreelearner,usetheTreeBaggerinstead
+ofthefitrtreefunctioninMATLAB:
+model=TreeBagger(5, [ret1(trainset) ret2(trainset) ret5(trainset)
+ret20(trainset)], retFut1(trainset), 'Method', 'regression',
+'MinLeaf', 100);
+Original trainset (size N)
+94
+(cid:2) (cid:2)
+1 2 3 4 ... N
+New trainset 1 (size N)
+Bag 1
+New trainset K (size N)
+Bag 2
+(cid:2)
+...
+FIGURE4.5 BaggingwithKbags(Inbag1,datasamples2and4willbepartoftest
+set1.InbagK,datasamples1and3willbepartoftestsetK.)
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page95
+ARTIFICIAL
+INTELLIGENCE
+TECHNIQUES
+(cid:2)
+0.6
+0.5
+0.4
+0.3
+0.2
+0.1
+0
+–0.1
+2010 2011 2012 2013 2014
+Date
+95
+(cid:2) (cid:2)
+(cid:2)
+snruteR
+evitalumuC
+Regression tree on SPY with bagging. K=5.
+FIGURE4.6 Tradingmodelbasedonregressiontreewithbagging(K=5)
+WepickedK=5(thefirstparameterintheTreeBaggerfunction4)sincethis
+wasthenumberoftreeswebuiltwithcrossvalidationaswell.Thisyielded
+significantlybetterpredictiveperformancethanthecrossvalidationmodel:
+CAGRis7.2percentwithaSharperatioof0.5.Theequitycurveisdisplayed
+inFigure4.6.
+Increasing K will actually degrade out-of-sample performance, because
+theaverageresultofalargeensembleofreplicaswillbeverysimilartothat
+ofusingtheoriginaltrainingset.
+■ Random Subspace and Random Forest
+With bagging, we randomly sample data with replacement to train mul-
+tiple models. With random subspace, we randomly sample predictors with
+replacement (but with decreasing sampling probability for those that have
+been chosen previously) to train multiple models. In both cases, we will
+averagethepredictionsofallthesemodels(weaklearners)sothattheensem-
+ble prediction is stronger. Any method that trains many weak learners to
+formastronglearneriscalledan‘‘ensemble’’method.
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page96
+GNIDART
+ENIHCAM
+(cid:2)
+InMATLAB,thefunctionthatimplementsrandomsubspaceisfitensemble,
+ifwesetthe‘‘Method’’variableto‘‘Subspace.’’However,itonlyworkson
+classification problems (i.e., with discrete instead of continuous response
+variables).Wewilldiscussthatinthesectionon‘‘ClassificationTree.’’Also,
+therandomsubspacemethodreallyshinesonlywhenwehavealargenumber
+of predictors, so we won’t be able to demonstrate it here using our SPY
+example even if we were to discretize the response variable. Instead, we
+inviteyoutotryitasanexerciseusingthefundamentaldatasetsuggestedin
+thesection‘‘ApplicationtoStocksSelection.’’
+There is another ensemble method called random forest that is a hybrid
+of bagging and random subspace. More specifically, a random forest is a
+regression or classification tree where we start with a randomly selected
+(with replacement) subset of training data, and at each split of the node,
+choose the best predictor from a randomly selected (with replacement)
+subset of all the available predictors. Again, we will average the prediction
+oftheweaklearners.InMATLAB,randomforestisimplementedusingthe
+TreeBagger function, with the ‘‘NumPredictorsToSample’’ parameter set to any
+numbersmallerthanthetotalnumberofpredictors.Actually,theMATLAB
+defaultistohaveNumPredictorsToSamplesettoone-thirdofthetotalnumber
+ofpredictors,whichiswhatweusedinthebaggingexampleintheprevious
+96
+(cid:2) section and in rTreeBagger.m. If we actually want to use all the predictors (cid:2)
+at every node for prediction, we can set NumPredictorsToSample to ‘‘all.’’
+This decreases the out-of-sample CAGR of the previous example from
+7.2percentto1.5percent,andtheSharperatiofrom0.5to0.2.
+■ Boosting
+Ashumans,weprideourselvesonourabilitytolearnfromourpastmistakes.
+The best of us don’t waste our time reminiscing on past triumphs. It turns
+outthatwecanteachourAIalgorithmstodothesame,andthismethodis
+calledboosting.
+Boosting involves applying a learning algorithm iteratively to the
+prediction errors of the model constructed in the previous iteration. As a
+first step in boosting, we apply a learning algorithm such as a regression
+treetothetrainingdataasbefore.Thefirststepiscompleteoncethetreeis
+constructedandpredictionsmadeforthetrainingset.Webeginthesecond
+step by creating a new training set where the responses are the differences
+between the actual responses and the predicted response from the first
+model.Theobjectiveofthissecondtreeistominimizethesquareofthese
+(cid:2)
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page97
+ARTIFICIAL
+INTELLIGENCE
+TECHNIQUES
+(cid:2)
+differences. We will repeat this so as to create a total of M trees and take
+the predictions of the Mth tree as final. The hope is again to turn a weakly
+predictivealgorithmintoastrongerone.
+Wewillapplythisproceduretotheregressiontreemodelthatwecreated
+before.Weneedtojustreplacefitrtreefunctionwiththefitensemblefunction
+inourcode(rTreeLSBoost.m),justasinthecasewiththerandomsubspace
+method.Weneedtospecify‘‘LSBoost’’astheboostingalgorithm,whichis
+the gradient descent method (Friedman, 1999) for boosting regression or
+regression tree models. We also specify M as the number of iterations for
+boosting.Finally,wespecify‘‘Tree’’asthelearningalgorithm.
+model=fitensemble([ret1(trainset) ret2(trainset) ret5(trainset)
+ret20(trainset)], retFut1(trainset), 'LSBoost', M, 'Tree');
+As opposed to cross validation and bagging, boosting does not seem to
+alleviate overfitting (although there are theoretical arguments on why it
+won’t overfit). (See Kun, 2015.) We can see in Figure 4.7 the effect of
+boosting the previously constructed regression tree on the train versus
+8 97
+(cid:2) (cid:2)
+7
+6
+5
+4
+3
+2
+1
+0
+–1
+0 1000 2000 3000 4000 5000 6000
+Number of boosting iterations
+(cid:2)
+oitaR
+eprahS
+Effect of boosting on train vs. test set
+Trainset
+Test set
+FIGURE4.7 Effectofboostingaregressiontreeontrainvs.testsetSharperatio
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page98
+GNIDART
+ENIHCAM
+(cid:2)
+testset. With increasing number of iterations, the Sharpe ratio on the
+trainset increases rapidly, while the Sharpe ratio on the test set increases
+muchmoreslowly.Infact,theSharperatioforthetestsetremainsinsignif-
+icant at any reasonable number of iterations. Applying cross validation to
+thebesttreeateachiterationactuallyworsensperformance.
+■ Classification Tree
+The core learning algorithms we have discussed so far assume that the
+responsevariableiscontinuous.Thisisnaturalbecausewearemostlyinter-
+estedinexpectedreturnsintrading.Buttherearesomelearningalgorithms
+that are specifically designed for discrete (also called categorical) response
+variables. There is no reason why we should deprive ourselves of them—
+we just need to discretize our returns into, say, positive and negative
+returns. In this section, we will apply the classification tree to the SPY
+predictiontask.
+Classification tree is a close sibling of regression tree. With regression
+tree, the best predictor to split a node is one that minimizes variance of
+responses in the child nodes. With classification tree, the variance
+ofresponsesisreplacedbytheanalogousGini’sDiversityIndex(GDI).For
+98
+(cid:2) (cid:2)
+a binary classification into positive (+) or negative (−) classes, GDI for a
+nodeis
+1−p2 −p2
++ −
+wherep isthefractionofobservationswithpositivereturns,andp isthe
++ −
+fractionofobservationswithnegativereturns.GDIhasaminimumvalueof
+zero,whichisobtainedwhenthenodeconsistsofobservationsofthesame
+class—that is, perfect classification. The best predictor to split a node is
+onethatminimizesthesumoftheGDIsofbothchildnodes.Naturally,the
+predictedresponseofanodeistheobservationthatconstitutes thehighest
+fraction.
+ToimplementclassificationtreeinMATLAB,simplyreplacethefunction
+fitrtree in our program rTree.m with fitctree, taking care to discretize the
+response variable.5 Since we know that using the entire tree for prediction
+suffers from severe data snooping bias, we will also impose fivefold cross
+validationaswedidwithregressiontrees:
+model=fitctree([ret1(trainset) ret2(trainset) ret5(trainset)
+ret20(trainset)], retFut1(trainset) >= 0, 'MinLeafSize', 100,
+'CrossVal', 'On', 'KFold', 5); % Response: True if >=0,
+False if < 0.
+(cid:2)
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page99
+ARTIFICIAL
+INTELLIGENCE
+TECHNIQUES
+(cid:2)
+Wecanusethismodelinanobviouswaytogeneratetradingsignal:just
+buy when the predicted response is positive, and short when it is nega-
+tive. The complete program is in cTree.m. The resulting CAGR on the
+test set is 4.8 percent, with a Sharpe ratio of 0.4, which is better than the
+cross-validatedregressiontreeresults,butnotasgoodastheregressiontree
+withrandomforest.(Ofcourse,youcanapplytherandomforestalgorithm
+totheclassificationtreeaswell.Thisisleftasanexercise.)
+One doesn’t have to categorize the response as positive or negative
+returns. We can create a class for high positive returns (i.e., returns
+higher than some threshold) and another one for the complement, and
+generatebuysignalsonlywhenwepredictthishigh-returnclass.Similarly,
+we can create a class for low negative returns and generate short signals
+for predictions in this class. However, this doesn’t seem to improve the
+performanceofthetradingstrategy.
+■ Support Vector Machine
+The support vector machine (SVM) is another popular classification tech-
+niquethatworksondiscreteresponses.Theintuitiveideabehinditisquite
+visually appealing: let’s imagine each sample data point resides in an 99
+(cid:2) (cid:2)
+m-dimensional space, where m is the number of predictors (which are still
+continuousvariables).Let’ssaysomeofthesedatapointsarelabeled‘‘plus’’
+theremainingonesarelabeled‘‘minuses.’’(SeeFigure4.8).Theseplusesand
+Support vector
+Support vector
+M
+Separating
+hyperplane
+a Support vector
+rg
+in
+Support vector
+FIGURE4.8 Supportvectormachineillustrated
+(cid:2)
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page100
+GNIDART
+ENIHCAM
+(cid:2)
+minusesareourdiscreteresponses.TheSVMattemptstofindahyperplanein
+thism-dimensionalspacethatcanseparatetheplusesfromtheminuses.Fur-
+thermore,itwantstoseparatethemwiththelargestpossiblemargin.Ifthat
+canbedone,wehaveachievedourclassificationtask:wheneveradatapoint
+hascoordinatesononesideofthishyperplane,wewillknowexactlywhich
+responsecategoryitwillhave.Inour2-DillustrationinFigure4.8,theblack
+lineinthemiddleachievessuchacleanseparation:alltheminusesareonthe
+rightsideoftheline,andalltheplusesareontheleft.Theplusesthatcome
+closesttotheseparatinghyperplane(line)formasetof‘‘supportvectors,’’
+and so do the minuses that come closest. The separation between the two
+setsofsupportvectorsisthemarginwhichwemaximizedwithourSVM.
+Of course, real data are rarely as obliging as our fantasy data set. Even
+withthe‘‘best’’hyperplane,wewillfindplusesontherightsideandminuses
+on the left. We can attempt to find the best hyperplane by maximizing the
+margin of separation while simultaneously minimizing a penalty term that
+penalizes misclassified data points. (The mathematical details can be found
+in Anonymous, 2015.) To use the SVM in MATLAB, simply substitute the
+functionfitcsvmforfitctreeandagainapplyfivefoldcrossvalidation.6
+model=fitcsvm([ret1(trainset) ret2(trainset) ret5(trainset)
+(cid:2) 100 ret20(trainset)], retFut1(trainset) >= 0, 'CrossVal', 'On', (cid:2)
+'KFold', 5); % Response: True if >=0, False if < 0.
+The resulting CAGR of 13.3 percent with a Sharpe ratio of 0.8 on the
+testsetismuchsuperiortothatoftheclassificationtree.Theequitycurve
+in Figure 4.9 also shows no deterioration in the more recent period. This
+outperformance is perhaps because the model resulting from this basic
+version of the SVM is genuinely linear: after all, it is just a hyperplane.
+(The classification tree can be thought of as piece-wise linear only.) Linear
+modelsavoidoverfittingandgeneratebetterresultsonout-of-sampledata.
+Interestingly, this same linear model performs worse on the training set,
+perhapsforthesamereason.
+Sometimes, however, we do need to transform predictors nonlinearly
+before the SVM is able to classify the data. These transformations are
+carried out by the Kernel function. Instead of a linear Kernel function,
+we can specify a polynomial function. Instead of setting the Kernel scale
+to 1, we can specify ‘‘auto’’ such that the algorithm will select an optimal
+Kernelscale.Wehavetriedthisnewconfiguration,andtheresultsweren’t
+improved. If we try the radial basis (Gaussian) function, the results are
+slightlyimproved.Thereisalsoamultilayerperceptron(sigmoidal)function
+(cid:2)
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page101
+ARTIFICIAL
+INTELLIGENCE
+TECHNIQUES
+(cid:2)
+0.8
+0.7
+0.6
+0.5
+0.4
+0.3
+0.2
+0.1
+0
+–0.1
+2010 2011 2012 2013 2014
+Date
+101
+(cid:2) (cid:2)
+(cid:2)
+snruteR
+evitalumuC
+Cross-validated SVM on SPY: test set
+FIGURE4.9 Supportvectormachinewithcrossvalidation
+that we can apply, but it isn’t part of the Statistics and Machine Learning
+Toolbox,soyouwouldhavetoconstructityourself.(Interestedreaderscan
+explore whether they can extract this function from the Neural Network
+ToolboxandapplythattotheSVM.)ApplyinganonlinearKernelfunction
+tothepredictorsiseffectivelyusingacurvedmembraneinsteadofaplaneto
+cutthroughthedata.AnotherwayofthinkingabouttheKerneltransforma-
+tionisthatwearetransformingthedataintoahigherdimensionalspacesuch
+thatahyperplanetherecancleanlyseparatethem.Areversetransformation
+ofthishyperplaneappearsasacurve,notaline,intheoriginalspace.This
+allowsformuchmoreflexibility(andmoreroomforoverfitting).
+■ Hidden Markov Model
+It is common for traders to label a certain market moment ‘‘bull’’ or
+‘‘bear.’’ It isn’t clear, though, what constitutes a bull or bear market, since
+wecancertainlyexperiencedowndaysinabullmarketandupdaysinabear
+market.NotwocableTVcommentatorsareabletoagreeontheexactdefi-
+nitionofabullorbearmarket.Thesamegoesfor‘‘mean-reverting’’versus
+
+TrimSize:6inx9in Chan c04.tex V2-12/11/2016 12:44A.M. Page102
+GNIDART
+ENIHCAM
+(cid:2)
+‘‘trending’’ markets, or ‘‘risk-on’’ versus ‘‘risk-off’’ regimes. Machine
+learners,however,arequiteaccustomedtosuchambiguity.Moreprecisely,
+they are accustomed to classification problems where the classes are not
+actually observable, unlike the ‘‘up’’ or ‘‘down’’ days that we asked the
+SVM to classify in the previous section. Such classification of unobservable
+(hidden)statesarethedomainof‘‘unsupervisedlearning’’methods.
+One of the most well-known models with hidden states is the Hidden
+MarkovModel(HMM).TheeasiestwaytounderstandanHMMistoimag-
+ine that bull versus bear markets are two hidden states, and a transition
+probability matrix describes the probabilities that the market would jump
+fromonestatetoanotherfromonedaytothenext.Forexample,ifwelabel
+thebullmarketasthefirststate,andbearmarketasthesecond,atransition
+matrixT suchas [ ]
+. .
+060 0 40
+T =
+. .
+075 0 25
+indicatesthatthereisaprobabilityof0.6thatabullmarketwillremainsothe
+nextday.Ofcourse,thatalsoimpliesithasaprobabilityof0.4totransition
+to a bear market. This matrix also indicates there is a probability of 0.25
+thatabearmarketwillremainsothenextday,andaprobabilityof0.75that
+102 it will transition to a bull market. Naturally, the probabilities on each row
+(cid:2) (cid:2)
+mustaddupto1.
+Besides the transition probabilities as tabulated in the transition matrix,
+wealsoneedtoknowtheprobabilitiesthatabearstatewill‘‘emit’’adown
+day and an up day, respectively. The down and up days are called emissions,
+orobservables.Similarly,weneedtoknowthesameforabullstate.These
+‘‘emission’’ probabilities are tabulated in an emission probability matrix E
+suchas [ ]
+. .
+0 19 0 81
+E =
+. .
+0 97 0 03
+where we label the down days as the first emission symbol and the up days
+asthesecond.Sothisemissionmatrixistellingusthatthereisa19percent
+chancethatabullstatewillemitadownday,andan81percentchancethat
+it will emit an up day. There is a 97 percent chance that a bear state will
+emit a down day and a 3 percent chance that it will emit an up day. Again,
+the probabilities of each row must sum to one. Figure 4.10 illustrates the
+transitionmatrix.
+Sincebullandbearareunobservable,theyarejustnameswegivetothe
+states. They can just as well be called ‘‘mean-reverting’’ and ‘‘trending,’’
+(cid:2)

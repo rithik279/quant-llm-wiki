@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "09871e37ba5e7651",
+        "id": "e883695944586ea4",
         "type": "tabs",
         "children": [
           {
-            "id": "0032f44380dcb45b",
+            "id": "7def8f887f10ce7d",
             "type": "leaf",
             "state": {
               "type": "graph",
@@ -176,27 +176,36 @@
       "bases:Create new base": false
     }
   },
-  "active": "0032f44380dcb45b",
+  "active": "7def8f887f10ce7d",
   "lastOpenFiles": [
-    "reading-notes/Agilith-Research-Plan.md",
-    "reading-notes/Agilith-Learning-System.md",
-    "reading-notes/Agilith-Investment-Thesis.md",
-    "reading-notes/Agilith-Internship-Overview.md",
-    "reading-notes/Agilith-Call-Notes.md",
-    "reading-notes/Superalignment.md",
-    "_meta/index.md.tmp.16408.1777585459674",
-    "reading-notes/Agilith-Strat-Priorities.md",
-    "reading-notes/Agilith-Investment-Thesis.md.tmp.16408.1777585430085",
-    "reading-notes/Situational-Awareness-Cultural.md",
-    "reading-notes/Security-for-AGI.md",
-    "reading-notes/Compute-Scaling.md",
-    "reading-notes/Intelligence-Explosion-Mechanism.md",
-    "reading-notes/The-Project.md",
+    "Agilith_OnePager.md",
+    "Chan-Chapter4-StocksETFs.md",
+    "reading-notes/Chan-Chapter4-8-Generative-Models.md",
+    "reading-notes/Chan-Chapter1-3-NoCode-ML.md",
+    "reading-notes/Chan-Chapter1-3-NoCode-ML.md.tmp.34116.1777755682145",
+    "reading-notes/Chan-Chapter10-Efficient-Inference.md",
+    "reading-notes/Chan-Chapter9-LLM-Sentiment.md",
+    "reading-notes/Chan-GanAI-Full-Summary.md",
+    "reading-notes/Machine-Trading-Leopold-Integration.md",
+    "reading-notes/Machine-Trading-Ch4-AI-ML.md",
+    "reading-notes/Machine-Trading-Ch2-FactorModels.md",
+    "reading-notes/BOOK_INGESTION_PROCESS.md",
     "reading-notes/Situational-Awareness.md",
-    "reading-notes/Compute-Appendix.md",
+    "reading-notes/Chan-Agilith-Integration.md",
+    "reading-notes/QTB-Full-Summary.md",
+    "reading-notes/QTB-RiskManagement.md",
+    "reading-notes/QTB-Chapter7-SpecialTopics.md",
+    "reading-notes/QTB-Backtesting-Start.md",
+    "reading-notes/Chan-RiskManagement.md",
+    "reading-notes/Chan-Chapter6-Momentum.md",
+    "reading-notes/Chan-Chapter2-MeanReversion.md",
+    "reading-notes/Chan-Chapter1-Backtesting.md",
+    "reading-notes/Agilith-Alpha-Stack-System.md",
+    "SYSTEM.md",
     "_meta/index.md",
-    "reading-notes/Scalable-Oversight.md",
-    "reading-notes/Intelligence-Explosion.md",
-    "reading-notes/AI-AGI-Timeline.md"
+    "_meta/contradictions.md",
+    "architecture/4-Month-Build-Plan.md",
+    "_meta/index.md.tmp.16408.1777585459674",
+    "reading-notes/Agilith-Investment-Thesis.md.tmp.16408.1777585430085"
   ]
 }
